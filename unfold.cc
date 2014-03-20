@@ -63,7 +63,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		nbkgs = names.size()-1;
 
 		hsignal = (TH1F*)f->Get(var_y+"__tchan");
-    if(hsignal == NULL) throw;
+	if(hsignal == NULL) throw;
 		hsignal->Scale(scales[0]);
 
 		// Read in background histograms
@@ -83,10 +83,10 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		cout << "background events: " << sum_nonrot << endl;
 
 		// Read in covariance matrix
-		TFile *fcov = new TFile("cov.root");
-		TH2F *hcov = (TH2F*)fcov->Get("covariance");
-		// Decorrelate background templates
-    decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
+	//TFile *fcov = new TFile("cov.root");
+	//TH2F *hcov = (TH2F*)fcov->Get("covariance");
+	//// Decorrelate background templates
+	//decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
 	}
 
 	// Current samples are normalized to one
@@ -114,7 +114,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
 
-	Float_t tau = 4.891e-05; // FIXME muon
+	Float_t tau = 0.000109905;//4.891e-05; // FIXME muon
 
 	// set input distribution
 	unfold.SetInput(hrec);
@@ -127,8 +127,8 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	if(subtractData) {
 		for(int i = 0; i < nbkgs; i++)
 		{
-			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
-			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
 		}
 	}
 
@@ -161,7 +161,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	hrhoij->Write();
 	hrhoi->Write();
 	hematrix->Write();
-	
+    cout << "unfolded asymmetry: " << asymmetry(hurec) << endl;	
 	fo->Close();
 }
 
@@ -177,6 +177,7 @@ int main()
 	
 	TH2F *hgenrec = (TH2F*)f->Get("tm__pdgid_13__nominal");
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
+    cout << "gen asymmetry: " << asymmetry(hgen) << endl;	
 
 	//TH2F *hgenrec = (TH2F*)f->Get("tm__pdgid_11__nominal");
 	//TH1F *hgen = (TH1F*)f->Get("tm__pdgid_11__nominal__proj_x");
