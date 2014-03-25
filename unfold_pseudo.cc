@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "utils.hpp"
-#include "binnings.h"
+#include "info.h"
 #include "unfold.hpp"
 
 using namespace std;
@@ -97,7 +97,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	}
 
 	cout << "Unfolding: " + varname << endl;
-		
+
 	// Prepare unfolding
 	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
 
@@ -256,18 +256,22 @@ int main()
 {	
 	// load histograms
   // mu histograms
-  TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
+  TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
   
-  // ele histograms
-  //TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
-	//TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
-	
-	TH2F *hgenrec = (TH2F*)f->Get("tm__pdgid_13__nominal");
+	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
+	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
+	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+
+  TH2F *hgenrec = (TH2F*)hgenrecmu->Clone();
+  hgenrec->Add(hgenrecele);
+  hgenrec->Add(hgenrectau);
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
 
-	//TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan"); //FIXME
-	TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
+	TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan"); //FIXME
+	//TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
 
 	// reconstructed, subtracted, matrix, efficiency, bias
 	unfold(hrec,hgen,hgenrec,f2);

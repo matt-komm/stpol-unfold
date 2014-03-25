@@ -18,10 +18,12 @@ const Double_t var_max = 1;
 const Int_t bin_x = 6;
 const Int_t bin_y = 12;
 
-//TString sample = "scanned_hists_mar10/hists/0.40000";
-
-TString sample = "scanned_hists_mar17/hists/0.40000";
+//TString sample = "scanned_hists_mar17/hists/0.40000";
 //TString sample = "scanned_hists_mar17/hists/0.60000";
 //TString sample = "scanned_hists_mar17/hists/0.80000";
+
+//TString sample = "scanned_hists_mar20/hists/0.40000";
+
+TString sample = "scanned_hists_mar21/hists/0.40000";
 
 #endif
