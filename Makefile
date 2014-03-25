@@ -12,4 +12,4 @@ unfold_scan_dice: unfold_scan_dice.cc unfold.hpp utils.hpp info.h
 calc_asymmetry: calc_asymmetry.C info.h utils.hpp
 
 clean:
-	rm unfold unfold_pseudo calc_asymmetry unfold_scan_dice
+	rm unfold unfold_pseudo calc_asymmetry unfold_systematics
