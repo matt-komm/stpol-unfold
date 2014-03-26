@@ -57,7 +57,8 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 		
 		// Order of fit results must be the same as in covariance matrix:
 		// first entry beta_signal, rest alphabetic
-		read_fitres("nominal",names,scales,uncs);
+		//read_fitres("nominal",names,scales,uncs);
+		read_fitres("syst_"+syst,names,scales,uncs);
 				
 		nbkgs = names.size()-1;
 
@@ -106,9 +107,9 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 
 
   // Calculate selection efficiency
-	Float_t overflow = hgenrec->Integral(1,bin_x,0,0);
-	Float_t total = hgenrec->Integral(1,bin_x,1,bin_y)+overflow;
-	Float_t sel_eff = hgenrec->Integral(1,bin_x,1,bin_y)/total;
+	//Float_t overflow = hgenrec->Integral(1,bin_x,0,0);
+	//Float_t total = hgenrec->Integral(1,bin_x,1,bin_y)+overflow;
+	//Float_t sel_eff = hgenrec->Integral(1,bin_x,1,bin_y)/total;
 
   //cout << "overflow: " << overflow << endl;
 	//cout << "data events: " << hrec->Integral() << endl;
