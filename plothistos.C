@@ -1,4 +1,4 @@
-#include "binnings.h"
+#include "info.h"
 #include "utils.hpp"
 #include "plotutils.hpp"
 
