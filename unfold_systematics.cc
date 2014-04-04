@@ -73,8 +73,8 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
         histo = (TH1F*)f->Get(var_y+"__"+name);
       } else {
         // FIXME normalize to nominal
-        TH1F *nominal = (TH1F*)f->Get(var_y+"__"+name);
-        histo->Scale(nominal->Integral()/histo->Integral());
+        //TH1F *nominal = (TH1F*)f->Get(var_y+"__"+name);
+        //histo->Scale(nominal->Integral()/histo->Integral());
       }
 			
 			// Scale histos
@@ -90,7 +90,8 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 		cout << "background events: " << sum_nonrot << endl;
 
 		// Read in covariance matrix
-		TFile *fcov = new TFile("fitresults/cov.root"); // FIXME systematics
+		//TFile *fcov = new TFile("fitresults/cov.root"); // FIXME systematics
+		TFile *fcov = new TFile("fitresults/cov_syst_"+syst+".root"); // FIXME systematics
 		TH2F *hcov = (TH2F*)fcov->Get("covariance");
 		// Decorrelate background templates
     decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
@@ -122,7 +123,10 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
 
   // FIXME automate this
-  Float_t tau = 2.41005e-05; // mu 0.8
+  //Float_t tau = 2.41005e-05; // mu 0.8
+  //Float_t tau = 0.0001;
+  //Float_t tau = 2.65416e-05; // ele 0.6
+  Float_t tau = 3.25254e-05; // mu 0.6
 
 	// set input distribution
 	unfold.SetInput(hrec);
@@ -132,8 +136,8 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 	if(subtractData) {
 		for(int i = 0; i < nbkgs; i++)
 		{
-			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
-			unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
 		}
 	}
 
@@ -176,9 +180,17 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 int main()
 {	
 	// load histograms
+  // mu histograms
   TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
+
+  // ele histograms
+  /*
+  TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
+  */
 
   vector<TString> systematics;
   systematics.push_back("pu__up");
@@ -190,6 +202,7 @@ int main()
   systematics.push_back("lepton_id__up");
   systematics.push_back("lepton_id__down");
   systematics.push_back("lepton_iso__up");
+  systematics.push_back("lepton_iso__down");
   systematics.push_back("lepton_trigger__up");
   systematics.push_back("lepton_trigger__down");
   systematics.push_back("mass__up");
@@ -221,11 +234,18 @@ int main()
     TString syst = (*it);
     cout << syst << endl;
     TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
+    //TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
   
     //if(syst.Contains("fraction") or syst.Contains("FSIM") or syst.Contains("ttbar_scale") or syst.Contains("ttbar_matching") or syst.Contains("wjets_shape") or syst.Contains("wjets_flat") or syst.Contains("iso")) syst = "nominal";
-    TH2F *hgenrec = (TH2F*)fmu->Get("tm__nominal"); // FIXME change to systematic
-    TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
-    TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+    TH2F *hgenrec = NULL;
+    TH2F *hgenrecele = NULL;
+    TH2F *hgenrectau = NULL;
+    hgenrec = (TH2F*)fmu->Get("tm__"+syst);
+    hgenrecele = (TH2F*)fele->Get("tm__"+syst);
+    hgenrectau = (TH2F*)ftau->Get("tm__"+syst);
+    if (hgenrec == NULL) hgenrec = (TH2F*)fmu->Get("tm__nominal");
+    if (hgenrecele == NULL) hgenrecele = (TH2F*)fele->Get("tm__nominal");
+    if (hgenrectau == NULL) hgenrectau = (TH2F*)ftau->Get("tm__nominal");
     hgenrec->Add(hgenrecele);
     hgenrec->Add(hgenrectau);
 

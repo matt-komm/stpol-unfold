@@ -113,9 +113,13 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	// Prepare unfolding
 	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
 
   //Float_t tau = 3.69986e-05; // mu 0.4
-  Float_t tau = 2.41005e-05; // mu 0.8
+  //Float_t tau = 2.41005e-05; // mu 0.8
+  Float_t tau = 3.25254e-05; // mu 0.6
+  //Float_t tau = 2.65416e-05; // ele 0.6
 
 	// set input distribution
 	unfold.SetInput(hrec);
@@ -171,14 +175,20 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 int main()
 {	
 	// load histograms
+  // mu histograms
   TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
   
   // ele histograms
-  //TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
-	//TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
+  /*
+  TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
+	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
+  */
+ 
 	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
 	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
 	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");

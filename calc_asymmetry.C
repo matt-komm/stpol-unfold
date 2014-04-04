@@ -15,8 +15,10 @@ void calc_asymmetry()
 {
 	TFile *f1 = new TFile("histos/unfolded.root");
 	TFile *f2 = new TFile("histos/pseudoexperiments.root");
-	TFile *f3 = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__reco_mu.root");
-	TFile *f5 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
+	//TFile *f3 = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
+	//TFile *f5 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
+	TFile *f3 = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+	TFile *f5 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
 
 	TH1F *hunf = (TH1F*)f1->Get("unfolded");
 	TH2F *herr = (TH2F*)f1->Get("error");

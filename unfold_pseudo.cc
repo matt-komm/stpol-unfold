@@ -180,14 +180,12 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
     } else { // signal only
       int n = random.Poisson(hrec->Integral());
       TH1F *hclone = (TH1F*)hrec->Clone();
-      /*
       // Additional smearing
       for(int ibin = 1; ibin <= bin_y; ibin++) {
       Float_t val = hclone->GetBinContent(ibin);
       Float_t err = hclone->GetBinError(ibin);
       hclone->SetBinContent(ibin, random.Gaus(val, err));
       }
-       */
 
       for(int j = 0; j < n; j++) {
         hpseudo->Fill(hclone->GetRandom());
@@ -260,7 +258,14 @@ int main()
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
-  
+  // ele histograms
+  /*
+  TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
+	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
+  */
+ 
 	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
 	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
 	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
