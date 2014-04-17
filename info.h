@@ -18,12 +18,7 @@ const Double_t var_max = 1;
 const Int_t bin_x = 6;
 const Int_t bin_y = 12;
 
-//TString sample = "scanned_hists_mar21/hists/0.40000";
-//TString sample = "scanned_hists_mar21/hists/0.60000";
-//TString sample = "scanned_hists_mar21/hists/0.80000";
-
-
-//TString sample = "scanned_hists_apr03/merged/tchpt/qcd__metmtw_nominal/hists/0.60000";
-TString sample = "scanned_hists_apr03/merged/csvt/qcd__metmtw_nominal/hists/0.60000";
+TString sample = "scanned_hists_apr10/csvt/qcd__mva_nominal/hists/0.60000";
+//TString sample = "scanned_hists_apr10/csvt/qcd__mva_nominal/hists/etajprime_topmass_default";
 
 #endif

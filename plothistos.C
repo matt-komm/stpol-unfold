@@ -31,7 +31,7 @@ plot_unfolded()
 
 	hgen_produced->SetStats(0);
 	hgen_produced->SetTitle("");
-	hgen_produced->SetMaximum(hgen_produced->GetMaximum()*1.2);
+	hgen_produced->SetMaximum(hgen_produced->GetMaximum()*1.5);
 	hgen_produced->SetMinimum(0);
 	hgen_produced->GetXaxis()->SetTitle(varname);
 	hgen_produced->GetYaxis()->SetTitle("Events");

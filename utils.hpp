@@ -1,6 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include "TH2F.h"
+#include "TH1F.h"
 #include "TMath.h"
 #include "TMatrix.h"
 #include "TString.h"
