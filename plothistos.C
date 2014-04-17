@@ -1,4 +1,4 @@
-#include "binnings.h"
+#include "info.h"
 #include "utils.hpp"
 #include "plotutils.hpp"
 
@@ -6,17 +6,24 @@ plot_unfolded()
 {
 	TCanvas *cunf = new TCanvas("unfolded","unfolded",800,600);
 	TFile *f1 = new TFile("histos/unfolded.root");
-	TFile *f2 = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
+	TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
+	TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
+	TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 
 	TH1D *hunf = (TH1D*)f1->Get("unfolded");
-  TH2F *hgenrec = (TH2F*)f2->Get("tm__pdgid_13__nominal");
-	TH1F *hgen = (TH1F*)f2->Get("tm__pdgid_13__nominal__proj_x");
+  TH2F *hgenrec = (TH2F*)fmu->Get("tm__nominal");
+  TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
+  TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+  hgenrec->Add(hgenrecele);
+  hgenrec->Add(hgenrectau);
+
+	//TH1F *hgen = (TH1F*)f2->Get("tm__nominal__proj_x");
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
   TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
 
   // Normalize to one
-//	hgen_produced->Scale(1.0/hgen_produced->Integral());
-//	hunf->Scale(1.0/hunf->Integral());
+	hgen_produced->Scale(1.0/hgen_produced->Integral());
+	hunf->Scale(1.0/hunf->Integral());
 
 	// color
   hunf->SetLineColor(kRed+1);
@@ -24,7 +31,7 @@ plot_unfolded()
 
 	hgen_produced->SetStats(0);
 	hgen_produced->SetTitle("");
-	hgen_produced->SetMaximum(hgen_produced->GetMaximum()*1.2);
+	hgen_produced->SetMaximum(hgen_produced->GetMaximum()*1.5);
 	hgen_produced->SetMinimum(0);
 	hgen_produced->GetXaxis()->SetTitle(varname);
 	hgen_produced->GetYaxis()->SetTitle("Events");
@@ -316,9 +323,9 @@ plot_efficiency()
 plot_matrix()
 {
 	TCanvas *cmat = new TCanvas("cmat","matrix",800,600);
-	TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
+	TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
 
-  TH2F *hmat = (TH2F*)f->Get("tm__pdgid_13__nominal");
+  TH2F *hmat = (TH2F*)f->Get("tm__nominal");
 
 	Int_t nbinsx = hmat->GetNbinsX();
 	Int_t nbinsy = hmat->GetNbinsY();

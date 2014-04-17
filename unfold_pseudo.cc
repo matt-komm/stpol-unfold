@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "utils.hpp"
-#include "binnings.h"
+#include "info.hpp"
 #include "unfold.hpp"
 
 using namespace std;
@@ -28,17 +28,17 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	gErrorIgnoreLevel = kError;
 
 	cout << "using TUnfold " << TUnfold_VERSION << endl;
-	
+
 	// dummy canvas
 	TCanvas *c1 = new TCanvas("canvas","canvas");
 	c1->Clear();
-	
+
 	TRandom3 random(0);
 
 	TH1::SetDefaultSumw2(true);
 
 	TFile *fo = new TFile("histos/pseudoexperiments.root","RECREATE");
-	
+
 	//bool subtractData = true;
 	bool subtractData = false;
 
@@ -65,7 +65,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		// Order of fit results must be the same as in covariance matrix:
 		// first entry beta_signal, rest alphabetic
 		read_fitres("nominal",names,scales,uncs);
-				
+
 		nbkgs = names.size()-1;
 
 		hsignal = (TH1F*)f->Get(var_y+"__tchan");
@@ -76,10 +76,10 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		for(int i = 0; i < nbkgs ; i++) {
 			TString name = names.at(i+1);
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
-			
+
 			// Scale histos
 			histo->Scale(scales[i+1]);
-			
+
 			sum_nonrot += histo->Integral();
 			bkghistos.push_back((TH1F*)histo);
 
@@ -97,7 +97,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	}
 
 	cout << "Unfolding: " + varname << endl;
-		
+
 	// Prepare unfolding
 	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
 
@@ -130,7 +130,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		hPull[i-1] = new TH1F(pname,pname,60,-3.0,3.0);
 		hBin[i-1] = new TH1F(bname,bname,100,-1.0,1.0);
 	}
-	
+
 	// do PEs
   cout << "Dicing " << NPSEUDO << " pseudo events..." << endl;
   TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
@@ -180,14 +180,12 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
     } else { // signal only
       int n = random.Poisson(hrec->Integral());
       TH1F *hclone = (TH1F*)hrec->Clone();
-      /*
       // Additional smearing
       for(int ibin = 1; ibin <= bin_y; ibin++) {
       Float_t val = hclone->GetBinContent(ibin);
       Float_t err = hclone->GetBinError(ibin);
       hclone->SetBinContent(ibin, random.Gaus(val, err));
       }
-       */
 
       for(int j = 0; j < n; j++) {
         hpseudo->Fill(hclone->GetRandom());
@@ -204,7 +202,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
     Double_t corr = unfold.DoUnfold(tau,hpseudo,scaleBias);
     sum_corr += corr;
-    
+
     TH1F *hupseudo = new TH1F("upseudo","pseudo unfolded",bin_x,var_min,var_max);
     unfold.GetOutput(hupseudo);
 
@@ -213,7 +211,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
     TH2F *hperr = new TH2F("perror","perror",bin_x,1,bin_x,bin_x,1,bin_x);
     unfold.GetEmatrix(hperr);
     // Add migration matrix stat. error
-    unfold.GetEmatrixSysUncorr(hperr, 0, false); 
+    unfold.GetEmatrixSysUncorr(hperr, 0, false);
 
     // Calculate asymmetry
     Float_t asy = asymmetry(hupseudo);
@@ -253,21 +251,32 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 }
 
 int main()
-{	
+{
 	// load histograms
   // mu histograms
-  TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
-	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
-  
+  TFile *fmu = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_tau.root");
+	TFile *f2 = new TFile("histos/"+sample+"/merged/cos_theta_lj.root");
   // ele histograms
-  //TFile *f = new TFile("histos/"+sample+"/mu/tmatrix_nocharge.root");
-	//TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
-	
-	TH2F *hgenrec = (TH2F*)f->Get("tm__pdgid_13__nominal");
+  /*
+  TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
+  TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+  TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
+	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
+  */
+
+	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
+	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
+	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+
+  TH2F *hgenrec = (TH2F*)hgenrecmu->Clone();
+  hgenrec->Add(hgenrecele);
+  hgenrec->Add(hgenrectau);
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
 
-	//TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan"); //FIXME
-	TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
+	TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan"); //FIXME
+	//TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
 
 	// reconstructed, subtracted, matrix, efficiency, bias
 	unfold(hrec,hgen,hgenrec,f2);
