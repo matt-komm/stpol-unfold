@@ -17,3 +17,49 @@ calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
 
 clean:
 	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst
+
+do_unfold:
+	rm -f histos/src
+	ln -s ../../../results/hists/remade_tchpt/0.06000/mu/ histos/src
+	./unfold
+	cp histos/unfolded.root results/tchpt_mu_0_06.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.20000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_2.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.40000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_4.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.60000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_6.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.80000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_8.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.20000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_2.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.40000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_4.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.60000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_6.root
+	
+	rm -f histos/src
+	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.80000/mu histos/src
+	./unfold
+	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_8.root
