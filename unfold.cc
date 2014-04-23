@@ -35,7 +35,9 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	TFile *fo = new TFile("histos/unfolded.root","RECREATE");
 
 	bool subtractData = true;
-	//bool subtractData = false;
+
+    //For closure tests, i.e. running on the projection or t-channel template only	
+    //bool subtractData = false;
 
 	// Background subtraction
 	vector<TString> names;
@@ -110,8 +112,8 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	cout << "Unfolding: " + varname << endl;
 
 	// Prepare unfolding
-	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
-	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
+	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
 
@@ -142,7 +144,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 
 	Float_t corr;
-	corr = unfold.DoUnfold(tau,hrec, scaleBias);
+	corr = unfold.DoUnfold(tau, hrec, scaleBias);
 
 	cout << "global correlation: " << corr << endl;
 
@@ -185,7 +187,7 @@ int main()
   TFile *fmu = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_tau.root");
-	TFile *f2 = new TFile("histos/"+sample+"/merged/cos_theta_lj.root");
+  TFile *f2 = new TFile("histos/"+sample+"/merged/cos_theta_lj.root");
 
   // ele histograms
   /*
@@ -247,9 +249,13 @@ int main()
 
 	// DATA
 	TH1F *hrec = (TH1F*)f2->Get(var_y+"__DATA");
+    
+    //Closure tests	
+    //TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
+	//TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan");
 
 	// reconstructed, generated, matrix, histo file
   unfold(hrec,hgen,hgenrec,f2);
-
+  std::cout << "all done..." << std::endl;
   return 0;
 }
