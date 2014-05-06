@@ -12,54 +12,65 @@ all: unfold
 unfold: unfold.cc info.hpp utils.hpp
 	c++ -Wall -O2 -I/Users/joosep/Documents/tunfold  `root-config --cflags --libs`  -L/Users/joosep/Documents/tunfold -lunfold0 -lMinuit -lXMLParser unfold.cc info.hpp utils.hpp
 	mv a.out unfold
+
+unfold_pseudo: unfold_pseudo.cc info.hpp utils.hpp
+	c++ -Wall -O2 -I/Users/joosep/Documents/tunfold  `root-config --cflags --libs`  -L/Users/joosep/Documents/tunfold -lunfold0 -lMinuit -lXMLParser unfold_pseudo.cc info.hpp utils.hpp
+	mv a.out unfold_pseudo
+
 calc_asymmetry: calc_asymmetry.C info.hpp utils.hpp
 calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
 
 clean:
 	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst
 
-do_unfold:
-	rm -f histos/src
-	ln -s ../../../results/hists/remade_tchpt/0.06000/mu/ histos/src
-	./unfold
-	cp histos/unfolded.root results/tchpt_mu_0_06.root
+do_unfold_mu:
+	cp ../../results/fits/apr21/bdt/mu_cov.root fitresults/cov.root
+	cp ../../results/fits/apr21/bdt/mu.txt fitresults/nominal.txt
 	
+#	rm -f histos/src
+#	ln -s ../../../results/hists/apr29/0.90000/mu/ histos/src
+#	./unfold
+#	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_9__mu.root
+
 	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.20000/mu histos/src
+	ln -s ../../../results/hists/apr29/0.80000/mu/ histos/src
 	./unfold
-	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_2.root
+	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_8__mu.root
 	
+#	rm -f histos/src
+#	ln -s ../../../results/hists/apr29/0.60000/mu/ histos/src
+#	./unfold
+#	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_6__mu.root
+#
+#	rm -f histos/src
+#	ln -s ../../../results/hists/apr29/0.40000/mu/ histos/src
+#	./unfold
+#	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_4__mu.root
+
+
+do_unfold_ele:
+	cp ../../results/fits/apr21/bdt/ele_cov.root fitresults/cov.root
+	cp ../../results/fits/apr21/bdt/ele.txt fitresults/nominal.txt
+
 	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.40000/mu histos/src
+	ln -s ../../../results/hists/apr29/0.80000/ele/ histos/src
 	./unfold
-	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_4.root
+	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_8__ele.root
 	
+#	rm -f histos/src
+#	ln -s ../../../results/hists/apr29/0.60000/ele/ histos/src
+#	./unfold
+#	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_6__ele.root
+#
+#	rm -f histos/src
+#	ln -s ../../../results/hists/apr29/0.40000/ele/ histos/src
+#	./unfold
+#	cp histos/unfolded.root results/csvt__qcd_mva__bdt_0_4__ele.root
+
+do_unfold_mu_tchpt:
+	cp ../../results/fits/remade_tchpt/bdt/mu_cov.root fitresults/cov.root
+	cp ../../results/fits/remade_tchpt/bdt/mu.txt fitresults/nominal.txt
 	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.60000/mu histos/src
+	ln -s ../../../results/hists/remade_tchpt_2/0.06000/mu/ histos/src
 	./unfold
-	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_6.root
-	
-	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_metmtw/0.80000/mu histos/src
-	./unfold
-	cp histos/unfolded.root results/csvt_qcd_metmtw_bdt_0_8.root
-	
-	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.20000/mu histos/src
-	./unfold
-	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_2.root
-	
-	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.40000/mu histos/src
-	./unfold
-	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_4.root
-	
-	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.60000/mu histos/src
-	./unfold
-	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_6.root
-	
-	rm -f histos/src
-	ln -s ../../../results/hists/apr16/csvt_qcd_mva/0.80000/mu histos/src
-	./unfold
-	cp histos/unfolded.root results/csvt_qcd_mva_bdt_0_8.root
+	cp histos/unfolded.root results/tchpt_0_06__mu.root
