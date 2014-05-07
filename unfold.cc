@@ -214,7 +214,6 @@ float unfold_pseudo(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
         minimizeRhoAverage(&unfold, hpseudo, 1000, -6, -1); // mu
         //minimizeRhoAverage(&unfold, hrec, 1000, -6, 0); // ele
         const float tau = unfold.GetTau();
-        
         tau_vec.push_back(tau);
         sum_tau += tau;
 
@@ -376,9 +375,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
     //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
     //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
 
-    const float tau = 5 * unfold_pseudo(hrec, hgen, hgenrec, f);
-
-    //const float tau = 1E-4;
+    eonst float tau = unfold_pseudo(hrec, hgen, hgenrec, f);
     //const float tau = 1E-4/2;
     //const float tau = 1E-4/4;
 
