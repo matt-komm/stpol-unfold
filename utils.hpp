@@ -20,7 +20,7 @@ void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scale
 {
         TString name;
         Float_t scale, unc;
-        
+
 	//cout << "reading fit results: " << fresult << endl;
 
         ifstream ifs;
@@ -33,17 +33,17 @@ void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scale
                 names.push_back(name);
                 scales.push_back(scale);
                 uncs.push_back(unc);
-		//cout << name << " " << scale << " " << unc << endl;
-        } 
+		        cout << "fit result: " << name << " " << scale << " " << unc << endl;
+        }
         ifs.close();
-        
+
 }
 
 void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos, vector<Float_t> &eigenerrors) {
 	Int_t nbkgs = bkghistos.size();
 	// Decorrelate background templates
 	// Read in covariance matrix
-	
+
 	TMatrixD covmatrix(nbkgs,nbkgs);
 
 	// Fill cov matrix, skip first entry with beta_signal
@@ -55,11 +55,11 @@ void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos,
 
 	TVectorD eigenvalues(nbkgs);
 	TMatrixD eigenvectors = covmatrix.EigenVectors(eigenvalues);
-	
+
 	// Unit vector
 	TVectorD unitvec(nbkgs);
 	for(int i = 0; i < nbkgs; i++) unitvec[i] = 1;
-	
+
 	// Inverted eigenvectors
 	TMatrixD inv_eigenvectors(eigenvectors);
 	inv_eigenvectors.Invert();
@@ -67,7 +67,7 @@ void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos,
 	unitvec *= inv_eigenvectors;
 	// Scale vector to keep norm
 	TVectorD scale_vector(unitvec);
-	
+
 	// Apply scale factors to eigenvectors
 	for(int i = 0; i < nbkgs; i++)
 	{
@@ -104,7 +104,7 @@ void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos,
 void fill_nooverflow_1d(TH1* h, double val, double weight)
 {
 	if(val > h->GetXaxis()->GetXmax()) val = h->GetXaxis()->GetXmax()-0.00001;
-	if(val < h->GetXaxis()->GetXmin()) val = h->GetXaxis()->GetXmin()+0.00001; 
+	if(val < h->GetXaxis()->GetXmin()) val = h->GetXaxis()->GetXmin()+0.00001;
 	h->Fill(val, weight);
 }
 
@@ -116,11 +116,11 @@ void fill_nooverflow_2d(TH2* h, double valx, double valy, double weight)
 	const double ymin = h->GetYaxis()->GetXmin();
 
 	if(valx > xmax) valx =xmax-0.00001;
-	if(valx < xmin) valx = xmin+0.00001; 
+	if(valx < xmin) valx = xmin+0.00001;
 
 	if(valy > ymax) valy = ymax-0.00001;
-	if(valy < ymin) valy = ymin+0.00001; 
-  
+	if(valy < ymin) valy = ymin+0.00001;
+
 	h->Fill(valx, valy, weight);
 }
 
@@ -171,14 +171,14 @@ Float_t error_unfold(TH2F* errmat, TH1F* unf)
 
 	for(Int_t i = 0; i < bin_last; i++)
 		error += vecT.GetBinContent(i)*vec.GetBinContent(i);
-	
+
 	error = TMath::Sqrt(error);
 
 	return error;
 }
 
 Double_t asymmetry(TH1F *hist)
-{	
+{
 	// Underflow and overflow should not be filled
 	//cout << hist->GetBinContent(0) << endl;
 	//cout << hist->GetBinContent(hist->GetNbinsX()+1) << endl;
