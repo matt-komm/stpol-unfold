@@ -72,7 +72,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 			
 			// Scale histos
-			histo->Scale(scales[i+1]);
+			//histo->Scale(scales[i+1]);
 			preds.push_back(histo->Integral());
 			
 			sum_nonrot += histo->Integral();
@@ -132,11 +132,14 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 
 	// subtract backgrounds
+  // FIXME errors need to be relative!
 	if(subtractData) {
 		for(int i = 0; i < nbkgs; i++)
 		{
-			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
 			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			
+      unfold.SubtractBackground(bkghistos[i],names[i+1], scales[i+1], uncs[i+1]/scales[i+1]); // FIXME Test subtracting nominal histos
 		}
 	}
 

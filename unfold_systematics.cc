@@ -78,7 +78,7 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
       }
 			
 			// Scale histos
-			histo->Scale(scales[i+1]);
+			//histo->Scale(scales[i+1]);
 			preds.push_back(histo->Integral());
 
       //cout << histo->Integral() << endl;
@@ -136,8 +136,10 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 	if(subtractData) {
 		for(int i = 0; i < nbkgs; i++)
 		{
-			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
 			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			
+      unfold.SubtractBackground(bkghistos[i],names[i+1],scales[i+1], uncs[i+1]/scales[i+1]); // FIXME
 		}
 	}
 
