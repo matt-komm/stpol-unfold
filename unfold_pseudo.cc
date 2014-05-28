@@ -18,8 +18,8 @@
 using namespace std;
 
 // Number of pseudo experiments
-#define NPSEUDO 50000
-//#define NPSEUDO 1000
+//#define NPSEUDO 50000
+#define NPSEUDO 1000
 
 
 void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
@@ -78,7 +78,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 			
 			// Scale histos
-			histo->Scale(scales[i+1]);
+			//histo->Scale(scales[i+1]);
 			
 			sum_nonrot += histo->Integral();
 			bkghistos.push_back((TH1F*)histo);
@@ -106,7 +106,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 		for(int i = 0; i < nbkgs; i++)
 		{
 			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
-			unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			unfold.SubtractBackground(bkghistos[i],names[i+1], scales[i+1], uncs[i+1]/scales[i+1]); // FIXME Test subtracting nominal histos
 		}
 	}
 
@@ -150,7 +150,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
         TH1F *hclone = (TH1F*)heigen->Clone();
 
         //Float_t bla = random.Gaus(heigen->Integral(),eigenerrors[i]*heigen->Integral());
-        Float_t bla = random.Gaus(heigen->Integral(),uncs[i+1]*heigen->Integral()); // FIXME test dicing nominal
+        Float_t bla = random.Gaus(heigen->Integral(),uncs[i+1]/scales[i+1]*heigen->Integral()); // FIXME test dicing nominal
 
         int n = random.Poisson(bla);
 
@@ -258,8 +258,8 @@ int main()
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
-  // ele histograms
   /*
+  // ele histograms
   TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
