@@ -164,17 +164,17 @@ class Subtraction(TransformationFunction):
         return numpy.add(args[0],-args[1])
 
 class Unfolding(TransformationFunction):
-    def __init__(self,responseMatrix):
+    def __init__(self,invertedResponseMatrix):
         TransformationFunction.__init__(self)
-        self._responseMatrix=responseMatrix
+        self._invertedResponseMatrix=invertedResponseMatrix
         
     def getJacobian(self,*args):
-        return self._responseMatrix
+        return self._invertedResponseMatrix
 
     def transform(self,*args):
         if (len(args)!=1):
             raise NotImplemented
-        return numpy.dot(self._responseMatrix,args[0])
+        return numpy.dot(self._invertedResponseMatrix,args[0])
         
 class Asymmetry(TransformationFunction):
     def __init__(self):
@@ -197,8 +197,41 @@ class Asymmetry(TransformationFunction):
         #just return this double array so no problems with the distribution may arise
         return numpy.array([asymmetry,asymmetry])
         
-        
+def readResponseFromHistogramAndInvert(rootHist):
+    rebinnedHist=rootHist.Rebin2D(rootHist.GetNbinsX()/2,rootHist.GetNbinsY()/2,"rebinned"+rootHist.GetName())
+    response = numpy.zeros((2,2))
+    efficiency= numpy.zeros(2)
+    truth = numpy.zeros(2)
+    measured = numpy.zeros(2)
+    for igen in range(rebinnedHist.GetNbinsX()):
+        for ireco in range(rebinnedHist.GetNbinsY()):
+            response[igen,ireco]=rebinnedHist.GetBinContent(igen+1,ireco+1)/rebinnedHist.Integral(igen+1,igen+1,1,2)
+        truth[igen]=rebinnedHist.Integral(igen+1,igen+1,0,2)
+        measured[igen]=rebinnedHist.Integral(1,2,igen+1,igen+1)
+        efficiency[igen]=1.0-rebinnedHist.GetBinContent(igen+1,0)/rebinnedHist.Integral(igen+1,igen+1,0,2)
+    efficiencyMatrix=numpy.array([[efficiency[0],0.0],[0.0,efficiency[1]]])
+    responseAndEfficiency=numpy.dot(efficiencyMatrix,response)
+    invertedResponse=numpy.linalg.inv(responseAndEfficiency).T # not clear why it needs to be transposed but it works only this way
+    #'''
+    #debug
+    print "truth=",truth
+    print "measured=",measured
+    print "efficiency=",efficiency
+    print "response=",response
+    print "inverted=",invertedResponse
+    print "unfolded=",numpy.dot(invertedResponse,measured)
+    #'''
+    #sanity check
+    deltaMeasured = measured-numpy.dot(response,numpy.dot(efficiencyMatrix,truth))
+    if (deltaMeasured[0]+deltaMeasured[1]>0.01):
+        raise Exception("response matrix not properly defined")
+    deltaTruth = truth-numpy.dot(invertedResponse,measured)
+    if (deltaTruth[0]+deltaTruth[1]>0.01):
+        raise Exception("inverted response matrix not properly defined")
+    return invertedResponse    
+    
 if __name__=="__main__":
+    
     #measured data with 1000 in first and 2000 in second bin, assume poisson uncertainties
     data = DataDistribution(1000,2000,True,0.0)
     
@@ -222,8 +255,15 @@ if __name__=="__main__":
     print "-----------------------"
     
     #unfold the measured distribution
-    responseMatrix=numpy.array([[283.2637427,-32.23640403],[-92.50766353,210.2191294]])
-    unfolded= CompoundDistribution(Unfolding(responseMatrix),measured)
+    testResponse=ROOT.TH2F("testresponse","",2,-1,1,2,-1,1)
+    testResponse.SetBinContent(1 , 0 ,  208706.312561)
+    testResponse.SetBinContent(1 , 1 ,  779.808402828)
+    testResponse.SetBinContent(1 , 2 ,  343.157416447)
+    testResponse.SetBinContent(2 , 0 ,  532897.071256)
+    testResponse.SetBinContent(2 , 1 ,  305.399707367)
+    testResponse.SetBinContent(2 , 2 ,  2683.5705404)
+    invertedResponseMatrix=readResponseFromHistogramAndInvert(testResponse)
+    unfolded= CompoundDistribution(Unfolding(invertedResponseMatrix),measured)
     print "u1=",unfolded.getMean(0)," +- ",unfolded.getUncertainty(0)
     print "u1=",unfolded.getMeanSampled(0)," +- ",unfolded.getUncertaintySampled(0)," (toys)"
     print "u2=",unfolded.getMean(1)," +- ",unfolded.getUncertainty(1)
