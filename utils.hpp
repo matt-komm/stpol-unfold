@@ -18,25 +18,25 @@ typedef TMatrixT<double>	TMatrixD;
 
 void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scales, vector<Float_t> &uncs)
 {
-        TString name;
-        Float_t scale, unc;
-        
-	//cout << "reading fit results: " << fresult << endl;
+  TString name;
+  Float_t scale, unc;
 
-        ifstream ifs;
-        ifs.open("fitresults/"+fresult+".txt");
-        if(!ifs.good()) {
-                cout << "Could not open fit results file! " << fresult << endl;
-                exit(1);
-        }
-        while (ifs >> name >> scale >> unc) {
-                names.push_back(name);
-                scales.push_back(scale);
-                uncs.push_back(unc);
-		//cout << name << " " << scale << " " << unc << endl;
-        } 
-        ifs.close();
-        
+  //cout << "reading fit results: " << fresult << endl;
+
+  ifstream ifs;
+  ifs.open("fitresults/"+fresult+".txt");
+  if(!ifs.good()) {
+    cout << "Could not open fit results file! " << fresult << endl;
+    exit(1);
+  }
+  while (ifs >> name >> scale >> unc) {
+    names.push_back(name);
+    scales.push_back(scale);
+    uncs.push_back(unc);
+    //cout << name << " " << scale << " " << unc << endl;
+  } 
+
+  ifs.close();
 }
 
 void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos, vector<Float_t> &eigenerrors) {
@@ -96,7 +96,7 @@ void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos,
 		//cout << "eigenhisto" << i << " " << eigenhisto->Integral() << endl;
 		eigenerrors.push_back(sqrt(eigenvalues[i]));
 		// eigenerrors
-		//cout << eigenerrors[i] << endl;
+		//cout << eigenvalues[i] << " " << eigenerrors[i] << endl;
 	}
 	//cout << "background events rotated: " << sum_rot << endl;
 }

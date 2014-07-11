@@ -122,12 +122,6 @@ void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TFile *f)
 	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
 
-  // FIXME automate this
-  //Float_t tau = 2.41005e-05; // mu 0.8
-  //Float_t tau = 0.0001;
-  //Float_t tau = 2.65416e-05; // ele 0.6
-  Float_t tau = 3.25254e-05; // mu 0.6
-
 	// set input distribution
 	unfold.SetInput(hrec);
 	
@@ -183,16 +177,16 @@ int main()
 {	
 	// load histograms
   // mu histograms
+  /*
   TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
+  */
 
   // ele histograms
-  /*
   TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
-  */
 
   vector<TString> systematics;
   systematics.push_back("pu__up");

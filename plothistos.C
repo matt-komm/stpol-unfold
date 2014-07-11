@@ -19,11 +19,12 @@ plot_unfolded()
 
 	//TH1F *hgen = (TH1F*)f2->Get("tm__nominal__proj_x");
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
+  hgen->Rebin(4);
   TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
 
   // Normalize to one
-	hgen_produced->Scale(1.0/hgen_produced->Integral());
-	hunf->Scale(1.0/hunf->Integral());
+	//hgen_produced->Scale(1.0/hgen_produced->Integral());
+	//hunf->Scale(1.0/hunf->Integral());
 
 	// color
   hunf->SetLineColor(kRed+1);

@@ -18,7 +18,14 @@ const Double_t var_max = 1;
 const Int_t bin_x = 6;
 const Int_t bin_y = 12;
 
-TString sample = "scanned_hists_apr10/csvt/qcd__mva_nominal/hists/0.60000";
-//TString sample = "scanned_hists_apr10/csvt/qcd__mva_nominal/hists/etajprime_topmass_default";
+//const Int_t bin_x = 12;
+//const Int_t bin_y = 24;
+
+//TString sample = "scanned_hists_may29/hists/0.60000";
+TString sample = "scanned_hists_jun13/hists/0.60000";
+
+const Float_t tau = 2.63086e-05;
+//const Float_t tau = 2.80988e-05; // new mu
+//const Float_t tau = 2.24251e-05; // new ele
 
 #endif

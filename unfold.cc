@@ -64,6 +64,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 		hsignal = (TH1F*)f->Get(var_y+"__tchan");
     if(hsignal == NULL) throw;
+    hsignal->Rebin(4);
 		hsignal->Scale(scales[0]);
 
 		// Read in background histograms
@@ -71,6 +72,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 			TString name = names.at(i+1);
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 			
+      histo->Rebin(4);
 			// Scale histos
 			//histo->Scale(scales[i+1]);
 			preds.push_back(histo->Integral());
@@ -115,20 +117,12 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
 
-  //Float_t tau = 3.69986e-05; // mu 0.4
-  //Float_t tau = 2.41005e-05; // mu 0.8
-  //Float_t tau = 3.25254e-05; // mu 0.6
-  //Float_t tau = 2.65416e-05; // ele 0.6
-
-  //Float_t tau = 2.43043e-05; // mu cut based
-  Float_t tau = 2.81052e-05; // new mu 0.6
-
 	// set input distribution
 	unfold.SetInput(hrec);
 	
 	// set different bias dist
-  //TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
-	//unfold.SetBias(hgen_produced);
+  TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
+	unfold.SetBias(hgen_produced);
 
 
 	// subtract backgrounds
@@ -194,10 +188,15 @@ int main()
 	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
   */
  
+  // load all transfer matrices
 	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
 	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
 	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
 	
+  hgenrecmu->Rebin2D(4,4);
+  hgenrecele->Rebin2D(4,4);
+  hgenrectau->Rebin2D(4,4);
+
   TH2F *hgenrec = (TH2F*)hgenrecmu->Clone();
   hgenrec->Add(hgenrecele);
   hgenrec->Add(hgenrectau);
@@ -246,6 +245,7 @@ int main()
 
 	// DATA
 	TH1F *hrec = (TH1F*)f2->Get(var_y+"__DATA");
+  hrec->Rebin(4);
 	
 	// reconstructed, generated, matrix, histo file
   unfold(hrec,hgen,hgenrec,f2);
