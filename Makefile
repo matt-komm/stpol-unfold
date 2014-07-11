@@ -1,11 +1,21 @@
 CC=g++
 #UNFOLD_DIR=/Users/joosep/Documents/tunfold
 
+#<<<<<<< HEAD
 #the full path to compiled TUnfold
 UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
 
 CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs`
 LDFLAGS=-L$(UNFOLD_DIR) -lunfold -lMinuit -lXMLParser
+#=======
+#all: unfold unfold_pseudo unfold_systematics calc_asymmetry calc_asymmetry_syst closure unfold_pseudo2
+#
+#unfold: unfold.cc info.h utils.hpp
+#unfold_pseudo: unfold_pseudo.cc info.h utils.hpp
+#unfold_pseudo2: unfold_pseudo2.cc info.h utils.hpp
+#unfold_systematics: unfold_systematics.cc info.h utils.hpp
+#unfold_scan_dice: unfold_scan_dice.cc unfold.hpp utils.hpp info.h
+#>>>>>>> remotes/steffen/master
 
 all: unfold
 
@@ -25,6 +35,8 @@ unfold_pseudo: unfold_pseudo.cc info.hpp utils.hpp
 
 calc_asymmetry: calc_asymmetry.C info.hpp utils.hpp
 calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
+
+closure: closure.C info.h utils.hpp
 
 clean:
 	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst

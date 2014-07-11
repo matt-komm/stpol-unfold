@@ -36,7 +36,6 @@ void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scale
 		        cout << "fit result: " << name << " " << scale << " " << unc << endl;
         }
         ifs.close();
-
 }
 
 void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos, vector<Float_t> &eigenerrors) {
@@ -96,7 +95,7 @@ void decorrelate(TH2F* cov, vector<TH1F*> bkghistos, vector<TH1F*> &eigenhistos,
 		//cout << "eigenhisto" << i << " " << eigenhisto->Integral() << endl;
 		eigenerrors.push_back(sqrt(eigenvalues[i]));
 		// eigenerrors
-		//cout << eigenerrors[i] << endl;
+		//cout << eigenvalues[i] << " " << eigenerrors[i] << endl;
 	}
 	//cout << "background events rotated: " << sum_rot << endl;
 }

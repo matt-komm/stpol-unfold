@@ -279,8 +279,6 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	// only show errors
 	// gErrorIgnoreLevel = kError;
 
-	cout << "using TUnfold " << TUnfold_VERSION << endl;
-	
 	// dummy canvas
 	TCanvas *c1 = new TCanvas("canvas","canvas");
 	c1->Clear();
@@ -321,6 +319,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 		hsignal = (TH1F*)f->Get(var_y+"__tchan");
     if(hsignal == NULL) throw;
+    hsignal->Rebin(4);
 		hsignal->Scale(scales[0]);
 
 		// Read in background histograms
@@ -328,6 +327,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 			TString name = names.at(i+1);
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 			
+      histo->Rebin(4);
 			// Scale histos
 			//histo->Scale(scales[i+1]);
 			preds.push_back(histo->Integral());
@@ -375,14 +375,6 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
 	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
-
-  //Float_t tau = 3.69986e-05; // mu 0.4
-  //Float_t tau = 2.41005e-05; // mu 0.8
-  //Float_t tau = 3.25254e-05; // mu 0.6
-  //Float_t tau = 2.65416e-05; // ele 0.6
-
-  //Float_t tau = 2.43043e-05; // mu cut based
-  Float_t tau = 2.63086e-05;
 
 	// set input distribution
 	unfold.SetInput(hrec);
@@ -439,6 +431,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 }
 
 int main()
+//<<<<<<< HEAD
 {
 
     cout << "using TUnfold " << TUnfold_VERSION << endl;
@@ -541,4 +534,83 @@ int main()
     fo->Close(); 
     std::cout << "all done..." << std::endl;
     return 0;
+//=======
+//{	
+//	// load histograms
+//  // mu histograms
+//  TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
+//  TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
+//  TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
+//	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
+//  
+//  // ele histograms
+//  /*
+//  TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
+//  TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
+//  TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
+//	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
+//  */
+// 
+//  // load all transfer matrices
+//	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
+//	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
+//	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+//	
+//  hgenrecmu->Rebin2D(4,4);
+//  hgenrecele->Rebin2D(4,4);
+//  hgenrectau->Rebin2D(4,4);
+//
+//  TH2F *hgenrec = (TH2F*)hgenrecmu->Clone();
+//  hgenrec->Add(hgenrecele);
+//  hgenrec->Add(hgenrectau);
+//
+///*
+//  // FIXME Check with Comphep TMs
+//
+//  //TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__comphep_nominal");
+//	//TH2F *hgenrecele = (TH2F*)fele->Get("tm__comphep_nominal");
+//	//TH2F *hgenrectau = (TH2F*)ftau->Get("tm__comphep_nominal");
+//  
+//  TH2F *hgenrecmu_unphys = (TH2F*)fmu->Get("tm__comphep_anom_unphys");
+//  TH2F *hgenrecele_unphys = (TH2F*)fele->Get("tm__comphep_anom_unphys");
+//  TH2F *hgenrectau_unphys = (TH2F*)ftau->Get("tm__comphep_anom_unphys");
+//
+//  TH2F *hgenrec_unphys = (TH2F*)hgenrecmu_unphys->Clone();
+//  hgenrec_unphys->Add(hgenrecele_unphys);
+//  hgenrec_unphys->Add(hgenrectau_unphys);
+//  
+//  TH2F *hgenrecmu_bsm = (TH2F*)fmu->Get("tm__comphep_anom_0100");
+//  TH2F *hgenrecele_bsm = (TH2F*)fele->Get("tm__comphep_anom_0100");
+//  TH2F *hgenrectau_bsm = (TH2F*)ftau->Get("tm__comphep_anom_0100");
+//  
+//  TH2F *hgenrec_bsm = (TH2F*)hgenrecmu_bsm->Clone();
+//  hgenrec_bsm->Add(hgenrecele_bsm);
+//  hgenrec_bsm->Add(hgenrectau_bsm);
+//
+//  Double_t V_L = 1.0;
+//  Double_t V_R = 0.3;
+//
+//  Double_t wtot = (pow(V_L,2) + pow(V_R,2));
+//  Double_t m = pow(V_L,4)/wtot;
+//  Double_t n = pow(V_L,2)*pow(V_R,2)/wtot;
+//  Double_t k = pow(V_R,4)/wtot;
+//
+//  hgenrec->Scale(m);
+//  hgenrec_unphys->Scale(n);
+//  hgenrec_bsm->Scale(k);
+//  
+//  hgenrec->Add(hgenrec_unphys);
+//  hgenrec->Add(hgenrec_bsm);
+//*/
+//
+//
+//	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
+//
+//	// DATA
+//	TH1F *hrec = (TH1F*)f2->Get(var_y+"__DATA");
+//  hrec->Rebin(4);
+//	
+//	// reconstructed, generated, matrix, histo file
+//  unfold(hrec,hgen,hgenrec,f2);
+//>>>>>>> remotes/steffen/master
 }

@@ -137,6 +137,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 		hsignal = (TH1F*)f->Get(var_y+"__tchan");
     if(hsignal == NULL) throw;
+    hsignal->Rebin(4);
 		hsignal->Scale(scales[0]);
 
 		// Read in background histograms
@@ -144,6 +145,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 			TString name = names.at(i+1);
 			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 			
+      histo->Rebin(4);
 			// Scale histos
 			//histo->Scale(scales[i+1]);
 			
@@ -206,7 +208,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
   TH1F *hpseudo = new TH1F("pseudo","pseudo", bin_y, var_min, var_max);
   for(Int_t p=1; p<=NPSEUDO; p++) {
 
-    if(p%5000 == 0) cout << p << endl;
+    if(p%500 == 0) cout << p << endl;
 
     hpseudo->Reset();
     if(subtractData) {
@@ -448,22 +450,27 @@ int main()
 =======
 {	
 	// load histograms
+  /*
   // mu histograms
   TFile *fmu = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/mu/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/mu/merged/cos_theta_lj.root");
-  /*
+  */
+
   // ele histograms
   TFile *fmu = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_mu.root");
   TFile *fele = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_ele.root");
   TFile *ftau = new TFile("histos/"+sample+"/ele/tmatrix_nocharge__gen_tau.root");
 	TFile *f2 = new TFile("histos/"+sample+"/ele/merged/cos_theta_lj.root");
-  */
  
 	TH2F *hgenrecmu = (TH2F*)fmu->Get("tm__nominal");
 	TH2F *hgenrecele = (TH2F*)fele->Get("tm__nominal");
 	TH2F *hgenrectau = (TH2F*)ftau->Get("tm__nominal");
+
+  hgenrecmu->Rebin2D(4,4);
+  hgenrecele->Rebin2D(4,4);
+  hgenrectau->Rebin2D(4,4);
 
   TH2F *hgenrec = (TH2F*)hgenrecmu->Clone();
   hgenrec->Add(hgenrecele);
@@ -471,6 +478,7 @@ int main()
 	TH1F *hgen = (TH1F*)hgenrec->ProjectionX();
 
 	TH1F *hrec = (TH1F*)f2->Get(var_y+"__tchan"); //FIXME
+  hrec->Rebin(4);
 	//TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
 
 	// reconstructed, subtracted, matrix, efficiency, bias
