@@ -39,7 +39,8 @@ void minimizeRhoAverage(TUnfoldSys *unfold, TH1F *hdata, int nsteps, double log1
   minuit.DefineParameter(1, "scaleBias", scaleBias, 0, scaleBias, scaleBias);
   minuit.FixParameter(1);
 
-  minuit.SetMaxIterations(100);
+  //minuit.SetMaxIterations(100);
+  minuit.SetMaxIterations(nsteps);
   minuit.Migrad();
 
   double bestlogtau = -1000;

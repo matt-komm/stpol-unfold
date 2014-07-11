@@ -1,7 +1,11 @@
 CC=g++
-UNFOLD_DIR=/Users/joosep/Documents/tunfold
+#UNFOLD_DIR=/Users/joosep/Documents/tunfold
+
+#the full path to compiled TUnfold
+UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
+
 CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs`
-LDFLAGS=-L$(UNFOLD_DIR) -lunfold0 -lMinuit -lXMLParser
+LDFLAGS=-L$(UNFOLD_DIR) -lunfold -lMinuit -lXMLParser
 
 all: unfold
 
@@ -9,8 +13,10 @@ all: unfold
 #unfold_pseudo: unfold_pseudo.cc info.hpp utils.hpp
 #unfold_systematics: unfold_systematics.cc info.hpp utils.hpp
 #unfold_scan_dice: unfold_scan_dice.cc unfold.hpp utils.hpp info.hpp
-unfold: unfold.cc info.hpp utils.hpp
-	c++ -Wall -O2 -I/Users/joosep/Documents/tunfold  `root-config --cflags --libs`  -L/Users/joosep/Documents/tunfold -lunfold0 -lMinuit -lXMLParser unfold.cc info.hpp utils.hpp
+
+#only works in SLC6, or new osx
+unfold: unfold.cc info.hpp utils.hpp 
+	c++ -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` $(LDFLAGS) unfold.cc info.hpp utils.hpp
 	mv a.out unfold
 
 unfold_pseudo: unfold_pseudo.cc info.hpp utils.hpp

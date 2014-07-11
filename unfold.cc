@@ -276,164 +276,323 @@ float unfold_pseudo(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 
 void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f)
 {
-    // dummy canvas
-    TCanvas *c1 = new TCanvas("canvas","canvas");
-    c1->Clear();
+//<<<<<<< HEAD
+//    // dummy canvas
+//    TCanvas *c1 = new TCanvas("canvas","canvas");
+//    c1->Clear();
+//
+//    TRandom3 random(0);
+//
+//    TH1::SetDefaultSumw2(true);
+//
+//    TFile *fo = new TFile("histos/unfolded.root","RECREATE");
+//
+//    const bool subtractData = true;
+//
+//    //For closure tests, i.e. running on the projection or t-channel template only
+//    //bool subtractData = false;
+//
+//    // Background subtraction
+//    vector<TString> names;
+//    vector<Float_t> scales, uncs, preds, eigenerrors;
+//    vector<TH1F*> bkghistos;
+//    TH1F *hsignal;
+//
+//    vector<TH1F*> eigenhistos;
+//
+//    Int_t nbkgs = 0;
+//    Float_t sum_nonrot = 0;
+//
+//    if(hrec == NULL) throw;
+//
+//    if(subtractData)
+//    {
+//
+//        // Order of fit results must be the same as in covariance matrix:
+//        // first entry beta_signal, rest alphabetic
+//        read_fitres("nominal", names, scales, uncs);
+//
+//        nbkgs = names.size() - 1;
+//
+//        hsignal = (TH1F*)f->Get(var_y+"__tchan");
+//        if(hsignal == NULL) throw;
+//
+//        if (NREBIN>1) hsignal->Rebin(NREBIN);
+//
+//        hsignal->Scale(scales[0]);
+//
+//        // Read in background histograms
+//        for(int i = 0; i < nbkgs ; i++)
+//        {
+//            TString name = names.at(i+1);
+//            TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
+//            if (NREBIN>1) histo->Rebin(NREBIN);
+//
+//            // Scale histos
+//            histo->Scale(scales[i+1]);
+//            preds.push_back(histo->Integral());
+//
+//            sum_nonrot += histo->Integral();
+//            bkghistos.push_back((TH1F*)histo);
+//
+//        }
+//        cout << "background events: " << sum_nonrot << endl;
+//
+//        // Read in covariance matrix
+//        TFile *fcov = new TFile("fitresults/cov.root");
+//        TH2F *hcov = (TH2F*)fcov->Get("covariance");
+//        // Decorrelate background templates
+//        decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
+//    }
+//
+//    // Current samples are normalized to one
+//    Float_t expected = 0;
+//
+//    // Number of expected events
+//    if(subtractData)
+//        expected = (hrec->Integral() - sum_nonrot);
+//    else
+//        expected = hrec->Integral();
+//
+//
+//    // Calculate selection efficiency
+//    Float_t overflow = hgenrec->Integral(1,bin_x,0,0);
+//    Float_t total = hgenrec->Integral(1,bin_x,1,bin_y)+overflow;
+//    Float_t sel_eff = hgenrec->Integral(1,bin_x,1,bin_y)/total;
+//
+//    //cout << "overflow: " << overflow << endl;
+//    cout << "data events: " << hrec->Integral() << endl;
+//    cout << "expected signal events: " << expected << endl;
+//    cout << "matrix integral " << hgenrec->Integral() << endl;
+//    cout << "Unfolding: " + varname << endl;
+//
+//    // Prepare unfolding
+//    TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
+//    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
+//    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
+//    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
+//
+//    eonst float tau = unfold_pseudo(hrec, hgen, hgenrec, f);
+//    //const float tau = 1E-4/2;
+//    //const float tau = 1E-4/4;
+//
+//    // set input distribution
+//    unfold.SetInput(hrec);
+//
+//    // set different bias dist
+//    //TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
+//    //unfold.SetBias(hgen_produced);
+//
+//
+//    // subtract backgrounds
+//    if(subtractData)
+//    {
+//        for(int i = 0; i < nbkgs; i++)
+//        {
+//            unfold.SubtractBackground(eigenhistos[i], names[i+1], 1.0, eigenerrors[i]);
+//            //unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+//        }
+//    }
+//
+//
+//    Float_t corr;
+//    corr = unfold.DoUnfold(tau, hrec, scaleBias);
+//
+//    cout << "global correlation: " << corr << endl;
+//
+//    fo->cd();
+//
+//    TH1F *hurec = new TH1F("unfolded","unfolded",bin_x,var_min,var_max);
+//    unfold.GetOutput(hurec);
+//
+//    cout << "selection eff: " << sel_eff << endl;
+//    cout << "reconstructed: " << expected << " unfolded: " << hurec->Integral() << endl;
+//    cout << "asymmetry: " << asymmetry(hurec) << endl;
+//
+//    // rho, error matrix
+//    TH2D *hrhoij = new TH2D("correlation","correlation",bin_x,1,bin_x,bin_x,1,bin_x);
+//    unfold.GetRhoIJ(hrhoij);
+//    TH1D *hrhoi = new TH1D("1dcorr","1dcorr",bin_x,1,bin_x);
+//    unfold.GetRhoI(hrhoi);
+//    TH2D *hematrix = new TH2D("error","error",bin_x,1,bin_x,bin_x,1,bin_x);
+//    unfold.GetEmatrix(hematrix);
+//    // Add migration matrix stat. error
+//    unfold.GetEmatrixSysUncorr(hematrix, 0, false);  // FIXME remove for mig mag statistics
+//
+//    hurec->SetEntries(hrec->GetEntries());
+//
+//    // write results
+//    hurec->Write();
+//    hrhoij->Write();
+//    hrhoi->Write();
+//    hematrix->Write();
+//
+//    hrec->Write("reco");
+//    hgen->Write("gen");
+//    hgenrec->Write("genrec");
+//    fo->Close();
+//=======
+	// only show errors
+	// gErrorIgnoreLevel = kError;
 
-    TRandom3 random(0);
+	cout << "using TUnfold " << TUnfold_VERSION << endl;
+	
+	// dummy canvas
+	TCanvas *c1 = new TCanvas("canvas","canvas");
+	c1->Clear();
+	
+	TRandom3 random(0);
 
-    TH1::SetDefaultSumw2(true);
+	TH1::SetDefaultSumw2(true);
 
-    TFile *fo = new TFile("histos/unfolded.root","RECREATE");
+	TFile *fo = new TFile("histos/unfolded.root","RECREATE");
+	
+	bool subtractData = true;
+	//bool subtractData = false;
 
-    const bool subtractData = true;
+	// Background subtraction
+	vector<TString> names;
+	vector<Float_t> scales;
+	vector<Float_t> uncs;
+	vector<Float_t> preds;
+	vector<TH1F*> bkghistos;
+	TH1F *hsignal;
 
-    //For closure tests, i.e. running on the projection or t-channel template only
-    //bool subtractData = false;
+	vector<TH1F*> eigenhistos;
+	vector<Float_t> eigenerrors;
 
-    // Background subtraction
-    vector<TString> names;
-    vector<Float_t> scales;
-    vector<Float_t> uncs;
-    vector<Float_t> preds;
-    vector<TH1F*> bkghistos;
-    TH1F *hsignal;
-
-    vector<TH1F*> eigenhistos;
-    vector<Float_t> eigenerrors;
-
-    Int_t nbkgs = 0;
-    Float_t sum_nonrot = 0;
+	Int_t nbkgs = 0;
+	Float_t sum_nonrot = 0;
 
 
-    if(hrec == NULL) throw;
+  if(hrec == NULL) throw;
 
-    if(subtractData)
-    {
+	if(subtractData) {
+		
+		// Order of fit results must be the same as in covariance matrix:
+		// first entry beta_signal, rest alphabetic
+		read_fitres("nominal",names,scales,uncs);
+				
+		nbkgs = names.size()-1;
 
-        // Order of fit results must be the same as in covariance matrix:
-        // first entry beta_signal, rest alphabetic
-        read_fitres("nominal", names, scales, uncs);
+		hsignal = (TH1F*)f->Get(var_y+"__tchan");
+    if(hsignal == NULL) throw;
+		hsignal->Scale(scales[0]);
 
-        nbkgs = names.size() - 1;
+		// Read in background histograms
+		for(int i = 0; i < nbkgs ; i++) {
+			TString name = names.at(i+1);
+			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
+			
+			// Scale histos
+			//histo->Scale(scales[i+1]);
+			preds.push_back(histo->Integral());
+			
+			sum_nonrot += histo->Integral();
+			bkghistos.push_back((TH1F*)histo);
 
-        hsignal = (TH1F*)f->Get(var_y+"__tchan");
-        if(hsignal == NULL) throw;
+		}
+		cout << "background events: " << sum_nonrot << endl;
 
-        if (NREBIN>1) hsignal->Rebin(NREBIN);
-
-        hsignal->Scale(scales[0]);
-
-        // Read in background histograms
-        for(int i = 0; i < nbkgs ; i++)
-        {
-            TString name = names.at(i+1);
-            TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
-            if (NREBIN>1) histo->Rebin(NREBIN);
-
-            // Scale histos
-            histo->Scale(scales[i+1]);
-            preds.push_back(histo->Integral());
-
-            sum_nonrot += histo->Integral();
-            bkghistos.push_back((TH1F*)histo);
-
+		// Read in covariance matrix
+		TFile *fcov = new TFile("fitresults/cov.root");
+        if (fcov->IsZombie()) {
+            cerr << "ERROR: could not open fitresults/cov.root" << endl;
+            exit(1);
         }
-        cout << "background events: " << sum_nonrot << endl;
+		TH2F *hcov = (TH2F*)fcov->Get("covariance");
+		// Decorrelate background templates
+    decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
+	}
 
-        // Read in covariance matrix
-        TFile *fcov = new TFile("fitresults/cov.root");
-        TH2F *hcov = (TH2F*)fcov->Get("covariance");
-        // Decorrelate background templates
-        decorrelate(hcov, bkghistos, eigenhistos, eigenerrors);
-    }
+	// Current samples are normalized to one
+	Float_t expected = 0;
 
-    // Current samples are normalized to one
-    Float_t expected = 0;
-
-    // Number of expected events
-    if(subtractData)
-        expected = (hrec->Integral() - sum_nonrot);
-    else
-        expected = hrec->Integral();
+	// Number of expected events
+	if(subtractData)
+		expected = (hrec->Integral() - sum_nonrot);
+	else
+		expected = hrec->Integral();
 
 
-    // Calculate selection efficiency
-    Float_t overflow = hgenrec->Integral(1,bin_x,0,0);
-    Float_t total = hgenrec->Integral(1,bin_x,1,bin_y)+overflow;
-    Float_t sel_eff = hgenrec->Integral(1,bin_x,1,bin_y)/total;
+  // Calculate selection efficiency
+	Float_t overflow = hgenrec->Integral(1,bin_x,0,0);
+	Float_t total = hgenrec->Integral(1,bin_x,1,bin_y)+overflow;
+	Float_t sel_eff = hgenrec->Integral(1,bin_x,1,bin_y)/total;
 
-    //cout << "overflow: " << overflow << endl;
-    cout << "data events: " << hrec->Integral() << endl;
-    cout << "expected signal events: " << expected << endl;
-    cout << "matrix integral " << hgenrec->Integral() << endl;
-    cout << "Unfolding: " + varname << endl;
+  //cout << "overflow: " << overflow << endl;
+	cout << "data events: " << hrec->Integral() << endl;
+	cout << "expected signal events: " << expected << endl;
+	cout << "matrix integral " << hgenrec->Integral() << endl;
+	cout << "Unfolding: " + varname << endl;
+	
+	// Prepare unfolding
+	TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
+	//TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
 
-    // Prepare unfolding
-    TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
-    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeNone); // FIXME For tests
-    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize); // FIXME For tests
-    //TUnfoldSys unfold(hgenrec,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeDerivative); // FIXME For tests
+  //Float_t tau = 3.69986e-05; // mu 0.4
+  //Float_t tau = 2.41005e-05; // mu 0.8
+  //Float_t tau = 3.25254e-05; // mu 0.6
+  //Float_t tau = 2.65416e-05; // ele 0.6
 
-    eonst float tau = unfold_pseudo(hrec, hgen, hgenrec, f);
-    //const float tau = 1E-4/2;
-    //const float tau = 1E-4/4;
+  //Float_t tau = 2.43043e-05; // mu cut based
+  Float_t tau = 2.63086e-05;
 
-    // set input distribution
-    unfold.SetInput(hrec);
-
-    // set different bias dist
-    //TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
-    //unfold.SetBias(hgen_produced);
-
-
-    // subtract backgrounds
-    if(subtractData)
-    {
-        for(int i = 0; i < nbkgs; i++)
-        {
-            unfold.SubtractBackground(eigenhistos[i], names[i+1], 1.0, eigenerrors[i]);
-            //unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
-        }
-    }
+	// set input distribution
+	unfold.SetInput(hrec);
+	
+	// set different bias dist
+  //TH1F *hgen_produced = (TH1F*)hgen->Clone("hgen_produced");
+	//unfold.SetBias(hgen_produced);
 
 
-    Float_t corr;
-    corr = unfold.DoUnfold(tau, hrec, scaleBias);
+	// subtract backgrounds
+  // FIXME errors need to be relative!
+	if(subtractData) {
+		for(int i = 0; i < nbkgs; i++)
+		{
+			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]); // FIXME Test subtracting nominal histos
+			
+      unfold.SubtractBackground(bkghistos[i],names[i+1], scales[i+1], uncs[i+1]/scales[i+1]); // FIXME Test subtracting nominal histos
+		}
+	}
 
-    cout << "global correlation: " << corr << endl;
 
-    fo->cd();
+	Float_t corr;
+	corr = unfold.DoUnfold(tau,hrec, scaleBias);
 
-    TH1F *hurec = new TH1F("unfolded","unfolded",bin_x,var_min,var_max);
-    unfold.GetOutput(hurec);
+	cout << "global correlation: " << corr << endl;
 
-    cout << "selection eff: " << sel_eff << endl;
-    cout << "reconstructed: " << expected << " unfolded: " << hurec->Integral() << endl;
-    cout << "asymmetry: " << asymmetry(hurec) << endl;
+	fo->cd();
 
-    // rho, error matrix
-    TH2D *hrhoij = new TH2D("correlation","correlation",bin_x,1,bin_x,bin_x,1,bin_x);
-    unfold.GetRhoIJ(hrhoij);
-    TH1D *hrhoi = new TH1D("1dcorr","1dcorr",bin_x,1,bin_x);
-    unfold.GetRhoI(hrhoi);
-    TH2D *hematrix = new TH2D("error","error",bin_x,1,bin_x,bin_x,1,bin_x);
-    unfold.GetEmatrix(hematrix);
-    // Add migration matrix stat. error
-    unfold.GetEmatrixSysUncorr(hematrix, 0, false);  // FIXME remove for mig mag statistics
+	TH1F *hurec = new TH1F("unfolded","unfolded",bin_x,var_min,var_max);
+	unfold.GetOutput(hurec);
 
-    hurec->SetEntries(hrec->GetEntries());
+	cout << "selection eff: " << sel_eff << endl;
+	cout << "reconstructed: " << expected << " unfolded: " << hurec->Integral() << endl;
+  cout << "asymmetry: " << asymmetry(hurec) << endl;
 
-    // write results
-    hurec->Write();
-    hrhoij->Write();
-    hrhoi->Write();
-    hematrix->Write();
+	// rho, error matrix
+	TH2D *hrhoij = new TH2D("correlation","correlation",bin_x,1,bin_x,bin_x,1,bin_x);
+	unfold.GetRhoIJ(hrhoij);
+	TH1D *hrhoi = new TH1D("1dcorr","1dcorr",bin_x,1,bin_x);
+	unfold.GetRhoI(hrhoi);
+	TH2D *hematrix = new TH2D("error","error",bin_x,1,bin_x,bin_x,1,bin_x);
+	unfold.GetEmatrix(hematrix);
+	// Add migration matrix stat. error
+	unfold.GetEmatrixSysUncorr(hematrix, 0, false);  // FIXME remove for mig mag statistics
 
-    hrec->Write("reco");
-    hgen->Write("gen");
-    hgenrec->Write("genrec");
-    fo->Close();
+	// write results
+	hurec->Write();
+	hrhoij->Write();
+	hrhoi->Write();
+	hematrix->Write();
+	
+	fo->Close();
+//>>>>>>> remotes/steffen/master
 }
 
 int main()
@@ -443,6 +602,10 @@ int main()
 
     // load histograms
     TFile *fmu = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_mu.root");
+    if (fmu->IsZombie()) {
+        cerr << "ERROR: could not open input files" << endl;
+        exit(1);
+    }
     TFile *fele = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_ele.root");
     TFile *ftau = new TFile("histos/"+sample+"/tmatrix_nocharge__gen_tau.root");
     TFile *f2 = new TFile("histos/"+sample+"/merged/cos_theta_lj.root");
@@ -508,10 +671,17 @@ int main()
     //TH1F *hrec = (TH1F*)hgenrec->ProjectionY();
     TH1F *hrec_tchan = (TH1F*)f2->Get(var_y+"__tchan");
     std::cout << "tchan " << hrec_tchan->GetEntries() << std::endl;
-    
+   
+    cout << "Rebinning hrec " << hrec->GetNbinsX() << " by " << NREBIN << endl;
     hrec->Rebin(NREBIN);
+    cout << "Rebinning hgen " << hgen->GetNbinsX() << " by " << NREBIN << endl;
     hgen->Rebin(NREBIN);
+    cout << "Rebinning hgenrec " << hgenrec->GetNbinsX() << ":" << hgenrec->GetNbinsY() << " by " << NREBIN << endl;
     hgenrec->Rebin2D(NREBIN, NREBIN);
+
+    //hgen->Print("ALL");
+    //hrec->Print("ALL");
+    //hgenrec->Print("ALL");
     // reconstructed, generated, matrix, histo file
     unfold(hrec, hgen, hgenrec, f2);
     
