@@ -24,7 +24,7 @@ void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scale
 	//cout << "reading fit results: " << fresult << endl;
 
         ifstream ifs;
-        ifs.open("fitresults/"+fresult+".txt");
+        ifs.open(fresult+".txt");
         if(!ifs.good()) {
                 cerr << "ERROR: could not open fit results file! fitresults/" << fresult << ".txt" << endl;
                 exit(1);
