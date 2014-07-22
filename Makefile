@@ -2,10 +2,10 @@ CC=g++
 
 #the full path to compiled TUnfold
 #UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
-UNFOLD_DIR=/Users/joosep/Documents/tunfold
+UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
 
 CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs`
-LDFLAGS=-L$(UNFOLD_DIR) $(UNFOLD_DIR)/libunfold0.so -lMinuit -lXMLParser
+LDFLAGS=-L$(UNFOLD_DIR) $(UNFOLD_DIR)/libunfold.so -lMinuit -lXMLParser
 
 all: unfold
 
@@ -109,3 +109,7 @@ do_unfold_ele:
 unfold_nominal:	
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ nominal fitresults/nominal/ele histos/ele__nominal.root
+
+unfold_nominal_2bin:	
+	python unfolding2bins.py $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
+	python unfolding2bins.py $(DATADIR)/ele/ nominal fitresults/nominal/ele histos/ele__nominal.root

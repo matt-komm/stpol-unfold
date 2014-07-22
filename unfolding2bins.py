@@ -1,6 +1,7 @@
 import ROOT
 import numpy
 import math
+from optparse import OptionParser
 
 #abstract distribution
 class Distribution():
@@ -87,6 +88,9 @@ class DataDistribution(Distribution):
             
     def setBin(self,index,binContent):
         self._content[index]=binContent  
+        self.setYieldUncertainty(self._yieldUncertainty)
+        self.setPoissonUncertainty(self._hasPoissonUncertainty)
+        
         
     def getMeans(self):
         return self._content
@@ -212,7 +216,7 @@ def readResponseFromHistogramAndInvert(rootHist):
     efficiencyMatrix=numpy.array([[efficiency[0],0.0],[0.0,efficiency[1]]])
     responseAndEfficiency=numpy.dot(efficiencyMatrix,response)
     invertedResponse=numpy.linalg.inv(responseAndEfficiency).T # not clear why it needs to be transposed but it works only this way
-    #'''
+    '''
     #debug
     print "truth=",truth
     print "measured=",measured
@@ -230,7 +234,9 @@ def readResponseFromHistogramAndInvert(rootHist):
         raise Exception("inverted response matrix not properly defined")
     return invertedResponse    
     
+    
 if __name__=="__main__":
+    '''
     
     #measured data with 1000 in first and 2000 in second bin, assume poisson uncertainties
     data = DataDistribution(1000,2000,True,0.0)
@@ -276,4 +282,4 @@ if __name__=="__main__":
     asymmetry=CompoundDistribution(Asymmetry(),unfolded)
     print "A=",asymmetry.getMean(0)," +- ",asymmetry.getUncertainty(0)
     print "A=",asymmetry.getMeanSampled(0)," +- ",asymmetry.getUncertaintySampled(0)," (toys)"
-    
+    '''
