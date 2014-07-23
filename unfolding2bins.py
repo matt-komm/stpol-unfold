@@ -65,47 +65,65 @@ class Distribution():
 # concrete distribution initialized with measured values and uncertainties
 class DataDistribution(Distribution):
     
-    def __init__(self,bin1,bin2,hasPoissonUncertainty=False,yieldUncertainty=0.0):
+    def __init__(self):
         Distribution.__init__(self)
-        self._content=numpy.zeros(2)
-        self._content[0]=bin1
-        self._content[1]=bin2
-        self.setPoissonUncertainty(hasPoissonUncertainty)
-        self.setYieldUncertainty(yieldUncertainty)
+        self._content=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorPoisson=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorMC=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorYield=numpy.zeros((2,2),dtype=numpy.float32)
+        self._usePoissonUncertainty=False
+        self._useMCuncertainty=False
+        self._yieldUncertainty=0.0
         
-    def setYieldUncertainty(self, yieldUncertainty):
-        self._yieldUncertainty=yieldUncertainty
-        varBin1=(self._content[0]*yieldUncertainty)**2
-        varBin2=(self._content[1]*yieldUncertainty)**2
-        self._yieldCovarianceMatrix=numpy.array([[varBin1,math.sqrt(varBin1*varBin2)],[math.sqrt(varBin1*varBin2),varBin2]],dtype=numpy.float32)
-       
-    def setPoissonUncertainty(self,hasPoissonUncertainty):
-        self._hasPoissonUncertainty=hasPoissonUncertainty
-        if (hasPoissonUncertainty):
-            self._poissonCovarianceMatrix=numpy.array([[self._content[0],0.0],[0.0,self._content[1]]],dtype=numpy.float32)
-        else:
-            self._poissonCovarianceMatrix=numpy.array([[0.0,0.0],[0.0,0.0]],dtype=numpy.float32)
-            
-    def setBin(self,index,binContent):
-        self._content[index]=binContent  
-        self.setYieldUncertainty(self._yieldUncertainty)
-        self.setPoissonUncertainty(self._hasPoissonUncertainty)
+    @staticmethod
+    def createFromHistogram(hist,usePoissonUncertainty=False,useMCuncertainty=False,yieldUncertainty=0.0):
         
+        
+        dist = DataDistribution()
+        dist._usePoissonUncertainty=usePoissonUncertainty
+        dist._useMCuncertainty=useMCuncertainty
+        dist._yieldUncertainty=yieldUncertainty
+        dist._content[0]=hist.GetBinContent(1)
+        dist._content[1]=hist.GetBinContent(2)
+        if (usePoissonUncertainty):
+            dist._contentErrorPoisson[0]=math.sqrt(hist.GetBinContent(1))
+            dist._contentErrorPoisson[1]=math.sqrt(hist.GetBinContent(2))
+        if (useMCuncertainty):
+            dist._contentErrorMC[0]=(hist.GetBinError(1))
+            dist._contentErrorMC[1]=(hist.GetBinError(2))
+         
+        return dist
         
     def getMeans(self):
         return self._content
       
     def getVarianceMatrix(self):
-        return self._poissonCovarianceMatrix+self._yieldCovarianceMatrix
+        covarianceMatrix=numpy.zeros((2,2),dtype=numpy.float32)
+        if (self._usePoissonUncertainty):
+            covarianceMatrix[0][0]+=self._contentErrorPoisson[0]**2
+            covarianceMatrix[1][1]+=self._contentErrorPoisson[1]**2
+        if (self._useMCuncertainty):
+            covarianceMatrix[0][0]+=self._contentErrorMC[0]**2
+            covarianceMatrix[1][1]+=self._contentErrorMC[1]**2
+        
+        varBin1=(self._content[0]*self._yieldUncertainty)**2
+        varBin2=(self._content[1]*self._yieldUncertainty)**2
+        covarianceMatrix+=numpy.array([[varBin1,math.sqrt(varBin1*varBin2)],[math.sqrt(varBin1*varBin2),varBin2]],dtype=numpy.float32)
+        return covarianceMatrix
         
     def sample(self):
         result = numpy.zeros(2)
         y=ROOT.gRandom.Gaus(1.0,self._yieldUncertainty)
         result[0] = self._content[0]
         result[1] = self._content[1]
-        if self._hasPoissonUncertainty:
-            result[0]=ROOT.gRandom.Poisson(result[0])
-            result[1]=ROOT.gRandom.Poisson(result[1])
+        if self._usePoissonUncertainty:
+            pass
+            result[0]=ROOT.gRandom.Poisson(self._contentErrorPoisson[0]**2)
+            result[1]=ROOT.gRandom.Poisson(self._contentErrorPoisson[1]**2)
+        if self._useMCuncertainty:
+            result[0]+=ROOT.gRandom.Gaus(0.0,self._contentErrorMC[0])
+            result[1]+=ROOT.gRandom.Gaus(0.0,self._contentErrorMC[1])
+            pass
         result[0]*=y
         result[1]*=y
         return result

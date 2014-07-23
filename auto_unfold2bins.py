@@ -4,6 +4,7 @@ import numpy
 import math
 import os
 import os.path
+import sys
 from optparse import OptionParser
 import unfolding2bins as u2b
 
@@ -117,6 +118,17 @@ def readFitResult(fitResult,fitCovariance):
     except Exception,e:
         raise Exception("Error during parsing of fit result: "+fitResult)
     f.close()
+    
+    covFile = ROOT.TFile(fitCovariance,"R")
+    covHist = covFile.Get("covariance")
+    covMatrix = ROOT.TMatrixD(len(fitDict.keys())-2,len(fitDict.keys())-2)
+    for ibin in range(len(fitDict.keys())-2):
+        for jbin in range(len(fitDict.keys())-2):
+            covMatrix[ibin][jbin]=covHist.GetBinContent(ibin+2,jbin+2) #skip bin 1 = tchan, QCD not included in covariance hist
+    
+    eigenValues = ROOT.TVectorD(len(fitDict.keys())-2)
+    eigenVectors = covMatrix.EigenVectors(eigenValues)
+    
     return fitDict
 
 if __name__=="__main__":
@@ -168,28 +180,24 @@ if __name__=="__main__":
     
     
     
-    dataContent=[0.0,0.0]
-    
+    measured = None
     if options.mc_only:
-        
         signalHist=readHist1d(options.histFiles,HISTPREFIX+SIGNAL,options.systematic,fitResult[SIGNAL]["scale"],REBIN_RECO)
-        dataContent[0]+=signalHist.GetBinContent(1)
-        dataContent[1]+=signalHist.GetBinContent(2)
         for background in BACKGROUND:
             backgroundHist=readHist1d(options.histFiles,HISTPREFIX+background,options.systematic,fitResult[background]["scale"],REBIN_RECO)
-            dataContent[0]+=backgroundHist.GetBinContent(1)
-            dataContent[1]+=backgroundHist.GetBinContent(2)
+            signalHist.Add(backgroundHist)
+        measured = u2b.DataDistribution.createFromHistogram(signalHist,True,False,0.0)
     else:
-        dataHist = readHist1d(options.histFiles,HISTPREFIX+DATA[0],"nominal",1,REBIN_RECO)
-        dataContent = [dataHist.GetBinContent(1),dataHist.GetBinContent(2)]
-     
-    measured = u2b.DataDistribution(dataContent[0],dataContent[1],True,0.0)
+        measured = u2b.DataDistribution.createFromHistogram(readHist1d(options.histFiles,HISTPREFIX+DATA[0],"nominal",1,REBIN_RECO),True,False,0.0)
+        
+    
+    
 
     #TODO: decorrelate before subtracting - or define correlation between bgs
 
     for background in BACKGROUND:
         backgroundHist=readHist1d(options.histFiles,HISTPREFIX+background,options.systematic,fitResult[background]["scale"],REBIN_RECO)
-        backgroundDist = u2b.DataDistribution(backgroundHist.GetBinContent(1),backgroundHist.GetBinContent(2),True,fitResult[background]["uncertainty"])
+        backgroundDist = u2b.DataDistribution.createFromHistogram(backgroundHist,False,True,fitResult[background]["uncertainty"])
         measured = u2b.CompoundDistribution(u2b.Subtraction(),measured,backgroundDist)
         
     tmHist = readHist2d(options.responseFiles,TMPREFIX,options.systematic,fitResult[SIGNAL]["scale"],REBIN_GEN,REBIN_RECO)
@@ -204,6 +212,7 @@ if __name__=="__main__":
         print " ... rho=",measured.getCorrelation(0,1)
         print " ... rho=",measured.getCorrelationSampled(0,1)," (toys)"
         print
+
     unfolded= u2b.CompoundDistribution(u2b.Unfolding(tmHistinverted),measured)
     
     if verbose:
