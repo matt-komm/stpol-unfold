@@ -34,12 +34,12 @@ class Distribution():
         
     def getCorrelation(self,index1,index2):
         varianceMatrix=self.getVarianceMatrix()
-        return varianceMatrix[index1,index2]/math.sqrt(varianceMatrix[index1,index1]*varianceMatrix[index2,index2])
+        return varianceMatrix[index1,index2]/math.sqrt(varianceMatrix[index1,index1]*varianceMatrix[index2,index2]) if varianceMatrix[index1,index1]>0 else float('NaN')
     
     def getCorrelationSampled(self,index1,index2,ntoys=10000):
         if self._ntoys!=ntoys:
             self.generateSample(ntoys)
-        return self._sampledCovariance[index1,index2]/math.sqrt(self._sampledCovariance[index1,index1]*self._sampledCovariance[index2,index2])
+        return self._sampledCovariance[index1,index2]/math.sqrt(self._sampledCovariance[index1,index1]*self._sampledCovariance[index2,index2]) if self._sampledCovariance[index1,index1]>0 else float('NaN')
     
     def getVarianceMatrix(self):
         raise NotImplemented
@@ -61,7 +61,9 @@ class Distribution():
         cov=cov/ntoys
         self._sampledMeans=mean
         self._sampledCovariance=cov-numpy.array([[mean[0]*mean[0],mean[0]*mean[1]],[mean[1]*mean[0],mean[1]*mean[1]]])
-        
+        #set diagonal elements to 0 in case of imperfect numerical cancelation
+        self._sampledCovariance[0][0]=self._sampledCovariance[0][0] if self._sampledCovariance[0][0]>0 else 0.0
+        self._sampledCovariance[1][1]=self._sampledCovariance[0][0] if self._sampledCovariance[0][0]>0 else 0.0
 # concrete distribution initialized with measured values and uncertainties
 class DataDistribution(Distribution):
     

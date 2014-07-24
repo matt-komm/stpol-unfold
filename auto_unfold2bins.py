@@ -5,8 +5,17 @@ import math
 import os
 import os.path
 import sys
+import csv
 from optparse import OptionParser
 import unfolding2bins as u2b
+
+DATA=["DATA"]
+SIGNAL="tchan"
+BACKGROUND=["ttjets","wzjets","qcd"]
+HISTPREFIX="2j1t_cos_theta_lj__"
+TMPREFIX="tm"
+REBIN_RECO=2
+REBIN_GEN=2
 
 verbose=False
 
@@ -100,6 +109,24 @@ def readHist2d(fileNames,histName,sys,scale=1.0,rebinX=1,rebinY=1):
                 rootObj.append(resulthist)
             else:
                 resulthist.Add(hist)
+        elif (f.FindKey(histName+"__nominal")):
+            hist = f.Get(histName+"__nominal")
+            print "WARNING: opening ",fileName
+            print " ... WARNING using ",histName+"__nominal"," as fallback for ",histName+"__"+sys
+            if (verbose):
+                print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
+                print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
+                print " ... scale with factor ",scale
+                print
+            hist.Rebin2D(hist.GetNbinsX()/rebinX,hist.GetNbinsY()/rebinY)
+            hist.Scale(scale)
+            
+            if (resulthist==None):
+                resulthist=hist
+                resulthist.SetDirectory(0)
+                rootObj.append(resulthist)
+            else:
+                resulthist.Add(hist)
         f.Close()
     if (resulthist==None):    
         raise Exception("hist '"+histName+"__"+sys+"' not found in the given rootfiles")
@@ -130,77 +157,41 @@ def readFitResult(fitResult,fitCovariance):
     eigenVectors = covMatrix.EigenVectors(eigenValues)
     
     return fitDict
+    
+def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,responseFiles,fitResult,systematic="nominal",useStatUnc=True,useMCStatUnc=True,useFitUnc=True):
 
-if __name__=="__main__":
-    DATA=["DATA"]
-    SIGNAL="tchan"
-    BACKGROUND=["ttjets","wzjets","qcd"]
-    HISTPREFIX="2j1t_cos_theta_lj__"
-    TMPREFIX="tm"
-    REBIN_RECO=2
-    REBIN_GEN=2
-    FITRESULTFILE="mu.txt"
-    FITCOVFILE="mu_cov.root"
-    
-    parser = OptionParser()
-    parser.add_option("-v", "--verbose",action="store_true", dest="verbose", default=False, help="Verbose output")
-    parser.add_option("--mc-only",action="store_true",dest="mc_only",default=False,help="Substitude data with MC")
-    parser.add_option("--histFile",action="append",dest="histFiles",default=[],help="The rootfile containing the signal/background histograms for unfolding")
-    parser.add_option("--sys",action="store",dest="systematic",default="nominal",help="Systematic shift.")
-    parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile>:<histpath> containing the 2d response matrix.")
-    parser.add_option("--fitResultPrefix",action="store",dest="fitResultPrefix",default="",help="Path prefix for the fit result")
-    parser.add_option("--output",action="store",dest="output",default="",help="The output file")
-    (options, args) = parser.parse_args()
-    verbose=options.verbose
-    
-    if (verbose):
-        print "histFiles: "
-        print "".join(" ... "+histFile+"\n" for histFile in options.histFiles)
-        print "responseFiles: "
-        print "".join(" ... "+responseFile+"\n" for responseFile in options.responseFiles)
-        print "systematic:"
-        print " ... "+options.systematic
-        print
-        print "fit: "
-        print " ... scale: "+os.path.join(options.fitResultPrefix,options.systematic,FITRESULTFILE)
-        print " ... covaraince: "+os.path.join(options.fitResultPrefix,options.systematic,FITCOVFILE)
-        print
-        
-    '''
-    #h = readHist1d(options.histFiles,HISTPREFIX+DATA[0],1,REBIN_RECO)
-    h = readHist2d(options.responseFiles,TMPREFIX+"nominal",1,REBIN_GEN,REBIN_RECO)
-    cv = ROOT.TCanvas("cv","",800,600)
-    h.Draw("colz")
-    cv.Update()
-    cv.WaitPrimitive()
-    '''
-    
-    
-    fitResult = readFitResult(os.path.join(options.fitResultPrefix,options.systematic,FITRESULTFILE),os.path.join(options.fitResultPrefix,options.systematic,FITCOVFILE))
-    
-    
-    
+
     measured = None
     if options.mc_only:
-        signalHist=readHist1d(options.histFiles,HISTPREFIX+SIGNAL,options.systematic,fitResult[SIGNAL]["scale"],REBIN_RECO)
-        for background in BACKGROUND:
-            backgroundHist=readHist1d(options.histFiles,HISTPREFIX+background,options.systematic,fitResult[background]["scale"],REBIN_RECO)
-            signalHist.Add(backgroundHist)
-        measured = u2b.DataDistribution.createFromHistogram(signalHist,True,False,0.0)
+        #fake data by adding up all nominal histograms
+        fakeData=None
+        for histName in fitResult.keys():
+            if histName==signalHistName or histName in backgroundHistNames:
+                if fakeData==None:
+                    fakeData=readHist1d(histFiles,HISTPREFIX+histName,"nominal",fitResult[histName]["scale"],REBIN_RECO)
+                else:
+                    fakeData.Add(readHist1d(histFiles,HISTPREFIX+histName,"nominal",fitResult[histName]["scale"],REBIN_RECO))
+
+        measured = u2b.DataDistribution.createFromHistogram(fakeData,useStatUnc,False,0.0)
     else:
-        measured = u2b.DataDistribution.createFromHistogram(readHist1d(options.histFiles,HISTPREFIX+DATA[0],"nominal",1,REBIN_RECO),True,False,0.0)
-        
+        #read data histograms
+        data=None
+        for histName in dataHistNames:
+            if data==None:         
+                data = readHist1d(histFiles,HISTPREFIX+histName,"nominal",1,REBIN_RECO)
+        measured = u2b.DataDistribution.createFromHistogram(data,useStatUnc,False,0.0)
     
     
 
     #TODO: decorrelate before subtracting - or define correlation between bgs
-
-    for background in BACKGROUND:
-        backgroundHist=readHist1d(options.histFiles,HISTPREFIX+background,options.systematic,fitResult[background]["scale"],REBIN_RECO)
-        backgroundDist = u2b.DataDistribution.createFromHistogram(backgroundHist,False,True,fitResult[background]["uncertainty"])
-        measured = u2b.CompoundDistribution(u2b.Subtraction(),measured,backgroundDist)
-        
-    tmHist = readHist2d(options.responseFiles,TMPREFIX,options.systematic,fitResult[SIGNAL]["scale"],REBIN_GEN,REBIN_RECO)
+    for histName in fitResult.keys():
+        if histName in backgroundHistNames:
+            backgroundHist=readHist1d(histFiles,HISTPREFIX+histName,systematic,fitResult[histName]["scale"],REBIN_RECO)
+            backgroundDist = u2b.DataDistribution.createFromHistogram(backgroundHist,False,useMCStatUnc, fitResult[histName]["uncertainty"] if useFitUnc else 0.0)
+            #subtract background from measured data
+            measured = u2b.CompoundDistribution(u2b.Subtraction(),measured,backgroundDist)
+         
+    tmHist = readHist2d(responseFiles,TMPREFIX,systematic,fitResult[signalHistName]["scale"],REBIN_GEN,REBIN_RECO)
     tmHistinverted=u2b.readResponseFromHistogramAndInvert(tmHist)
     
     if verbose:
@@ -230,4 +221,166 @@ if __name__=="__main__":
     if verbose:
         print "final result:"
         print " ... A=",asymmetry.getMean(0)," +- ",asymmetry.getUncertainty(0)
+        
+    return {"mean":asymmetry.getMean(0),"uncertainty":asymmetry.getUncertainty(0)}
+
+if __name__=="__main__":
+
     
+    parser = OptionParser()
+    parser.add_option("-v", "--verbose",action="store_true", dest="verbose", default=False, help="Verbose output")
+    parser.add_option("--mc-only",action="store_true",dest="mc_only",default=False,help="Substitude data with MC")
+    parser.add_option("--histFile",action="append",dest="histFiles",default=[],help="The rootfile containing the signal/background histograms for unfolding")
+    parser.add_option("--sys",action="store",dest="systematic",default="nominal",help="Systematic shift.")
+    parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile>:<histpath> containing the 2d response matrix.")
+    parser.add_option("--fitResultPrefix",action="store",dest="fitResultPrefix",default="",help="Path prefix to the fit result")
+    parser.add_option("--fitResult",action="store",dest="fitResult",default="mu.txt",help="Path to the fit result")
+    parser.add_option("--fitCovariance",action="store",dest="fitCovariance",default="mu_cov.root",help="Path to the fit covariance root file")
+    parser.add_option("--output",action="store",dest="output",default="out.csv",help="The output file")
+    parser.add_option("--no-stat",action="store_false",default=True,dest="stat",help="Deactivates statistical uncertainties (taken from data).")
+    parser.add_option("--no-mcstat",action="store_false",default=True,dest="mcstat",help="Deactivates limited MC statistics uncertainties (taken from background MC).")
+    parser.add_option("--no-fiterror",action="store_false",default=True,dest="fiterror",help="Deactivates uncertainties from the fit (taken from file with fit result).")
+    (options, args) = parser.parse_args()
+    verbose=options.verbose
+    
+    if (verbose):
+        print "histFiles: "
+        print "".join(" ... "+histFile+"\n" for histFile in options.histFiles)
+        print "responseFiles: "
+        print "".join(" ... "+responseFile+"\n" for responseFile in options.responseFiles)
+        print "systematic:"
+        print " ... "+options.systematic
+        print
+        print "fit: "
+        if options.systematic=="nominal":
+            print " ... scale: "+os.path.join(options.fitResultPrefix,"nominal",options.fitResult)
+            print " ... covaraince: "+os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
+        else:
+            print " ... scale (up): "+os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult)
+            print " ... scale (down): "+os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult)
+            print " ... covaraince (up): "+os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
+            print " ... covaraince (down): "+os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
+        print
+        
+     
+    outputFile = open(options.output, 'wb')
+    writer = csv.DictWriter(outputFile, ["syst","up","down","dup","ddown"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+    writer.writeheader()
+    if options.systematic=="nominal":
+        fitResult = readFitResult(
+            os.path.join(options.fitResultPrefix,"nominal",options.fitResult),
+            os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
+        )
+        result = doUnfolding(
+            options.histFiles,
+            SIGNAL,
+            BACKGROUND,
+            DATA,
+            options.responseFiles,
+            fitResult,
+            systematic="nominal",
+            useStatUnc=options.stat,
+            useMCStatUnc=options.mcstat,
+            useFitUnc=options.fiterror
+        )
+        if options.stat and options.mcstat and options.fiterror:
+            writer.writerow({
+                "syst":"nominal",
+                "up":result["mean"]+0.5*result["uncertainty"],
+                "down":result["mean"]-0.5*result["uncertainty"],
+                "dup":0.5*result["uncertainty"],
+                "ddown":0.5*result["uncertainty"]
+            })
+        elif options.stat and not options.mcstat and not options.fiterror:
+            writer.writerow({
+                "syst":"statistical",
+                "up":result["mean"]+0.5*result["uncertainty"],
+                "down":result["mean"]-0.5*result["uncertainty"],
+                "dup":0.5*result["uncertainty"],
+                "ddown":0.5*result["uncertainty"]
+            })
+        elif not options.stat and options.mcstat and not options.fiterror:
+            writer.writerow({
+                "syst":"limited_mc",
+                "up":result["mean"]+0.5*result["uncertainty"],
+                "down":result["mean"]-0.5*result["uncertainty"],
+                "dup":0.5*result["uncertainty"],
+                "ddown":0.5*result["uncertainty"]
+            })
+        elif not options.stat and not options.mcstat and options.fiterror:
+            writer.writerow({
+                "syst":"fituncertainty",
+                "up":result["mean"]+0.5*result["uncertainty"],
+                "down":result["mean"]-0.5*result["uncertainty"],
+                "dup":0.5*result["uncertainty"],
+                "ddown":0.5*result["uncertainty"]
+            })
+        else:
+            print "WARNING: systematic configuration not known"
+            writer.writerow({
+                "syst":"unknown",
+                "up":result["mean"]+0.5*result["uncertainty"],
+                "down":result["mean"]-0.5*result["uncertainty"],
+                "dup":0.5*result["uncertainty"],
+                "ddown":0.5*result["uncertainty"]
+            })
+        
+    else:
+        fitResultNominal = readFitResult(
+            os.path.join(options.fitResultPrefix,"nominal",options.fitResult),
+            os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
+        )
+        resultNominal = doUnfolding(
+            options.histFiles,
+            SIGNAL,
+            BACKGROUND,
+            DATA,
+            options.responseFiles,
+            fitResultNominal,
+            systematic="nominal",
+            useStatUnc=False,
+            useMCStatUnc=False,
+            useFitUnc=False
+        )
+        
+        fitResultUp = readFitResult(
+            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult),
+            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
+        )
+        resultUp = doUnfolding(
+            options.histFiles,
+            SIGNAL,
+            BACKGROUND,
+            DATA,
+            options.responseFiles,
+            fitResultUp,
+            systematic=options.systematic+"__up",
+            useStatUnc=False,
+            useMCStatUnc=False,
+            useFitUnc=False
+        )
+        
+        fitResultDown = readFitResult(
+            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult),
+            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
+        )
+        resultDown = doUnfolding(
+            options.histFiles,
+            SIGNAL,
+            BACKGROUND,
+            DATA,
+            options.responseFiles,
+            fitResultDown,
+            systematic=options.systematic+"__down",
+            useStatUnc=False,
+            useMCStatUnc=False,
+            useFitUnc=False
+        )
+        writer.writerow({
+            "syst":options.systematic,
+            "up":resultUp["mean"],
+            "down":resultDown["mean"],
+            "dup":resultUp["mean"]-resultNominal["mean"],
+            "ddown":resultNominal["mean"]-resultDown["mean"]
+        })
+    outputFile.close()
