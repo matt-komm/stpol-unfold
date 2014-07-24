@@ -32,7 +32,7 @@ clean:
 	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst
 
 #path to histograms
-DATADIR=../../results/hists/Jun13/0.60000
+DATADIR=/nfs/user/mkomm/scanned_hists_jun13/0.60000
 
 do_unfold_mu:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
@@ -110,6 +110,95 @@ unfold_nominal:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ nominal fitresults/nominal/ele histos/ele__nominal.root
 
-unfold_nominal_2bin:	
-	python unfolding2bins.py $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
-	python unfolding2bins.py $(DATADIR)/ele/ nominal fitresults/nominal/ele histos/ele__nominal.root
+unfold_2bin_mu:
+	for SYS in btag_bc btag_l jer jes lepton_id lepton_iso lepton_trigger mass matching met nominal pu scale_tchan top_weight scale_ttjets scale_wjets wjets_shape; do \
+	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=mu.txt \
+		--fitCovariance=mu_cov.root \
+		--sys=$$SYS \
+		--output=mu_$$SYS.csv; \
+	done
+	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=mu.txt \
+		--fitCovariance=mu_cov.root \
+		--sys=nominal \
+		--no-mcstat \
+		--no-fiterror \
+		--output=mu_stat.csv
+	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=mu.txt \
+		--fitCovariance=mu_cov.root \
+		--sys=nominal \
+		--no-stat \
+		--no-fiterror \
+		--output=mu_mcstat.csv
+	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=mu.txt \
+		--fitCovariance=mu_cov.root \
+		--sys=nominal \
+		--no-stat \
+		--no-mcstat \
+		--output=mu_fiterror.csv
+
+unfold_2bin_ele:
+	for SYS in btag_bc btag_l jer jes lepton_id lepton_iso lepton_trigger mass matching met nominal pu scale_tchan top_weight scale_ttjets scale_wjets wjets_shape; do \
+	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=ele.txt \
+		--fitCovariance=ele_cov.root \
+		--sys=$$SYS \
+		--output=ele_$$SYS.csv; \
+	done
+	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=ele.txt \
+		--fitCovariance=ele_cov.root \
+		--sys=nominal \
+		--no-mcstat \
+		--no-fiterror \
+		--output=ele_stat.csv
+	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=ele.txt \
+		--fitCovariance=ele_cov.root \
+		--sys=nominal \
+		--no-stat \
+		--no-fiterror \
+		--output=ele_mcstat.csv
+	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
+		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResult=ele.txt \
+		--fitCovariance=ele_cov.root \
+		--sys=nominal \
+		--no-stat \
+		--no-mcstat \
+		--output=ele_fiterror.csv
+
