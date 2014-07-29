@@ -1,4 +1,6 @@
 .*.swp
+*.gch
+*.root
 *.un~
 info.h
 unfold
