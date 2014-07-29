@@ -124,6 +124,11 @@ Float_t error_naive(Float_t plus, Float_t minus)
 	return 2/TMath::Power(plus+minus,2)*TMath::Sqrt(minus*plus*plus+plus*minus*minus);
 }
 
+// Im = \int_{-1}^0 dsigma/dcostheta dcosthetae 
+// Ip = \int_0^{+1} dsigma/dcostheta dcosthetae 
+// dm = 2 * Im / I^2
+// dm = 2 * Ip / I^2
+
 Float_t error_unfold(TH2F* errmat, TH1F* unf)
 {
 	Int_t bin_zero =  unf->FindBin(0.0);
