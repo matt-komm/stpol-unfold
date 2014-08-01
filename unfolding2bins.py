@@ -1,6 +1,7 @@
 import ROOT
 import numpy
 import math
+from optparse import OptionParser
 
 #abstract distribution
 class Distribution():
@@ -33,12 +34,12 @@ class Distribution():
         
     def getCorrelation(self,index1,index2):
         varianceMatrix=self.getVarianceMatrix()
-        return varianceMatrix[index1,index2]/math.sqrt(varianceMatrix[index1,index1]*varianceMatrix[index2,index2])
+        return varianceMatrix[index1,index2]/math.sqrt(varianceMatrix[index1,index1]*varianceMatrix[index2,index2]) if varianceMatrix[index1,index1]>0 else float('NaN')
     
     def getCorrelationSampled(self,index1,index2,ntoys=10000):
         if self._ntoys!=ntoys:
             self.generateSample(ntoys)
-        return self._sampledCovariance[index1,index2]/math.sqrt(self._sampledCovariance[index1,index1]*self._sampledCovariance[index2,index2])
+        return self._sampledCovariance[index1,index2]/math.sqrt(self._sampledCovariance[index1,index1]*self._sampledCovariance[index2,index2]) if self._sampledCovariance[index1,index1]>0 else float('NaN')
     
     def getVarianceMatrix(self):
         raise NotImplemented
@@ -60,48 +61,71 @@ class Distribution():
         cov=cov/ntoys
         self._sampledMeans=mean
         self._sampledCovariance=cov-numpy.array([[mean[0]*mean[0],mean[0]*mean[1]],[mean[1]*mean[0],mean[1]*mean[1]]])
-        
+        #set diagonal elements to 0 in case of imperfect numerical cancelation
+        self._sampledCovariance[0][0]=self._sampledCovariance[0][0] if self._sampledCovariance[0][0]>0 else 0.0
+        self._sampledCovariance[1][1]=self._sampledCovariance[0][0] if self._sampledCovariance[0][0]>0 else 0.0
 # concrete distribution initialized with measured values and uncertainties
 class DataDistribution(Distribution):
     
-    def __init__(self,bin1,bin2,hasPoissonUncertainty=False,yieldUncertainty=0.0):
+    def __init__(self):
         Distribution.__init__(self)
-        self._content=numpy.zeros(2)
-        self._content[0]=bin1
-        self._content[1]=bin2
-        self.setPoissonUncertainty(hasPoissonUncertainty)
-        self.setYieldUncertainty(yieldUncertainty)
+        self._content=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorPoisson=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorMC=numpy.zeros(2,dtype=numpy.float32)
+        self._contentErrorYield=numpy.zeros((2,2),dtype=numpy.float32)
+        self._usePoissonUncertainty=False
+        self._useMCuncertainty=False
+        self._yieldUncertainty=0.0
         
-    def setYieldUncertainty(self, yieldUncertainty):
-        self._yieldUncertainty=yieldUncertainty
-        varBin1=(self._content[0]*yieldUncertainty)**2
-        varBin2=(self._content[1]*yieldUncertainty)**2
-        self._yieldCovarianceMatrix=numpy.array([[varBin1,math.sqrt(varBin1*varBin2)],[math.sqrt(varBin1*varBin2),varBin2]],dtype=numpy.float32)
-       
-    def setPoissonUncertainty(self,hasPoissonUncertainty):
-        self._hasPoissonUncertainty=hasPoissonUncertainty
-        if (hasPoissonUncertainty):
-            self._poissonCovarianceMatrix=numpy.array([[self._content[0],0.0],[0.0,self._content[1]]],dtype=numpy.float32)
-        else:
-            self._poissonCovarianceMatrix=numpy.array([[0.0,0.0],[0.0,0.0]],dtype=numpy.float32)
-            
-    def setBin(self,index,binContent):
-        self._content[index]=binContent  
+    @staticmethod
+    def createFromHistogram(hist,usePoissonUncertainty=False,useMCuncertainty=False,yieldUncertainty=0.0):
+        
+        
+        dist = DataDistribution()
+        dist._usePoissonUncertainty=usePoissonUncertainty
+        dist._useMCuncertainty=useMCuncertainty
+        dist._yieldUncertainty=yieldUncertainty
+        dist._content[0]=hist.GetBinContent(1)
+        dist._content[1]=hist.GetBinContent(2)
+        if (usePoissonUncertainty):
+            dist._contentErrorPoisson[0]=math.sqrt(hist.GetBinContent(1))
+            dist._contentErrorPoisson[1]=math.sqrt(hist.GetBinContent(2))
+        if (useMCuncertainty):
+            dist._contentErrorMC[0]=(hist.GetBinError(1))
+            dist._contentErrorMC[1]=(hist.GetBinError(2))
+         
+        return dist
         
     def getMeans(self):
         return self._content
       
     def getVarianceMatrix(self):
-        return self._poissonCovarianceMatrix+self._yieldCovarianceMatrix
+        covarianceMatrix=numpy.zeros((2,2),dtype=numpy.float32)
+        if (self._usePoissonUncertainty):
+            covarianceMatrix[0][0]+=self._contentErrorPoisson[0]**2
+            covarianceMatrix[1][1]+=self._contentErrorPoisson[1]**2
+        if (self._useMCuncertainty):
+            covarianceMatrix[0][0]+=self._contentErrorMC[0]**2
+            covarianceMatrix[1][1]+=self._contentErrorMC[1]**2
+        
+        varBin1=(self._content[0]*self._yieldUncertainty)**2
+        varBin2=(self._content[1]*self._yieldUncertainty)**2
+        covarianceMatrix+=numpy.array([[varBin1,math.sqrt(varBin1*varBin2)],[math.sqrt(varBin1*varBin2),varBin2]],dtype=numpy.float32)
+        return covarianceMatrix
         
     def sample(self):
         result = numpy.zeros(2)
         y=ROOT.gRandom.Gaus(1.0,self._yieldUncertainty)
         result[0] = self._content[0]
         result[1] = self._content[1]
-        if self._hasPoissonUncertainty:
-            result[0]=ROOT.gRandom.Poisson(result[0])
-            result[1]=ROOT.gRandom.Poisson(result[1])
+        if self._usePoissonUncertainty:
+            pass
+            result[0]=ROOT.gRandom.Poisson(self._contentErrorPoisson[0]**2)
+            result[1]=ROOT.gRandom.Poisson(self._contentErrorPoisson[1]**2)
+        if self._useMCuncertainty:
+            result[0]+=ROOT.gRandom.Gaus(0.0,self._contentErrorMC[0])
+            result[1]+=ROOT.gRandom.Gaus(0.0,self._contentErrorMC[1])
+            pass
         result[0]*=y
         result[1]*=y
         return result
@@ -212,7 +236,7 @@ def readResponseFromHistogramAndInvert(rootHist):
     efficiencyMatrix=numpy.array([[efficiency[0],0.0],[0.0,efficiency[1]]])
     responseAndEfficiency=numpy.dot(efficiencyMatrix,response)
     invertedResponse=numpy.linalg.inv(responseAndEfficiency).T # not clear why it needs to be transposed but it works only this way
-    #'''
+    '''
     #debug
     print "truth=",truth
     print "measured=",measured
@@ -230,7 +254,9 @@ def readResponseFromHistogramAndInvert(rootHist):
         raise Exception("inverted response matrix not properly defined")
     return invertedResponse    
     
+    
 if __name__=="__main__":
+    '''
     
     #measured data with 1000 in first and 2000 in second bin, assume poisson uncertainties
     data = DataDistribution(1000,2000,True,0.0)
@@ -276,4 +302,4 @@ if __name__=="__main__":
     asymmetry=CompoundDistribution(Asymmetry(),unfolded)
     print "A=",asymmetry.getMean(0)," +- ",asymmetry.getUncertainty(0)
     print "A=",asymmetry.getMeanSampled(0)," +- ",asymmetry.getUncertaintySampled(0)," (toys)"
-    
+    '''
