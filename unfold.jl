@@ -23,7 +23,7 @@ function asymmetry(x::Histogram)
 end
 
 const toload = ["unfolded", "gen", "reco", "correlation", "genrec", "tm__comphep__proj_x", "error"];
-const lepton = :ele
+const lepton = symbol(ARGS[1])
 const bdt = "0.60000"
 
 #Load histograms
@@ -54,6 +54,9 @@ const bdt = "0.60000"
     hd = {k=>rebin(v, 2:nrebin:nbins(v)-nrebin) for (k, v) in hd};
 
     systs = map(x->symbol(x), map(x->split("$x", "__")[1], collect(keys(histos_d))) |> unique);
+    
+    const Ngen = integral(unf1["gen"])
+    norm_gen(h) = (Ngen/integral(h)) * h
 
 #Determine statistical error by covariant sampling
     covm = contents(unf1["error"])[2:end-2, 2:end-2]
@@ -78,14 +81,34 @@ const bdt = "0.60000"
 #ASYMMETRIES
     asymmetries = {:up=>Dict(), :down=>Dict()}
     A = 0
+    unf_histos = Dict()
+    nom = nothing
     for (k, v) in histos_d
         s = split(string(k), "__")
-        if s[1]=="nominal"
+        syst = symbol(s[1])
+        if syst==:nominal
             A = asymmetry(v["unfolded"])
+            nom = deepcopy(v["unfolded"])
         else
             dir = symbol(s[2])
-            asymmetries[dir][symbol(s[1])] = asymmetry(v["unfolded"])
+            asymmetries[dir][syst] = asymmetry(v["unfolded"])
+            if !haskey(unf_histos, syst)
+                unf_histos[syst] = Dict()
+            end
+            unf_histos[syst][dir] = deepcopy(v["unfolded"])
         end
+    end
+
+    for (k, v) in unf_histos
+        ax = axes()
+        barplot(ax, norm_gen(nom), "black", label="nominal A=$(asymmetry(nom))")
+        barplot(ax, unf1["gen"], "green", label=string("generated A=", asymmetry(unf1["gen"])))
+        barplot(ax, norm_gen(v[:up]), "red", label="up A=$(asymmetry(v[:up]))")
+        barplot(ax, norm_gen(v[:down]), "blue", label="down A=$(asymmetry(v[:down]))")
+        legend(loc="best")
+        xlabel(VARS[:cos_theta_lj])
+        title("Unfolded $lepton $k")
+        svfg("$BASE/results/plots/unfolding/$(k)__$(lepton)")
     end
 
     asymdf = DataFrame(syst=collect(keys(asymmetries[:up])));
@@ -96,13 +119,17 @@ const bdt = "0.60000"
     asymdf[:ddown] = abs(A .- asymdf[:down]);
     mkpath("$BASE/results/tables/$ts")
 
-    tot_du = asymdf[:dup].^2 |> sum |> sqrt
-    tot_dd = asymdf[:ddown].^2 |> sum |> sqrt;
+#    tot_du = asymdf[:dup].^2 |> sum |> sqrt
+#    tot_dd = asymdf[:ddown].^2 |> sum |> sqrt;
     push!(asymdf, [:statistical, A+Astat, A-Astat, Astat, Astat])
+    asymdf[:d] = max(abs(asymdf[:dup]), abs(asymdf[:ddown]))
+
+    Asyst = asymdf[1:end-2, :d].^2 |> sum |> sqrt
+    push!(asymdf, [:systematic, A+Asyst, A-Asyst, Asyst, Asyst, Asyst])
+    push!(asymdf, [:nominal, A, A, 0.0, 0.0, 0.0])
+    asymdf[:rel_percent] = 100.0 * asymdf[:d] ./ A 
+    #Asyst = sqrt(tot_du^2+tot_dd^2)
     writetable("$BASE/results/tables/$ts/asymmetries_$(lepton).csv", asymdf)
-
-
-    Asyst = sqrt(tot_du^2+tot_dd^2)
     println("Asyst=", Asyst)
 
 #MISC
@@ -142,37 +169,39 @@ const bdt = "0.60000"
     title("Reconstructed data vs. model, \$\\chi^2/n = $(round(chi2val, 2))\$, $(titles[lepton])");
     xticks(rbins);
     ylabel("reconstructed events / bin");
-    svfg("$BASE/results/plots/$ts/unfolding/data_mc_comparison_$(lepton)");
+    svfg("$BASE/results/plots/unfolding/data_mc_comparison_$(lepton)");
 
 
 ###Unfolded plot
+    fig = figure(num=nothing, figsize=(8, 8), dpi=200, facecolor="w", edgecolor="k")
+    
     ax = axes()
-    Ngen = integral(unf1["gen"])
-
-    norm_gen(h) = (Ngen/integral(h)) * h
-
-    barplot(ax, norm_gen(unf1["gen"]), "green", label="generated (POWHEG)")
-    #barplot(ax, rebin(unf1["tm__comphep__proj_x"], 2:nrebin:27-nrebin), "blue", label="generated (CompHEP)", ls="--")
-
+    
     eplot(ax, norm_gen(unf1["unfolded"]), color="black", label="unfolded data", ls="none", marker="o")
-    N = contents(norm_gen(unf1["unfolded"]))[1:end-1]
-
+    N = contents(norm_gen(unf1["unfolded"]))
+    
+    barplot(ax, norm_gen(unf1["gen"]), "green", label="generated (POWHEG)", do_error=false, lw=2)
+    #barplot(ax, rebin(unf1["tm__comphep__proj_x"], 2:nrebin:27-nrebin), "blue", label="generated (CompHEP)", ls="--")
+    
     variations = {:up=>Any[], :down=>Any[]}
     for d in [:up, :down]
         for k in systs
             k == :nominal && continue
-            println("$k $d")
-            delta = contents(norm_gen(unf1["unfolded"]) - norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])) |> abs;
+            #println("$k $d")
+            delta = contents(
+                norm_gen(unf1["unfolded"]) - 
+                norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])
+            )[1:end-1] |> abs;
             push!(variations[d], deepcopy(delta))
         end
     end
-
+    
     tot_du = [x.^2 for x in variations[:up]]|>sum|>sqrt
     tot_dd = [x.^2 for x in variations[:down]]|>sum|>sqrt
-    tot_du = tot_du[1:end-1]
-    tot_dd = tot_dd[1:end-1]
+    N = N[1:end-1]
+    println(tot_du, tot_dd)
     #tot_dd = sum(variations[:down].^2)|>sqrt
-
+    
     ax[:bar](
         lowedge(unf1["gen"].bin_edges),
         tot_du + tot_dd,
@@ -182,25 +211,39 @@ const bdt = "0.60000"
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="////",
+        hatch="///",
         label="uncertainty";
     )
-
-    title("unfolded distribution, \$\\chi^2/n = $(round(chi2val, 2))\$")
-    grid()
-    legend(loc=2, numpoints=1)
-    xlabel(VARS[:cos_theta_lj], fontsize=16)
-    ylabel("arbitrary units")
-    cmspaper(ax, 0.7, 0.97, additional_text=titles[lepton])
+    
+    #title("unfolded distribution, \$\\chi^2/n = $(round(chi2val, 2))\$")
+    #grid()
+    leg = legend(loc=4, numpoints=1)
+    leg[:draw_frame](false)
+    xlabel(string("", VARS[:cos_theta_lj]), fontsize=18)
+    ylabel("\$\\frac{\\mathrm{d}\\sigma}{\\sigma\\ \\\mathrm{d}\\cos\\ \\theta^*}\$", fontsize=18)
+    cmspaper(ax, 0.35, 0.13, additional_text=titles[lepton])
     unfolded = unf1["unfolded"]
     gen = unf1["gen"]
-    text(0.02, 0.78,
-        string("A = $(round(asymmetry(unfolded), 2)) \$\\pm\$ $(round(Astat, 2)) (stat.) \$\\pm\$ $(round(Asyst, 2)) (syst.)\n",
-        "POWHEG = $(round(asymmetry(gen), 2))"),
-        transform=ax[:transAxes], verticalalignment="top"
+    text(0.5, 0.98,
+        "A = $(round(asymmetry(unfolded), 2)) \$\\pm\$ $(round(Astat,2)) (stat.) \$\\pm\$ $(round(Asyst,2)) (syst.)\n",
+        transform=ax[:transAxes], verticalalignment="top" , horizontalalignment="center",
+        fontsize=16
     )
-    xticks(rbins);
-    svfg("$BASE/results/plots/$ts/results/unfolded_$(lepton)");
+    
+    @pyimport matplotlib.ticker as ticker
+    
+    majorLocator   = ticker.FixedLocator(linspace(-1, 1, length(rbins)))
+    minorLocator   = ticker.FixedLocator(linspace(-1, 1, (length(rbins)-1)*4 + 1))
+    
+    ax[:xaxis][:set_major_locator](majorLocator)
+    ax[:xaxis][:set_minor_locator](minorLocator)
+    ax[:ticklabel_format](axis="y", style="sci", useOffset=true, scilimits=(-2, 2))
+    ax[:yaxis][:major][:formatter][:_useMathText] = true
+    #rcParams["text.usetex"] = true
+    
+    #xticks(rbins);
+    ax[:tick_params](axis="x",which="minor",bottom="on")
+    svfg("$BASE/results/plots/unfolded_$(lepton)");
 
 tot_tm = unf1["genrec"];
 effh = zeros(nb_gen)
@@ -236,7 +279,7 @@ xlabel(VARS[:cos_theta_lj], fontsize=16)
 ylabel("reconstructed events")
 grid()
 xticks(rbins)
-svfg("$BASE/results/plots/$ts/unfolding/unfolded_comparison_$(lepton)")
+svfg("$BASE/results/plots/unfolding/unfolded_comparison_$(lepton)")
 
 hratio = Histogram(
 [1 for i=1:nb_reco+2],
@@ -264,7 +307,7 @@ ylim(0.6, 1.6)
 xlabel(VARS[:cos_theta_lj], fontsize=16)
 legend(loc="best")
 xticks(rbins)
-svfg("$BASE/results/plots/$ts/unfolding/unfolded_comparison_ratio_$(lepton)")
+svfg("$BASE/results/plots/unfolding/unfolded_comparison_ratio_$(lepton)")
 
 #
 # hd = reweight_hists_to_fitres(FITRESULTS[lepton], hists)
@@ -301,7 +344,7 @@ colorbar()
 xlabel("bins")
 ylabel("bins")
 title("bin-by-bin correlation")
-svfg("$BASE/results/plots/$ts/unfolding/unfolded_bin_correlation_$(lepton)")
+svfg("$BASE/results/plots/unfolding/unfolded_bin_correlation_$(lepton)")
 
 #
 #

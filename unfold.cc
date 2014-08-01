@@ -245,6 +245,11 @@ int main(int argc, char* argv[])
     } else {
         cout << "loaded TM " << tm_name << endl;
     }
+    
+    cout << "hgenrecele " << hgenrecele->Integral() << endl;
+    cout << "hgenrecmu " << hgenrecmu->Integral() << endl;
+    cout << "hgenrectau " << hgenrectau->Integral() << endl;
+    
     std::cout << "mu x=" << hgenrecmu->ProjectionX()->GetEntries() << " y=" << hgenrecmu->ProjectionY()->GetEntries() << std::endl;
     std::cout << "ele x=" << hgenrecele->ProjectionX()->GetEntries() << " y=" << hgenrecele->ProjectionY()->GetEntries() << std::endl;
     std::cout << "tau x=" << hgenrectau->ProjectionX()->GetEntries() << " y=" << hgenrectau->ProjectionY()->GetEntries() << std::endl;
