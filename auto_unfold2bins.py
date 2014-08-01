@@ -117,7 +117,7 @@ def readHist2d(fileNames,histName,sys,scale=1.0,rebinX=1,rebinY=1):
                 print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
                 print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
                 print " ... scale with factor ",scale
-                print
+            print
             hist.Rebin2D(hist.GetNbinsX()/rebinX,hist.GetNbinsY()/rebinY)
             hist.Scale(scale)
             
@@ -264,7 +264,7 @@ if __name__=="__main__":
         
      
     outputFile = open(options.output, 'wb')
-    writer = csv.DictWriter(outputFile, ["syst","up","down","dup","ddown"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+    writer = csv.DictWriter(outputFile, ["syst","up","down","dup","ddown","d"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
     writer.writeheader()
     if options.systematic=="nominal":
         fitResult = readFitResult(
@@ -289,7 +289,8 @@ if __name__=="__main__":
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"]
+                "ddown":0.5*result["uncertainty"],
+                "d":0.5*result["uncertainty"]
             })
         elif options.stat and not options.mcstat and not options.fiterror:
             writer.writerow({
@@ -297,7 +298,8 @@ if __name__=="__main__":
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"]
+                "ddown":0.5*result["uncertainty"],
+                "d":0.5*result["uncertainty"]
             })
         elif not options.stat and options.mcstat and not options.fiterror:
             writer.writerow({
@@ -305,7 +307,8 @@ if __name__=="__main__":
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"]
+                "ddown":0.5*result["uncertainty"],
+                "d":0.5*result["uncertainty"]
             })
         elif not options.stat and not options.mcstat and options.fiterror:
             writer.writerow({
@@ -313,7 +316,8 @@ if __name__=="__main__":
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"]
+                "ddown":0.5*result["uncertainty"],
+                "d":0.5*result["uncertainty"]
             })
         else:
             print "WARNING: systematic configuration not known"
@@ -322,7 +326,8 @@ if __name__=="__main__":
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"]
+                "ddown":0.5*result["uncertainty"],
+                "d":0.5*result["uncertainty"]
             })
         
     else:
@@ -376,11 +381,13 @@ if __name__=="__main__":
             useMCStatUnc=False,
             useFitUnc=False
         )
+        unc = max(math.fabs(resultNominal["mean"]-resultDown["mean"]),math.fabs(resultNominal["mean"]-resultUp["mean"]))
         writer.writerow({
             "syst":options.systematic,
             "up":resultUp["mean"],
             "down":resultDown["mean"],
             "dup":resultUp["mean"]-resultNominal["mean"],
-            "ddown":resultNominal["mean"]-resultDown["mean"]
+            "ddown":resultNominal["mean"]-resultDown["mean"],
+            "d":unc
         })
     outputFile.close()
