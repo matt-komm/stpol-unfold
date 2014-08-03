@@ -23,7 +23,7 @@ clean:
 	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst
 
 #path to histograms
-DATADIR=../../results/hists/Jul23/merged/0.60000
+DATADIR=../../results/hists/Aug1/merged/0.60000
 
 do_unfold_mu:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
@@ -39,6 +39,13 @@ do_unfold_mu:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ ttjets_scale__up fitresults/ttjets_scale__up/mu histos/mu__ttjets_scale__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wzjets_scale__down fitresults/wzjets_scale__down/mu histos/mu__wzjets_scale__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wzjets_scale__up fitresults/wzjets_scale__up/mu histos/mu__wzjets_scale__up.root
+	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_flavour_heavy__down fitresults/wjets_flavour_heavy__down/mu histos/mu__wjets_flavour_heavy__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_flavour_heavy__up fitresults/wjets_flavour_heavy__up/mu histos/mu__wjets_flavour_heavy__up.root
+	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_flavour_light__down fitresults/wjets_flavour_light__down/mu histos/mu__wjets_flavour_light__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_flavour_light__up fitresults/wjets_flavour_light__up/mu histos/mu__wjets_flavour_light__up.root
+	
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ pu__down fitresults/pu__down/mu histos/mu__pu__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ pu__up fitresults/pu__up/mu histos/mu__pu__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ top_weight__down fitresults/top_weight__down/mu histos/mu__top_weight__down.root
@@ -61,6 +68,9 @@ do_unfold_mu:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ lepton_trigger__up fitresults/lepton_trigger__up/mu histos/mu__lepton_trigger__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_shape__down fitresults/wjets_shape__down/mu histos/mu__wjets_shape__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ wjets_shape__up fitresults/wjets_shape__up/mu histos/mu__wjets_shape__up.root
+	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ qcd_antiiso__down fitresults/qcd_antiiso__down/mu histos/mu__qcd_antiiso__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ qcd_antiiso__up fitresults/qcd_antiiso__up/mu histos/mu__qcd_antiiso__up.root
 
 
 do_unfold_ele:
@@ -77,6 +87,12 @@ do_unfold_ele:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ ttjets_scale__up fitresults/ttjets_scale__up/ele histos/ele__ttjets_scale__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wzjets_scale__down fitresults/wzjets_scale__down/ele histos/ele__wzjets_scale__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wzjets_scale__up fitresults/wzjets_scale__up/ele histos/ele__wzjets_scale__up.root
+	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_flavour_heavy__down fitresults/wjets_flavour_heavy__down/ele histos/ele__wjets_flavour_heavy__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_flavour_heavy__up fitresults/wjets_flavour_heavy__up/ele histos/ele__wjets_flavour_heavy__up.root
+	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_flavour_light__down fitresults/wjets_flavour_light__down/ele histos/ele__wjets_flavour_light__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_flavour_light__up fitresults/wjets_flavour_light__up/ele histos/ele__wjets_flavour_light__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ pu__down fitresults/pu__down/ele histos/ele__pu__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ pu__up fitresults/pu__up/ele histos/ele__pu__up.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ top_weight__down fitresults/top_weight__down/ele histos/ele__top_weight__down.root
@@ -100,6 +116,8 @@ do_unfold_ele:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_shape__down fitresults/wjets_shape__down/ele histos/ele__wjets_shape__down.root
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ wjets_shape__up fitresults/wjets_shape__up/ele histos/ele__wjets_shape__up.root
 	
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ qcd_antiiso__down fitresults/qcd_antiiso__down/ele histos/ele__qcd_antiiso__down.root
+	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/ele/ qcd_antiiso__up fitresults/qcd_antiiso__up/ele histos/ele__qcd_antiiso__up.root
 	
 unfold_nominal:	
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
