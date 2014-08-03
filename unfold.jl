@@ -1,4 +1,3 @@
-const ts = "jul17"
 using NLopt
 include("../analysis/base.jl");
 using SingleTopBase;
@@ -7,6 +6,8 @@ using PyCall, PyPlot;
 
 include("$BASE/src/analysis/hplot.jl");
 include("$BASE/src/analysis/python_plots.jl");
+
+const hist_path = "../../results/hists/Aug1/merged"
 
 titles = {
     :mu=>"\$\\mu^\\pm\$, 2J1T, BDT>0.6",
@@ -18,6 +19,7 @@ function asymmetry(x::AbstractVector)
     nb2 = int(nb/2)
     return -(sum(x[1:nb2]) - sum(x[nb2+1:end])) / (sum(x[1:nb2]) + sum(x[nb2+1:end]))
 end
+
 function asymmetry(x::Histogram)
     asymmetry(contents(x)[1:end-1])
 end
@@ -40,12 +42,11 @@ const bdt = "0.60000"
         #println(s)
     end
 
-    cd("$BASE/notebooks")
     tms = {
-        k => load_hists_from_file("../results/hists/Jun13/$bdt/$lepton/tmatrix_nocharge__gen_$(k).root") for k in [:ele, :mu, :tau]
+        k => load_hists_from_file("$hist_path/$bdt/$lepton/tmatrix_nocharge__gen_$(k).root") for k in [:ele, :mu, :tau]
     };
 
-    hists = load_hists_from_file("../results/hists/Jun13/$bdt/$lepton/cos_theta_lj.root") |> remove_prefix;
+    hists = load_hists_from_file("$hist_path/$bdt/$lepton/cos_theta_lj.root") |> remove_prefix;
 
     unf1 = histos_d[:nominal]
 
@@ -54,7 +55,7 @@ const bdt = "0.60000"
     hd = {k=>rebin(v, 2:nrebin:nbins(v)-nrebin) for (k, v) in hd};
 
     systs = map(x->symbol(x), map(x->split("$x", "__")[1], collect(keys(histos_d))) |> unique);
-    
+
     const Ngen = integral(unf1["gen"])
     norm_gen(h) = (Ngen/integral(h)) * h
 
@@ -117,7 +118,7 @@ const bdt = "0.60000"
 
     asymdf[:dup] = abs(A .- asymdf[:up]);
     asymdf[:ddown] = abs(A .- asymdf[:down]);
-    mkpath("$BASE/results/tables/$ts")
+    mkpath("$BASE/results/tables/")
 
 #    tot_du = asymdf[:dup].^2 |> sum |> sqrt
 #    tot_dd = asymdf[:ddown].^2 |> sum |> sqrt;
@@ -127,9 +128,9 @@ const bdt = "0.60000"
     Asyst = asymdf[1:end-2, :d].^2 |> sum |> sqrt
     push!(asymdf, [:systematic, A+Asyst, A-Asyst, Asyst, Asyst, Asyst])
     push!(asymdf, [:nominal, A, A, 0.0, 0.0, 0.0])
-    asymdf[:rel_percent] = 100.0 * asymdf[:d] ./ A 
+    asymdf[:rel_percent] = 100.0 * asymdf[:d] ./ A
     #Asyst = sqrt(tot_du^2+tot_dd^2)
-    writetable("$BASE/results/tables/$ts/asymmetries_$(lepton).csv", asymdf)
+    writetable("$BASE/results/tables/asymmetries_$(lepton).csv", asymdf)
     println("Asyst=", Asyst)
 
 #MISC
@@ -174,34 +175,34 @@ const bdt = "0.60000"
 
 ###Unfolded plot
     fig = figure(num=nothing, figsize=(8, 8), dpi=200, facecolor="w", edgecolor="k")
-    
+
     ax = axes()
-    
+
     eplot(ax, norm_gen(unf1["unfolded"]), color="black", label="unfolded data", ls="none", marker="o")
     N = contents(norm_gen(unf1["unfolded"]))
-    
+
     barplot(ax, norm_gen(unf1["gen"]), "green", label="generated (POWHEG)", do_error=false, lw=2)
-    #barplot(ax, rebin(unf1["tm__comphep__proj_x"], 2:nrebin:27-nrebin), "blue", label="generated (CompHEP)", ls="--")
-    
+    barplot(ax, rebin(unf1["tm__comphep__proj_x"], 2:nrebin:27-nrebin), "red", label="generated (CompHEP)", ls="--", lw=2, do_error=false)
+
     variations = {:up=>Any[], :down=>Any[]}
     for d in [:up, :down]
         for k in systs
             k == :nominal && continue
             #println("$k $d")
             delta = contents(
-                norm_gen(unf1["unfolded"]) - 
+                norm_gen(unf1["unfolded"]) -
                 norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])
             )[1:end-1] |> abs;
             push!(variations[d], deepcopy(delta))
         end
     end
-    
+
     tot_du = [x.^2 for x in variations[:up]]|>sum|>sqrt
     tot_dd = [x.^2 for x in variations[:down]]|>sum|>sqrt
     N = N[1:end-1]
     println(tot_du, tot_dd)
     #tot_dd = sum(variations[:down].^2)|>sqrt
-    
+
     ax[:bar](
         lowedge(unf1["gen"].bin_edges),
         tot_du + tot_dd,
@@ -211,17 +212,17 @@ const bdt = "0.60000"
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="///",
+        hatch="/////",
         label="uncertainty";
     )
-    
+
     #title("unfolded distribution, \$\\chi^2/n = $(round(chi2val, 2))\$")
     #grid()
     leg = legend(loc=4, numpoints=1)
     leg[:draw_frame](false)
     xlabel(string("", VARS[:cos_theta_lj]), fontsize=18)
-    ylabel("\$\\frac{\\mathrm{d}\\sigma}{\\sigma\\ \\\mathrm{d}\\cos\\ \\theta^*}\$", fontsize=18)
-    cmspaper(ax, 0.35, 0.13, additional_text=titles[lepton])
+    ylabel(VARS[:differential_cos_theta], fontsize=18)
+    cmspaper_title(ax, 0.5, 1.01, additional_text=titles[lepton])
     unfolded = unf1["unfolded"]
     gen = unf1["gen"]
     text(0.5, 0.98,
@@ -229,18 +230,18 @@ const bdt = "0.60000"
         transform=ax[:transAxes], verticalalignment="top" , horizontalalignment="center",
         fontsize=16
     )
-    
+
     @pyimport matplotlib.ticker as ticker
-    
+
     majorLocator   = ticker.FixedLocator(linspace(-1, 1, length(rbins)))
     minorLocator   = ticker.FixedLocator(linspace(-1, 1, (length(rbins)-1)*4 + 1))
-    
+
     ax[:xaxis][:set_major_locator](majorLocator)
     ax[:xaxis][:set_minor_locator](minorLocator)
     ax[:ticklabel_format](axis="y", style="sci", useOffset=true, scilimits=(-2, 2))
     ax[:yaxis][:major][:formatter][:_useMathText] = true
     #rcParams["text.usetex"] = true
-    
+
     #xticks(rbins);
     ax[:tick_params](axis="x",which="minor",bottom="on")
     svfg("$BASE/results/plots/unfolded_$(lepton)");
@@ -309,32 +310,33 @@ legend(loc="best")
 xticks(rbins)
 svfg("$BASE/results/plots/unfolding/unfolded_comparison_ratio_$(lepton)")
 
-#
-# hd = reweight_hists_to_fitres(FITRESULTS[lepton], hists)
-# hd = {k=>rebin(v, 2:nrebin:nbins(v)-nrebin-1) for (k, v) in hd};
-# (ax, rax) = combdraw(hd, :cos_theta_lj; loc_paperstring=(:top, :left),
-# titletext=titles[lepton]
-# );
-#
-# hbg = sum([hd[k] for k in ["wjets", "ttjets", "qcd", "schan", "twchan", "dyjets", "gjets"]])
-# htchan = Histogram(entries(hbg), contents(hbg) + vcat(0, contents(h), 0), edges(hd["DATA"]))
-# #htchan = rebin(htchan, 2:nrebin:nbins(htchan)-nrebin-1)
-# htchan = integral(hd["DATA"])/integral(htchan) * htchan
-# if lepton == :mu
-#     htch_asym = hd["tchan__asym_028"] + hbg
-# elseif lepton == :ele
-#     htch_asym = hd["tchan__asym_008"] + hbg
-# end
-#
-# barplot(ax, htchan, "black", label="unfolded", do_error=false)
-# barplot(rax, (htchan - mctot) / htchan, "black", do_error=false)
-# #barplot(ax, htch_asym, "purple", label="weighted to A", do_error=false)
-# #barplot(rax, (hd["DATA"] - htch_asym)/hd["DATA"], "purple", do_error=false)
-#
-# rslegend(ax)
-# xticks(rbins)
-# svfg("$BASE/results/plots/$ts/results/cos_theta_lj_2j_1t_$(lepton)_bdt_0_6")
-#
+
+hd = reweight_hists_to_fitres(FITRESULTS[lepton], hists)
+hd = {k=>rebin(v, 2:nrebin:nbins(v)-nrebin-1) for (k, v) in hd};
+(ax, rax) = combdraw(hd, :cos_theta_lj; loc_paperstring=(:top, :left),
+titletext=titles[lepton]
+);
+
+hbg = sum([hd[k] for k in ["wjets", "ttjets", "qcd", "schan", "twchan", "dyjets", "gjets"]])
+htchan = Histogram(entries(hbg), contents(hbg) + vcat(0, contents(h), 0), edges(hd["DATA"]))
+#htchan = rebin(htchan, 2:nrebin:nbins(htchan)-nrebin-1)
+htchan = integral(hd["DATA"])/integral(htchan) * htchan
+#if lepton == :mu
+#    htch_asym = hd["tchan__asym_028"] + hbg
+#elseif lepton == :ele
+#    htch_asym = hd["tchan__asym_008"] + hbg
+#end
+
+#barplot(ax, htchan, "black", label="unfolded", do_error=false)
+#barplot(rax, hd["DATA"]/htchan, "black", do_error=false)
+#barplot(ax, htch_asym, "purple", label="weighted to A", do_error=false)
+#barplot(rax, (hd["DATA"] - htch_asym)/hd["DATA"], "purple", do_error=false)
+
+ylabel(VARS[:differential_cos_theta], fontsize=18)
+rslegend(ax)
+xticks(rbins)
+svfg("$BASE/results/plots/results/cos_theta_lj_2j_1t_$(lepton)_bdt_0_6")
+
 
 #### Correlation matrix parametrization
 hcorr = unf1["correlation"];
