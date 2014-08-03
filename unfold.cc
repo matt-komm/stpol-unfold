@@ -89,7 +89,7 @@ void unfold(TH1F *hrec, TH1F *hgen, TH2F *hgenrec, TFile *f, TString syst)
                 histo = (TH1F*)f->Get(var_y + "__" + name);
                 cout << "Could not load " << bkg_name << ", using nominal " << histo->GetName() << " " << histo->Integral() << endl;
             } else {
-                cout << "loaded background histogram for name=" << name << " " << bkg_name << endl;
+                cout << "loaded background histogram for name=" << name << " " << bkg_name << " " << histo->Integral() << endl;
             }
             
             histo->Rebin(NREBIN);
