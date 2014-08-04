@@ -1,18 +1,22 @@
 CC=g++
 
 #the full path to compiled TUnfold
-UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
-#UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
+#UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
+UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
 
-CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs`
-LDFLAGS=-L$(UNFOLD_DIR) $(UNFOLD_DIR)/libunfold.so -lMinuit -lXMLParser
+CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` -std=gnu++0x
+LDFLAGS=-L$(UNFOLD_DIR) -lunfold -lMinuit -lXMLParser
 
-all: unfold
+all: unfold unfoldPro
 
 #only works in SLC6, or new osx
 unfold: unfold.cc info.hpp utils.hpp
-	c++ -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` $(LDFLAGS) unfold.cc info.hpp utils.hpp
+	c++ $(CXXFLAGS) $(LDFLAGS) unfold.cc info.hpp utils.hpp
 	mv a.out unfold
+	
+unfoldPro: unfoldPro.cc info.hpp utils.hpp
+	c++ $(CXXFLAGS) $(LDFLAGS) unfoldPro.cc info.hpp utils.hpp
+	mv a.out unfoldPro
 
 calc_asymmetry: calc_asymmetry.C info.hpp utils.hpp
 calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
@@ -20,10 +24,11 @@ calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
 closure: closure.C info.h utils.hpp
 
 clean:
-	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst
+	rm -f unfold unfold_pseudo calc_asymmetry unfold_systematics calc_asymmetry_syst unfoldPro
 
 #path to histograms
-DATADIR=../../results/hists/Jul23/merged/0.60000
+#DATADIR=../../results/hists/Jul23/merged/0.60000
+DATADIR=/nfs/user/mkomm/scanned_hists_jul31/0.60000
 
 do_unfold_mu:
 	DYLD_LIBRARY_PATH=$(UNFOLD_DIR):$(DYLD_LIBRARY_PATH) ./unfold $(DATADIR)/mu/ nominal fitresults/nominal/mu histos/mu__nominal.root
