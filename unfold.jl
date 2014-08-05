@@ -12,7 +12,7 @@ const hist_path = "../../results/hists/Aug1/merged"
 titles = {
     :mu=>"\$\\mu^\\pm\$, 2J1T, BDT>0.6",
     :ele=>"\$e^\\pm\$, 2J1T, BDT>0.6",
-    :combined=>"\$e^\\pm,\\mu^\\pm\$, 2J1T, BDT>0.6"
+    :combined=>"\$e^\\pm,\\ \\mu^\\pm\$, 2J1T, BDT>0.6"
 };
 
 function asymmetry(x::AbstractVector)
@@ -91,7 +91,6 @@ end
     Astat = asymmetry_error(unf1["unfolded"], unf1["error"])
     println("Astat=", Astat)
 
-
 #ASYMMETRIES
     asymmetries = {:up=>Dict(), :down=>Dict()}
     A = 0
@@ -117,6 +116,12 @@ end
             asymmetries[:down][syst] = A - a
             unf_histos[syst][:up] = deepcopy(v["unfolded"])
             unf_histos[syst][:down] = deepcopy(v["unfolded"])
+        elseif length(s)==1 && syst in [:generator]
+            unf_histos[syst][:up] = deepcopy(v["unfolded"])
+            unf_histos[syst][:down] = deepcopy(v["unfolded"])
+            a = asymmetry(v["unfolded"])
+            asymmetries[:up][syst] = a
+            asymmetries[:down][syst] = a
         elseif length(s)==2
             dir = symbol(s[2])
             asymmetries[dir][syst] = asymmetry(v["unfolded"])
@@ -215,7 +220,8 @@ end
             println("$k $d")
             delta = contents(
                 norm_gen(unf1["unfolded"]) -
-                norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])
+        #        norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])
+                norm_gen(unf_histos[k][d])
             )[1:end-1] |> abs;
             push!(variations[d], deepcopy(delta))
         end
