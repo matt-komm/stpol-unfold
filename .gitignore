@@ -2,7 +2,12 @@
 *.gch
 *.root
 *.un~
+*.csv
+*.pyc
+*.tex
+*.log
 info.h
 unfold
 fitresults
 histos
+unfoldPro
