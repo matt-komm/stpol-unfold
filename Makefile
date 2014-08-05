@@ -2,10 +2,13 @@ CC=g++
 
 #the full path to compiled TUnfold
 #UNFOLD_DIR=/home/joosep/Dropbox/kbfi/top/stpol/tunfold
-UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
+#UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
+UNFOLD_DIR=/Users/joosep/Documents/tunfold
 
-CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` -std=gnu++0x
-LDFLAGS=-L$(UNFOLD_DIR) -lunfold -lMinuit -lXMLParser
+#CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` -std=gnu++0x
+#clang
+CXXFLAGS= -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` -std=c++11
+LDFLAGS=-L$(UNFOLD_DIR) -lunfold0 -lMinuit -lXMLParser
 
 all: unfold unfoldPro
 
@@ -35,7 +38,8 @@ SYSLIST=btag_bc btag_l jer jes lepton_id lepton_iso lepton_trigger mass wzjets_m
 
 #path to histograms
 #DATADIR=../../results/hists/Jul23/merged/0.60000
-DATADIR=/nfs/user/mkomm/scanned_hists_jul31/0.60000
+#DATADIR=/nfs/user/mkomm/scanned_hists_jul31/0.60000
+DATADIR=../../notes/notes/AN-14-001/trunk/data/hists_for_fit_unfolding/0.60000
 LD_LIBRARY_PATH:=$(UNFOLD_DIR):$(LD_LIBRARY_PATH)
 
 do_unfold_mu:
@@ -47,7 +51,7 @@ do_unfold_mu:
 			--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 			--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
 	        --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-	        --fitResultPrefix=$(DATADIR)/fitresult \
+	        --fitResultPrefix=fitresults \
 	        --fitResult=mu.txt \
 	        --fitCovariance=mu_cov.root \
             --sys=$$(echo $$SYS)__up \
@@ -61,7 +65,7 @@ do_unfold_mu:
             --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
             --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
             --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-            --fitResultPrefix=$(DATADIR)/fitresult \
+            --fitResultPrefix=fitresults \
             --fitResult=mu.txt \
             --fitCovariance=mu_cov.root \
             --sys=$$(echo $$SYS)__down \
@@ -77,7 +81,7 @@ do_unfold_mu:
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=mu.txt \
         --fitCovariance=mu_cov.root \
         --sys=nominal \
@@ -89,7 +93,7 @@ do_unfold_mu:
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=mu.txt \
         --fitCovariance=mu_cov.root \
         --sys=nominal \
@@ -103,7 +107,7 @@ do_unfold_mu:
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=mu.txt \
         --fitCovariance=mu_cov.root \
         --sys=nominal \
@@ -117,11 +121,100 @@ do_unfold_mu:
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=mu.txt \
         --fitCovariance=mu_cov.root \
         --sys=nominal \
         --output=$(OUTPUTFOLDER)/mu__fiterror.root \
+        -v \
+        --no-stat \
+        --no-mcstat
+
+
+do_unfold_combined:
+	mkdir -p $(OUTPUTFOLDER)
+	for SYS in $(SYSLIST); do \
+		echo $$SYS; \
+		./unfoldPro \
+			--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+			--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+			--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+	        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+	        --fitResultPrefix=fitresults \
+	        --fitResult=combined.txt \
+	        --fitCovariance=combined_cov.root \
+            --sys=$$(echo $$SYS)__up \
+            --output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__up.root \
+            -v \
+            --no-stat \
+            --no-mcstat \
+            --no-fiterror; \
+        ./unfoldPro \
+            --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+            --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+            --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+            --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+            --fitResultPrefix=fitresults \
+            --fitResult=combined.txt \
+            --fitCovariance=combined_cov.root \
+            --sys=$$(echo $$SYS)__down \
+            --output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__down.root \
+            -v \
+            --no-stat \
+            --no-mcstat \
+            --no-fiterror; \
+	done
+
+	./unfoldPro \
+        --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+        --fitResultPrefix=fitresults \
+        --fitResult=combined.txt \
+        --fitCovariance=combined_cov.root \
+        --sys=nominal \
+        --output=$(OUTPUTFOLDER)/combined__nominal.root \
+        -v 
+	
+	./unfoldPro \
+        --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+        --fitResultPrefix=fitresults \
+        --fitResult=combined.txt \
+        --fitCovariance=combined_cov.root \
+        --sys=nominal \
+        --output=$(OUTPUTFOLDER)/combined__stat.root \
+        -v \
+        --no-mcstat \
+        --no-fiterror
+    
+	./unfoldPro \
+        --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+        --fitResultPrefix=fitresults \
+        --fitResult=combined.txt \
+        --fitCovariance=combined_cov.root \
+        --sys=nominal \
+        --output=$(OUTPUTFOLDER)/combined__mcstat.root \
+        -v \
+        --no-stat \
+        --no-fiterror
+    
+	./unfoldPro \
+        --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+        --responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+        --fitResultPrefix=fitresults \
+        --fitResult=combined.txt \
+        --fitCovariance=combined_cov.root \
+        --sys=nominal \
+        --output=$(OUTPUTFOLDER)/combined__fiterror.root \
         -v \
         --no-stat \
         --no-mcstat
@@ -136,7 +229,7 @@ do_unfold_ele:
 			--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 			--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
 	        --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-	        --fitResultPrefix=$(DATADIR)/fitresult \
+	        --fitResultPrefix=fitresults \
 	        --fitResult=ele.txt \
 	        --fitCovariance=ele_cov.root \
             --sys=$$(echo $$SYS)__up \
@@ -150,7 +243,7 @@ do_unfold_ele:
             --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
             --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
             --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-            --fitResultPrefix=$(DATADIR)/fitresult \
+            --fitResultPrefix=fitresults \
             --fitResult=ele.txt \
             --fitCovariance=ele_cov.root \
             --sys=$$(echo $$SYS)__down \
@@ -166,19 +259,20 @@ do_unfold_ele:
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=ele.txt \
         --fitCovariance=ele_cov.root \
         --sys=nominal \
         --output=$(OUTPUTFOLDER)/ele__nominal.root \
         -v 
+    
 	
 	./unfoldPro \
 	    --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=ele.txt \
         --fitCovariance=ele_cov.root \
         --sys=nominal \
@@ -192,7 +286,7 @@ do_unfold_ele:
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=ele.txt \
         --fitCovariance=ele_cov.root \
         --sys=nominal \
@@ -206,7 +300,7 @@ do_unfold_ele:
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
         --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-        --fitResultPrefix=$(DATADIR)/fitresult \
+        --fitResultPrefix=fitresults \
         --fitResult=ele.txt \
         --fitCovariance=ele_cov.root \
         --sys=nominal \
@@ -214,6 +308,20 @@ do_unfold_ele:
         -v \
         --no-stat \
         --no-mcstat
+
+comphep:
+	./unfoldPro \
+        --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
+        --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
+        --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
+        --responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
+        --fitResultPrefix=fitresults \
+        --fitResult=ele.txt \
+        --fitCovariance=ele_cov.root \
+        --sys=nominal \
+		--responseMatrixName="tm__comphep" \
+        --output=$(OUTPUTFOLDER)/ele__generator.root \
+        -v 
 	
 unfold_2bin_mu:
 	mkdir -p $(OUTPUTFOLDER)
@@ -222,7 +330,7 @@ unfold_2bin_mu:
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=$$(echo $$SYS) \
@@ -232,7 +340,7 @@ unfold_2bin_mu:
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
@@ -243,7 +351,7 @@ unfold_2bin_mu:
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
@@ -254,7 +362,7 @@ unfold_2bin_mu:
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
@@ -269,7 +377,7 @@ unfold_2bin_ele:
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=$$(echo $$SYS) \
@@ -279,7 +387,7 @@ unfold_2bin_ele:
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
@@ -290,7 +398,7 @@ unfold_2bin_ele:
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
@@ -301,7 +409,7 @@ unfold_2bin_ele:
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_tau.root \
-		--fitResultPrefix=$(DATADIR)/fitresult \
+		--fitResultPrefix=fitresults \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
