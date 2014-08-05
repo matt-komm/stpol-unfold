@@ -158,7 +158,7 @@ def readFitResult(fitResult,fitCovariance):
     
     return fitDict
     
-def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,responseFiles,fitResult,systematic="nominal",useStatUnc=True,useMCStatUnc=True,useFitUnc=True):
+def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,responseFiles,responseHistName,fitResult,systematic="nominal",useStatUnc=True,useMCStatUnc=True,useFitUnc=True):
 
 
     measured = None
@@ -191,7 +191,7 @@ def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,respo
             #subtract background from measured data
             measured = u2b.CompoundDistribution(u2b.Subtraction(),measured,backgroundDist)
          
-    tmHist = readHist2d(responseFiles,TMPREFIX,systematic,fitResult[signalHistName]["scale"],REBIN_GEN,REBIN_RECO)
+    tmHist = readHist2d(responseFiles,responseHistName,systematic,fitResult[signalHistName]["scale"],REBIN_GEN,REBIN_RECO)
     tmHistinverted=u2b.readResponseFromHistogramAndInvert(tmHist)
     
     if verbose:
@@ -232,7 +232,8 @@ if __name__=="__main__":
     parser.add_option("--mc-only",action="store_true",dest="mc_only",default=False,help="Substitude data with MC")
     parser.add_option("--histFile",action="append",dest="histFiles",default=[],help="The rootfile containing the signal/background histograms for unfolding")
     parser.add_option("--sys",action="store",dest="systematic",default="nominal",help="Systematic shift.")
-    parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile>:<histpath> containing the 2d response matrix.")
+    parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile> containing the 2d response matrix.")
+    parser.add_option("--responseMatrixName",action="store",dest="responseMatrixName",default="tm",help="The<histname> containing the 2d response matrix.")
     parser.add_option("--fitResultPrefix",action="store",dest="fitResultPrefix",default="",help="Path prefix to the fit result")
     parser.add_option("--fitResult",action="store",dest="fitResult",default="mu.txt",help="Path to the fit result")
     parser.add_option("--fitCovariance",action="store",dest="fitCovariance",default="mu_cov.root",help="Path to the fit covariance root file")
@@ -277,6 +278,7 @@ if __name__=="__main__":
             BACKGROUND,
             DATA,
             options.responseFiles,
+            options.responseMatrixName,
             fitResult,
             systematic="nominal",
             useStatUnc=options.stat,
@@ -341,6 +343,7 @@ if __name__=="__main__":
             BACKGROUND,
             DATA,
             options.responseFiles,
+            options.responseMatrixName,
             fitResultNominal,
             systematic="nominal",
             useStatUnc=False,
@@ -358,6 +361,7 @@ if __name__=="__main__":
             BACKGROUND,
             DATA,
             options.responseFiles,
+            options.responseMatrixName,
             fitResultUp,
             systematic=options.systematic+"__up",
             useStatUnc=False,
@@ -375,6 +379,7 @@ if __name__=="__main__":
             BACKGROUND,
             DATA,
             options.responseFiles,
+            options.responseMatrixName,
             fitResultDown,
             systematic=options.systematic+"__down",
             useStatUnc=False,
