@@ -26,110 +26,75 @@ def readHist1d(fileNames,histName,sys,scale=1.0,rebin=1):
     resulthist=None
     for fileName in fileNames:
         f=ROOT.TFile(fileName,"r")
-        if sys!="nominal":
-            if (f.FindKey(histName+"__"+sys)):
-                hist = f.Get(histName+"__"+sys)
-                if (verbose):
-                    print "opening ",fileName
-                    print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
-                    print " ... rebin with factor ",hist.GetNbinsX()/rebin
-                    print " ... scale with factor ",scale
-                    print
-                hist.Rebin(hist.GetNbinsX()/rebin)
-                    
-                hist.Scale(scale)
-                    
-                if (resulthist==None):
-                    resulthist=hist
-                    resulthist.SetDirectory(0)
-                    rootObj.append(resulthist)
-                else:
-                    resulthist.Add(hist)
-            else:
-                if (f.FindKey(histName)):
-                    hist = f.Get(histName)
-                    print "WARNING: opening ",fileName
-                    print " ... WARNING using ",histName," as fallback for ",histName+"__"+sys
-                    if (verbose):
-                        print " ... rebin with factor ",hist.GetNbinsX()/rebin
-                        print " ... scale with factor ",scale
-                    print
-                    hist.Rebin(hist.GetNbinsX()/rebin)
-                        
-                    hist.Scale(scale)
-                        
-                    if (resulthist==None):
-                        resulthist=hist
-                        resulthist.SetDirectory(0)
-                        rootObj.append(resulthist)
-                    else:
-                        resulthist.Add(hist)
+        if (verbose):
+            print "opening ",fileName
+        hist=None
+        if ((sys=="" or sys=="nominal") and f.FindKey(histName)):
+            hist = f.Get(histName)
+        elif (f.FindKey(histName+"__"+sys)):
+            hist = f.Get(histName+"__"+sys)
+        elif (f.FindKey(histName)):
+            hist = f.Get(histName)
+            print " ... WARNING using ",histName," as fallback for ",histName+"__"+sys
         else:
-            if (f.FindKey(histName)):
-                hist = f.Get(histName)
-                if (verbose):
-                    print "opening ",fileName
-                    print " ... found ",histName," with entries=",hist.GetEntries()
-                    print " ... rebin with factor ",hist.GetNbinsX()/rebin
-                    print " ... scale with factor ",scale
-                    print
-                hist.Rebin(hist.GetNbinsX()/rebin)
-                    
-                hist.Scale(scale)
-                    
-                if (resulthist==None):
-                    resulthist=hist
-                    resulthist.SetDirectory(0)
-                    rootObj.append(resulthist)
-                else:
-                    resulthist.Add(hist)
+            continue
+            
+        if (verbose):
+            print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
+            print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
+            print " ... scale with factor ",scale
+            print
+        hist.Rebin(hist.GetNbinsX()/rebin)
+        hist.Scale(scale)
+            
+        if (resulthist==None):
+            resulthist=hist
+            resulthist.SetDirectory(0)
+            rootObj.append(resulthist)
+        else:
+            resulthist.Add(hist)
         f.Close()
+        
     if (resulthist==None):    
-        raise Exception("hist '"+histName+"' not found in the given rootfiles")
+        raise Exception("hist '"+histName+"' with sys '"+sys+"' not found in the given rootfiles")
     return resulthist
     
 def readHist2d(fileNames,histName,sys,scale=1.0,rebinX=1,rebinY=1):
     resulthist=None
     for fileName in fileNames:
         f=ROOT.TFile(fileName,"r")
-        if (f.FindKey(histName+"__"+sys)):
+        if (verbose):
+            print "opening ",fileName
+        hist=None
+        if (sys=="" and f.FindKey(histName)):
+            hist = f.Get(histName)
+        elif (f.FindKey(histName+"__"+sys)):
             hist = f.Get(histName+"__"+sys)
-            if (verbose):
-                print "opening ",fileName
-                print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
-                print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
-                print " ... scale with factor ",scale
-                print
-            hist.Rebin2D(hist.GetNbinsX()/rebinX,hist.GetNbinsY()/rebinY)
-            hist.Scale(scale)
-            
-            if (resulthist==None):
-                resulthist=hist
-                resulthist.SetDirectory(0)
-                rootObj.append(resulthist)
-            else:
-                resulthist.Add(hist)
         elif (f.FindKey(histName+"__nominal")):
             hist = f.Get(histName+"__nominal")
-            print "WARNING: opening ",fileName
             print " ... WARNING using ",histName+"__nominal"," as fallback for ",histName+"__"+sys
-            if (verbose):
-                print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
-                print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
-                print " ... scale with factor ",scale
-            print
-            hist.Rebin2D(hist.GetNbinsX()/rebinX,hist.GetNbinsY()/rebinY)
-            hist.Scale(scale)
+        else:
+            continue
             
-            if (resulthist==None):
-                resulthist=hist
-                resulthist.SetDirectory(0)
-                rootObj.append(resulthist)
-            else:
-                resulthist.Add(hist)
+        if (verbose):
+            print " ... found ",histName+"__"+sys," with entries=",hist.GetEntries()
+            print " ... rebin with factor ",hist.GetNbinsX()/rebinX,"x",hist.GetNbinsY()/rebinY
+            print " ... scale with factor ",scale
+            print
+        hist.Rebin2D(hist.GetNbinsX()/rebinX,hist.GetNbinsY()/rebinY)
+        hist.Scale(scale)
+            
+        if (resulthist==None):
+            resulthist=hist
+            resulthist.SetDirectory(0)
+            rootObj.append(resulthist)
+        else:
+            resulthist.Add(hist)
         f.Close()
+        
     if (resulthist==None):    
-        raise Exception("hist '"+histName+"__"+sys+"' not found in the given rootfiles")
+        
+        raise Exception("hist '"+histName+"' with sys '"+sys+"' not found in the given rootfiles")
     return resulthist
     
 def readFitResult(fitResult,fitCovariance):
