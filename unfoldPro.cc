@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
     bool noFitError = false;
     bool mcOnly = false;
     
-    gErrorIgnoreLevel = kPrint | kInfo| kWarning| kError| kBreak| kSysError| kFatal;
+    gErrorIgnoreLevel = kPrint | kInfo | kWarning;
     
     while (parser.Next())
     {
