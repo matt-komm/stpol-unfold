@@ -1,0 +1,23 @@
+CC=clang++
+
+CXXFLAGS= -std=c++11 -Wall -O2 -I$(UNFOLD_DIR)  `root-config --cflags --libs` -std=gnu++0x 
+LDFLAGS=-L$(UNFOLD_DIR) -lunfold -lMinuit -lXMLParser
+
+#the full path to compiled TUnfold
+UNFOLD_DIR=/home/mkomm/programs/tunfold17.3
+#UNFOLD_DIR=/home/fynu/mkomm/stpol/unfold/tunfold17.3
+#UNFOLD_DIR=/Users/joosep/Documents/tunfold
+
+OUTPUTFOLDER=./histos
+
+SYSLIST=btag_bc btag_l jer jes lepton_id lepton_iso lepton_trigger mass wzjets_matching ttjets_matching met pu tchan_scale top_weight ttjets_scale wzjets_scale wjets_shape
+#SYSLIST=btag_bc
+
+
+#path to histograms
+#DATADIR=../../results/hists/Jul23/merged/0.60000
+#DATADIR=/nfs/user/mkomm/scanned_hists_jul31/0.60000
+DATADIR=/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000
+FITDIR=/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000/fits
+
+LD_LIBRARY_PATH:=$(UNFOLD_DIR):$(LD_LIBRARY_PATH)
