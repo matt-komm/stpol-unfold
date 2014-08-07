@@ -91,7 +91,8 @@ def doNeyman(responseMatrix,comphep1000Matrix,comphep1100Matrix,comphep0100Matri
             "vr":vr,
             "generated":calcAsymmetry(genDist),
             "unfolded":asymmetry.getMean(0),
-            "uncertainty":asymmetry.getUncertainty(0)
+            "uncertainty":asymmetry.getUncertainty(0),
+            "bias":math.fabs(calcAsymmetry(genDist)-asymmetry.getMean(0))
         })
     return result
     
@@ -145,7 +146,7 @@ if __name__=="__main__":
         })
     '''
     outputFile = open(options.output, 'wb')
-    writer = csv.DictWriter(outputFile, ["vl","vr","generated","unfolded","uncertainty"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+    writer = csv.DictWriter(outputFile, ["vl","vr","generated","unfolded","uncertainty","bias"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
     writer.writeheader()
     for result in scanResult:
         writer.writerow(result)
