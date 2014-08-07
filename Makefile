@@ -29,7 +29,6 @@ test:
 do_unfold_mu:
 	mkdir -p $(OUTPUTFOLDER)
 	for SYS in $(SYSLIST); do \
-		echo $$SYS; \
 		./unfoldPro \
 			--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
 			--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
@@ -132,7 +131,6 @@ do_unfold_mu:
 do_unfold_combined:
 	mkdir -p $(OUTPUTFOLDER)
 	for SYS in $(SYSLIST); do \
-		echo $$SYS; \
 		./unfoldPro \
 			--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
 			--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
