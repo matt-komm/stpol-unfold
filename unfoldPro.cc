@@ -1,19 +1,21 @@
 #include "SimpleOpt.h"
-#include "utils.hpp"
-#include "info.hpp"
-#include "unfold.hpp"
+
+#include "loadHistogram.hpp"
+#include "loadFitResult.hpp"
+#include "logging.hpp"
 
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TFile.h"
+#include "TROOT.h"
 
 #include "TUnfold.h"
 #include "TUnfoldSys.h"
 
-
 #include <iostream>
 #include <cstdio>
 #include <vector>
+#include <cmath>
 #include <map>
 #include <set>
 #include <array>
@@ -27,141 +29,7 @@ static const std::string HISTPREFIX="2j1t_cos_theta_lj__";
 static const unsigned int REBIN_RECO=12;
 static const unsigned int REBIN_GEN=6;
 
-typedef std::map<std::string,std::array<float,2>> FitResult;
-
-bool verbose = false;
-
-
-TH1F* loadHistogram1D(
-    const std::vector<std::string>& fileList, 
-    const std::string& name, 
-    const std::string& sys, 
-    double scale,
-    int rebin
-    )
-{
-    TH1F* result = nullptr;
-    for (const std::string& file: fileList)
-    {
-        TFile input(file.c_str(),"r");
-        
-        std::string histName;
-        std::string histNameAlternative=name;
-        if (sys=="nominal")
-        {
-            histName=name;
-        }
-        else
-        {
-            histName=name+"__"+sys;
-        }
-        TH1F* hist = static_cast<TH1F*>(input.Get(histName.c_str()));
-        if (!hist)
-        {
-           printf("WARNING: using fallback '%s' for '%s'\n",histNameAlternative.c_str(),histName.c_str());
-           hist = static_cast<TH1F*>(input.Get(histNameAlternative.c_str()));
-           if (!hist)
-           {
-               printf("ERROR: fallback '%s' not found in file '%s'\n",histNameAlternative.c_str(),file.c_str());
-               continue;
-           }
-        }
-        hist->Scale(scale);
-        hist->Rebin(hist->GetNbinsX()/rebin);
-        if (!result)
-        {
-            result = new TH1F(*hist);
-            result->SetDirectory(0);
-        }
-        else
-        {
-            result->Add(hist);
-        }
-    }
-    if (!result)
-    {
-        throw std::string("Error while finding histogram '"+name+"' in given files");
-    }
-    return result;
-}
-
-TH2F* loadHistogram2D(
-    const std::vector<std::string>& fileList, 
-    const std::string& name, 
-    const std::string& sys, 
-    double scale,
-    int rebinX,
-    int rebinY
-    )
-{
-    TH2F* result = nullptr;
-    for (const std::string& file: fileList)
-    {
-        TFile input(file.c_str(),"r");
-        
-        std::string histName=name+"__"+sys;
-        std::string histNameAlternative=name+"__nominal";
-        
-        
-        TH2F* hist = static_cast<TH2F*>(input.Get(histName.c_str()));
-        if (!hist)
-        {
-           printf("WARNING: using fallback '%s' for '%s'\n",histNameAlternative.c_str(),histName.c_str());
-           hist = static_cast<TH2F*>(input.Get(histNameAlternative.c_str()));
-           if (!hist)
-           {
-               printf("ERROR: fallback '%s' not found in file '%s'\n",histNameAlternative.c_str(),file.c_str());
-               continue;
-           }
-        }
-        hist->Scale(scale);
-        
-        hist->Rebin2D(hist->GetNbinsX()/rebinX,hist->GetNbinsY()/rebinY);
-        if (!result)
-        {
-            result = new TH2F(*hist);
-            result->SetDirectory(0);
-        }
-        else
-        {
-            result->Add(hist);
-        }
-    }
-    if (!result)
-    {
-        throw std::string("Error while finding histogram '"+name+"' in given files");
-    }
-    return result;
-}
-
-FitResult loadFitResult(const std::string& fresult)
-{
-    FitResult result;
-    
-	//cout << "reading fit results: " << fresult << endl;
-    
-    std::ifstream ifs;
-    ifs.open(fresult);
-    if(!ifs.good()) {
-        printf("ERROR: could not open fit results file! '%s'\n",fresult.c_str());
-        throw std::string("ERROR: could not open fit results file! '"+fresult+"'");
-    }
-    std::string name;
-    float scale, unc;
-    printf("read fit result:\n");
-    while (ifs >> name >> scale >> unc) 
-    {
-        if (name=="beta_signal")
-        {
-            name="tchan";
-        }
-        result[name]={{scale,unc}};
-        printf(" ... %s: %6.5f +- %6.5f\n",name.c_str(),scale,unc);
-    }
-    printf("\n");
-    ifs.close();
-    return result;
-}
+static const double FIXEDTAU=2.63086e-05;
 
 void doUnfolding(const std::vector<std::string>& histFiles,
        const std::string& signalHistName,
@@ -204,10 +72,10 @@ void doUnfolding(const std::vector<std::string>& histFiles,
         dataHist = loadHistogram1D(histFiles,HISTPREFIX+dataHistName,"nominal",1.0,REBIN_RECO);
     }
     
-    printf("data hist: %i bins, N=%f\n",dataHist->GetNbinsX(),dataHist->Integral());
+    log(INFO,"data hist: %i bins, N=%f\n",dataHist->GetNbinsX(),dataHist->Integral());
     
     TH2F* responseHist = loadHistogram2D(responseFiles,responseMatrixName,sys,fitFactors[signalHistName][0],REBIN_GEN,REBIN_RECO);
-    printf("response hist: %ix%i, N=%f\n",responseHist->GetNbinsX(),responseHist->GetNbinsY(),responseHist->Integral());
+    log(INFO,"response hist: %ix%i, N=%f\n",responseHist->GetNbinsX(),responseHist->GetNbinsY(),responseHist->Integral());
     
     
     TUnfoldSys tunfold(responseHist,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
@@ -226,7 +94,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
     
     TFile outputFile(outputFileName.c_str(),"RECREATE");
     
-    tunfold.DoUnfold(tau,dataHist,scaleBias);
+    tunfold.DoUnfold(FIXEDTAU,dataHist,1.0);
     TH1F *unfoldedHist = new TH1F("unfolded","unfolded", REBIN_GEN, -1, 1);
 	tunfold.GetOutput(unfoldedHist);
 	unfoldedHist->Write();
@@ -235,7 +103,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
 	TH2D *hrhoij = new TH2D("correlation","correlation",REBIN_GEN,1,REBIN_GEN,REBIN_GEN,1,REBIN_GEN);
 	tunfold.GetRhoIJ(hrhoij);
 	hrhoij->Write();
-	TH1D *hrhoi = new TH1D("1dcorr","1dcorr",bin_x,1,bin_x);
+	TH1D *hrhoi = new TH1D("1dcorr","1dcorr",REBIN_GEN,1,REBIN_GEN);
 	tunfold.GetRhoI(hrhoi);
 	hrhoi->Write();
 	responseHist->ProjectionX("gen")->Write();
@@ -330,7 +198,7 @@ int main(int argc, char* argv[])
     bool noFitError = false;
     bool mcOnly = false;
     
-
+    gErrorIgnoreLevel = kPrint | kInfo| kWarning| kError| kBreak| kSysError| kFatal;
     
     while (parser.Next())
     {
@@ -386,45 +254,43 @@ int main(int argc, char* argv[])
             }
             else if (parser.OptionId() ==OPT_VERBOSE)
             {
-                verbose=true;
+                //verbose=true;
             }
         }
         else
         {
-            printf("Invalid argument: %s\n", parser.OptionText());
+            log(CRITICAL,"Invalid argument: %s\n", parser.OptionText());
             return 1;
         }
     }
     
-    if (verbose)
-    {
-        printf("histfiles: \n");
-        for (const std::string& histFile: histFiles)
-        {
-            printf(" ... %s\n",histFile.c_str());
-        }
-        printf("\n");
-        
-        printf("responseFiles: \n");
-        for (unsigned int i = 0; i< responseFiles.size();++i)
-        {
-            printf(" ... %s\n",responseFiles[i].c_str());
-        }
-        printf("\n");
-        
-        printf("matrix name: %s\n",(responseMatrixName+"__"+systematic).c_str());
-        printf("\n");
-        
-        printf("systematic:\n ... %s\n",systematic.c_str());
-        printf("\n");
-        
-        printf("fit:\n");
-        printf(" ... scale: %s\n",(fitResultPrefix+"/"+systematic+"/"+fitResultFile).c_str());
-        printf(" ... covariance: %s\n",(fitResultPrefix+"/"+systematic+"/"+covarianceFile).c_str());
-        printf("\n");
-
-    }
     
+    
+    log(INFO,"histfiles: \n");
+    for (const std::string& histFile: histFiles)
+    {
+        log(INFO," ... %s\n",histFile.c_str());
+    }
+    log(INFO,"\n");
+    
+    log(INFO,"responseFiles: \n");
+    for (unsigned int i = 0; i< responseFiles.size();++i)
+    {
+        log(INFO," ... %s\n",responseFiles[i].c_str());
+    }
+    log(INFO,"\n");
+    
+    log(INFO,"matrix name: %s\n",(responseMatrixName+"__"+systematic).c_str());
+    log(INFO,"\n");
+    
+    log(INFO,"systematic:\n ... %s\n",systematic.c_str());
+    log(INFO,"\n");
+    
+    log(INFO,"fit:\n");
+    log(INFO," ... scale: %s\n",(fitResultPrefix+"/"+systematic+"/"+fitResultFile).c_str());
+    log(INFO," ... covariance: %s\n",(fitResultPrefix+"/"+systematic+"/"+covarianceFile).c_str());
+    log(INFO,"\n");
+
     
     
     doUnfolding(
