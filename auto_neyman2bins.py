@@ -100,7 +100,6 @@ if __name__=="__main__":
     
     parser = OptionParser()
     parser.add_option("-v", "--verbose",action="store_true", dest="verbose", default=False, help="Verbose output")
-    parser.add_option("--histFile",action="append",dest="histFiles",default=[],help="The rootfile containing the signal/background histograms for unfolding")
     parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile> containing the 2d response matrix.")
     parser.add_option("--responseMatrixName",action="store",dest="responseMatrixName",default="tm",help="The<histname> containing the 2d response matrix.")
     
@@ -114,8 +113,6 @@ if __name__=="__main__":
     
     
     if (verbose):
-        print "histFiles: "
-        print "".join(" ... "+histFile+"\n" for histFile in options.histFiles)
         print "responseFiles: "
         print "".join(" ... "+responseFile+"\n" for responseFile in options.responseFiles)
         print "responseMatrixName:"

@@ -4,7 +4,6 @@ LD_LIBRARY_PATH=$UNFOLD_DIR:$LD_LIBRARY_PATH
 
 CHANNEL="mu"
 python auto_neyman2bins.py \
---histFile="/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000/"$CHANNEL"/merged/cos_theta_lj.root" \
 --responseFile="/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000/"$CHANNEL"/tmatrix_nocharge__gen_ele.root" \
 --responseFile="/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000/"$CHANNEL"/tmatrix_nocharge__gen_mu.root" \
 --responseFile="/home/mkomm/Analysis/STpol/scanned_hists_jul31/0.60000/"$CHANNEL"/tmatrix_nocharge__gen_tau.root" \
