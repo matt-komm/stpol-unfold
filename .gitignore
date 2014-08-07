@@ -11,4 +11,5 @@ unfold
 fitresults
 histos
 unfoldPro
+neymanPro
 settings.mk

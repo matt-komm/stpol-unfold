@@ -1,14 +1,16 @@
 include settings.mk
 
-all: unfold unfoldPro
+all: unfold unfoldPro neymanPro
 
 unfold: unfold.cc info.hpp utils.hpp
-	$(CC) $(CXXFLAGS) $(LDFLAGS) unfold.cc info.hpp utils.hpp
-	mv a.out unfold
+	$(CC) $(CXXFLAGS) $(LDFLAGS) -o unfold unfold.cc info.hpp utils.hpp
 	
-unfoldPro: unfoldPro.cc info.hpp utils.hpp
-	$(CC) $(CXXFLAGS) $(LDFLAGS) unfoldPro.cc info.hpp utils.hpp
-	mv a.out unfoldPro
+unfoldPro: unfoldPro.cc logging.hpp loadHistogram.hpp loadFitResult.hpp
+	$(CC) $(CXXFLAGS) $(LDFLAGS) -o unfoldPro unfoldPro.cc
+	
+neymanPro: neymanPro.cc logging.hpp loadHistogram.hpp
+	$(CC) $(CXXFLAGS) $(LDFLAGS) -o neymanPro neymanPro.cc
+    
 
 calc_asymmetry: calc_asymmetry.C info.hpp utils.hpp
 calc_asymmetry_syst: calc_asymmetry_syst.C info.hpp utils.hpp
