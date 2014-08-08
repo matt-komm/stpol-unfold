@@ -1,6 +1,11 @@
 #ifndef __LOGGING_H__
 #define __LOGGING_H__
 
+#include <cstdlib>
+#include <string>
+#include <algorithm>
+#include <cctype>
+
 enum LOGLEVEL
 {
     DEBUG=0,
@@ -38,6 +43,42 @@ std::string toStr(LOGLEVEL level)
 }
 
 static LOGLEVEL LogLevel = WARNING;
+
+void setupLogging()
+{
+    const char* env = std::getenv("LOG_LEVEL");
+    if (!env)
+    {
+        LogLevel=INFO;
+        return;
+    }
+    std::string loglevel = std::string(env);
+    std::transform(loglevel.begin(), loglevel.end(), loglevel.begin(),(int (*)(int))std::tolower);
+    if (loglevel=="debug")
+    {
+        LogLevel=DEBUG;
+    }
+    else if (loglevel=="info")
+    {
+        LogLevel=INFO;
+    }
+    else if (loglevel=="warning")
+    {
+        LogLevel=DEBUG;
+    }
+    else if (loglevel=="error")
+    {
+        LogLevel=ERROR;
+    }
+    else if (loglevel=="critical")
+    {
+        LogLevel=CRITICAL;
+    }
+    else
+    {
+        LogLevel=NONE;
+    }
+}
 
 template<class...ARGS> void log(LOGLEVEL level, const std::string& str, ARGS... args)
 {

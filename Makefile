@@ -2,7 +2,7 @@ include settings.mk
 
 all: unfoldPro neymanPro
 
-unfoldPro: unfoldPro.cc logging.hpp loadHistogram.hpp loadFitResult.hpp
+unfoldPro: unfoldPro.cc logging.hpp loadHistogram.hpp loadFitResult.hpp scanTau.hpp
 	$(CC) $(CXXFLAGS) $(LDFLAGS) -o unfoldPro unfoldPro.cc
 	
 neymanPro: neymanPro.cc logging.hpp loadHistogram.hpp
@@ -22,8 +22,8 @@ test:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
-		--output=test.root\
-		-v
+		$(REGMODE) \
+		--output=test.root
 
 
 do_unfold_mu:
@@ -39,7 +39,7 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__up \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__up.root \
-			-v \
+			$(REGMODE) \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -53,7 +53,7 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__down \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__down.root \
-			-v \
+			$(REGMODE) \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -68,8 +68,9 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/mu__nominal.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/mu__nominal.root 
+		
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
@@ -81,8 +82,8 @@ do_unfold_mu:
 		--fitCovariance=mu_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/mu__generator.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/mu__generator.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
@@ -93,8 +94,8 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__stat.root \
-		-v \
 		--no-mcstat \
 		--no-fiterror
 
@@ -107,8 +108,8 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__mcstat.root \
-		-v \
 		--no-stat \
 		--no-fiterror
 
@@ -121,8 +122,8 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__fiterror.root \
-		-v \
 		--no-stat \
 		--no-mcstat
 
@@ -140,8 +141,8 @@ do_unfold_combined:
 			--fitResult=combined.txt \
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__up \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__up.root \
-			-v \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -154,8 +155,8 @@ do_unfold_combined:
 			--fitResult=combined.txt \
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__down \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__down.root \
-			-v \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -170,8 +171,8 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/combined__nominal.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/combined__nominal.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
@@ -183,8 +184,8 @@ do_unfold_combined:
 		--fitCovariance=combined_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/combined__nominal.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/combined__nominal.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
@@ -195,8 +196,8 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__stat.root \
-		-v \
 		--no-mcstat \
 		--no-fiterro
 
@@ -209,8 +210,8 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__mcstat.root \
-		-v \
 		--no-stat \
 		--no-fiterror
 
@@ -223,8 +224,8 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__fiterror.root \
-		-v \
 		--no-stat \
 		--no-mcstat
 	#julia unfold.jl combined
@@ -241,8 +242,8 @@ do_unfold_ele:
 			--fitResult=ele.txt \
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__up \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__up.root \
-			-v \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -255,8 +256,8 @@ do_unfold_ele:
 			--fitResult=ele.txt \
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__down \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__down.root \
-			-v \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -271,8 +272,8 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/ele__nominal.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/ele__nominal.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
@@ -284,8 +285,8 @@ do_unfold_ele:
 		--fitCovariance=ele_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/ele__nominal.root \
-		-v
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/ele__nominal.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
@@ -296,8 +297,8 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__stat.root \
-		-v \
 		--no-mcstat \
 		--no-fiterror
 
@@ -310,8 +311,8 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__mcstat.root \
-		-v \
 		--no-stat \
 		--no-fiterror
 
@@ -324,8 +325,8 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__fiterror.root \
-		-v \
 		--no-stat \
 		--no-mcstat
 	#julia unfold.jl ele
