@@ -175,7 +175,6 @@ CSimpleOpt::SOption options[] ={
     {OPT_NOMC,"--no-mcstat",SO_NONE},
     {OPT_NOFITERROR,"--no-fiterror",SO_NONE},
     {OPT_MCONLY,"--mc-only",SO_NONE},
-    {OPT_VERBOSE,"-v",SO_NONE},
     SO_END_OF_OPTIONS
 
 };
@@ -199,6 +198,8 @@ int main(int argc, char* argv[])
     bool mcOnly = false;
     
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
+    
+    setupLogging();
     
     while (parser.Next())
     {
@@ -251,10 +252,6 @@ int main(int argc, char* argv[])
             else if (parser.OptionId() ==OPT_MCONLY)
             {
                 mcOnly=true;
-            }
-            else if (parser.OptionId() ==OPT_VERBOSE)
-            {
-                //verbose=true;
             }
         }
         else

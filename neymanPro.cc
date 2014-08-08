@@ -1,7 +1,6 @@
 #include "SimpleOpt.h"
 
 #include "loadHistogram.hpp"
-#include "loadFitResult.hpp"
 #include "logging.hpp"
 
 #include "TH1F.h"
@@ -57,6 +56,8 @@ int main(int argc, char* argv[])
     
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
     
+    setupLogging();
+    
     while (parser.Next())
     {
         if (parser.LastError() == SO_SUCCESS)
@@ -92,4 +93,14 @@ int main(int argc, char* argv[])
             return 1;
         }
     }
+    
+    log(INFO,"responseFiles: \n");
+    for (unsigned int i = 0; i< responseFiles.size();++i)
+    {
+        log(INFO," ... %s\n",responseFiles[i].c_str());
+    }
+    log(INFO,"matrix name: %s\n",(responseMatrixName).c_str());
+    
+    
+
 }
