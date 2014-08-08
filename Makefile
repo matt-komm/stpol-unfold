@@ -2,7 +2,7 @@ include settings.mk
 
 all: unfoldPro neymanPro
 
-unfoldPro: unfoldPro.cc logging.hpp loadHistogram.hpp loadFitResult.hpp
+unfoldPro: unfoldPro.cc logging.hpp loadHistogram.hpp loadFitResult.hpp scanTau.hpp
 	$(CC) $(CXXFLAGS) $(LDFLAGS) -o unfoldPro unfoldPro.cc
 	
 neymanPro: neymanPro.cc logging.hpp loadHistogram.hpp

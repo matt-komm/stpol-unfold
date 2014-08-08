@@ -2,12 +2,17 @@
 
 #include "loadHistogram.hpp"
 #include "loadFitResult.hpp"
+#include "scanTau.hpp"
 #include "logging.hpp"
 
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TFile.h"
 #include "TROOT.h"
+#include "TMath.h"
+#include "TColor.h"
+#include "TCanvas.h"
+#include "TLegend.h"
 
 #include "TUnfold.h"
 #include "TUnfoldSys.h"
@@ -21,6 +26,7 @@
 #include <array>
 #include <string>
 #include <fstream>
+#include <cstdio>
 
 static const std::string DATA="DATA";
 static const std::string SIGNAL="tchan";
@@ -29,7 +35,7 @@ static const std::string HISTPREFIX="2j1t_cos_theta_lj__";
 static const unsigned int REBIN_RECO=12;
 static const unsigned int REBIN_GEN=6;
 
-static const double FIXEDTAU=2.63086e-05;
+
 
 void doUnfolding(const std::vector<std::string>& histFiles,
        const std::string& signalHistName,
@@ -94,13 +100,17 @@ void doUnfolding(const std::vector<std::string>& histFiles,
     }
     
     TFile outputFile(outputFileName.c_str(),"RECREATE");
+    
+    
     if (fixedTau>0.0)
     {
         tunfold.DoUnfold(fixedTau,dataHist,1.0);
     }
     else
     {
-        tunfold.DoUnfold(FIXEDTAU,dataHist,1.0);
+        ScanResult scanResult = scanTau(responseHist,dataHist);
+        log(INFO,"regularization scan gives: tau=%5.4e @ rho=%4.3f\n",scanResult.taumean,scanResult.pmean);
+        tunfold.DoUnfold(scanResult.taumean,dataHist,1.0);
     }
     TH1F *unfoldedHist = new TH1F("unfolded","unfolded", REBIN_GEN, -1, 1);
 	tunfold.GetOutput(unfoldedHist);
