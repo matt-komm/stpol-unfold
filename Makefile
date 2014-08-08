@@ -22,6 +22,7 @@ test:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=test.root
 
 
@@ -38,6 +39,7 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__up \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__up.root \
+			$(REGMODE) \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -51,6 +53,7 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__down \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__down.root \
+			$(REGMODE) \
 			--no-stat \
 			--no-mcstat \
 			--no-fiterror; \
@@ -65,7 +68,9 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__nominal.root 
+		
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
@@ -77,6 +82,7 @@ do_unfold_mu:
 		--fitCovariance=mu_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__generator.root 
 
 	./unfoldPro \
@@ -88,7 +94,8 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
-		--output=$(OUTPUTFOLDER)/mu__stat.root 
+		$(REGMODE) \
+		--output=$(OUTPUTFOLDER)/mu__stat.root \
 		--no-mcstat \
 		--no-fiterror
 
@@ -101,6 +108,7 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__mcstat.root \
 		--no-stat \
 		--no-fiterror
@@ -114,6 +122,7 @@ do_unfold_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__fiterror.root \
 		--no-stat \
 		--no-mcstat
@@ -132,6 +141,7 @@ do_unfold_combined:
 			--fitResult=combined.txt \
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__up \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__up.root \
 			--no-stat \
 			--no-mcstat \
@@ -145,6 +155,7 @@ do_unfold_combined:
 			--fitResult=combined.txt \
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__down \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__down.root \
 			--no-stat \
 			--no-mcstat \
@@ -160,6 +171,7 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__nominal.root 
 
 	./unfoldPro \
@@ -172,6 +184,7 @@ do_unfold_combined:
 		--fitCovariance=combined_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__nominal.root 
 
 	./unfoldPro \
@@ -183,6 +196,7 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__stat.root \
 		--no-mcstat \
 		--no-fiterro
@@ -196,6 +210,7 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__mcstat.root \
 		--no-stat \
 		--no-fiterror
@@ -209,6 +224,7 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__fiterror.root \
 		--no-stat \
 		--no-mcstat
@@ -226,6 +242,7 @@ do_unfold_ele:
 			--fitResult=ele.txt \
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__up \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__up.root \
 			--no-stat \
 			--no-mcstat \
@@ -239,6 +256,7 @@ do_unfold_ele:
 			--fitResult=ele.txt \
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__down \
+			$(REGMODE) \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__down.root \
 			--no-stat \
 			--no-mcstat \
@@ -254,6 +272,7 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__nominal.root 
 
 	./unfoldPro \
@@ -266,6 +285,7 @@ do_unfold_ele:
 		--fitCovariance=ele_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__nominal.root 
 
 	./unfoldPro \
@@ -277,6 +297,7 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__stat.root \
 		--no-mcstat \
 		--no-fiterror
@@ -290,6 +311,7 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__mcstat.root \
 		--no-stat \
 		--no-fiterror
@@ -303,6 +325,7 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__fiterror.root \
 		--no-stat \
 		--no-mcstat

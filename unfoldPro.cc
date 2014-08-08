@@ -44,7 +44,8 @@ void doUnfolding(const std::vector<std::string>& histFiles,
        bool noStatUnc=true,
        bool noMCStatUnc=true,
        bool noFitUnc=true,
-       bool mcOnly=false)
+       bool mcOnly=false,
+       double fixedTau=-1.0)
 {
 	TH1::SetDefaultSumw2(true);
 
@@ -93,8 +94,14 @@ void doUnfolding(const std::vector<std::string>& histFiles,
     }
     
     TFile outputFile(outputFileName.c_str(),"RECREATE");
-    
-    tunfold.DoUnfold(FIXEDTAU,dataHist,1.0);
+    if (fixedTau>0.0)
+    {
+        tunfold.DoUnfold(fixedTau,dataHist,1.0);
+    }
+    else
+    {
+        tunfold.DoUnfold(FIXEDTAU,dataHist,1.0);
+    }
     TH1F *unfoldedHist = new TH1F("unfolded","unfolded", REBIN_GEN, -1, 1);
 	tunfold.GetOutput(unfoldedHist);
 	unfoldedHist->Write();
@@ -159,7 +166,8 @@ enum {
     OPT_NOMC,
     OPT_NOFITERROR,
     OPT_MCONLY,
-    OPT_VERBOSE
+    OTP_FIXEDTAU,
+    OTP_SCANTAU
 };
 
 CSimpleOpt::SOption options[] ={
@@ -175,6 +183,8 @@ CSimpleOpt::SOption options[] ={
     {OPT_NOMC,"--no-mcstat",SO_NONE},
     {OPT_NOFITERROR,"--no-fiterror",SO_NONE},
     {OPT_MCONLY,"--mc-only",SO_NONE},
+    {OTP_FIXEDTAU,"--fixedTau",SO_REQ_SEP},
+    {OTP_SCANTAU,"--scanTau",SO_NONE},
     SO_END_OF_OPTIONS
 
 };
@@ -196,6 +206,8 @@ int main(int argc, char* argv[])
     bool noMCStat = false;
     bool noFitError = false;
     bool mcOnly = false;
+    
+    double fixedTau=-1.0;
     
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
     
@@ -253,6 +265,21 @@ int main(int argc, char* argv[])
             {
                 mcOnly=true;
             }
+            else if (parser.OptionId() ==OTP_FIXEDTAU)
+            {
+                try
+                {
+                    fixedTau=stod(std::string(parser.OptionArg()));
+                } 
+                catch (std::exception e)
+                {
+                    log(ERROR,"while parsing the given fixed tau: "+std::string(e.what()));
+                }
+            }
+            else if (parser.OptionId() ==OTP_SCANTAU)
+            {
+                fixedTau=-1.0; //neg value will trigger a scan
+            }   
         }
         else
         {
@@ -268,27 +295,29 @@ int main(int argc, char* argv[])
     {
         log(INFO," ... %s\n",histFile.c_str());
     }
-    log(INFO,"\n");
     
     log(INFO,"responseFiles: \n");
     for (unsigned int i = 0; i< responseFiles.size();++i)
     {
         log(INFO," ... %s\n",responseFiles[i].c_str());
     }
-    log(INFO,"\n");
     
     log(INFO,"matrix name: %s\n",(responseMatrixName+"__"+systematic).c_str());
-    log(INFO,"\n");
     
     log(INFO,"systematic:\n ... %s\n",systematic.c_str());
-    log(INFO,"\n");
     
     log(INFO,"fit:\n");
     log(INFO," ... scale: %s\n",(fitResultPrefix+"/"+systematic+"/"+fitResultFile).c_str());
     log(INFO," ... covariance: %s\n",(fitResultPrefix+"/"+systematic+"/"+covarianceFile).c_str());
-    log(INFO,"\n");
 
-    
+    if (fixedTau<0.0)
+    {
+        log(INFO,"will scan for optimal regularization\n");
+    }
+    else
+    {
+        log(INFO,"use fixed regularization: %e\n",fixedTau);
+    }
     
     doUnfolding(
         histFiles,
@@ -304,7 +333,8 @@ int main(int argc, char* argv[])
         noStat, //stat unc
         noMCStat, //mcstat unc
         noFitError, //fitunc
-        mcOnly //only mc
+        mcOnly, //only mc
+        fixedTau
     );
     
     
