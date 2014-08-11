@@ -15,19 +15,11 @@ titles = {
     :combined=>"\$e^\\pm,\\ \\mu^\\pm\$, 2J1T, BDT>0.6"
 };
 
-function asymmetry(x::AbstractVector)
-    nb = length(x)
-    nb2 = int(nb/2)
-    return -(sum(x[1:nb2]) - sum(x[nb2+1:end])) / (sum(x[1:nb2]) + sum(x[nb2+1:end]))
-end
-
-function asymmetry(x::Histogram)
-    asymmetry(contents(x)[1:end-1])
-end
 
 const toload = ["unfolded", "gen", "correlation", "genrec",  "error"];
 const lepton = symbol(ARGS[1])
 const bdt = "0.60000"
+const BIAS = {:mu=>0.0183, :ele=>0.0333, :combined=>0.0240}
 
 #Load histograms
     histos = readdir("$BASE/src/stpol-unfold/histos/");
@@ -40,6 +32,10 @@ const bdt = "0.60000"
         histos_d[symbol(s)] = load_hists_from_file(
             "$BASE/src/stpol-unfold/histos/$h", name->name in toload
         );
+
+        tf = TFile("$BASE/src/stpol-unfold/histos/$h")
+        histos_d[symbol(s)]["unfolded"] = load_with_errors(tf, "unfolded";error_type = :errors)
+        Close(tf)
         #println(s)
     end
 
@@ -51,8 +47,9 @@ const bdt = "0.60000"
     hists = load_hists_from_file("$hist_path/$bdt/$lepton/cos_theta_lj.root") |> remove_prefix;
 
     unf1 = histos_d[:nominal]
+    #println(hcat(contents(unf1["unfolded"]), errors(unf1["unfolded"])))
     haskey(unf1, "unfolded") || error("unfolding was not successful")
-    
+
     hd = reweight_hists_to_fitres(FITRESULTS[lepton], hists)
     const nrebin=4
     hd = {k=>rebin(v, 2:nrebin:nbins(v)-nrebin) for (k, v) in hd};
@@ -63,7 +60,7 @@ const bdt = "0.60000"
     norm_gen(h) = (Ngen/integral(h)) * h
 
 #Determine statistical error by covariant sampling
-function asymmetry_error(unfolded, errmat) 
+function asymmetry_error(unfolded, errmat)
     covm = contents(errmat)[2:end-2, 2:end-2]
     #ROOT matrix may not be posdef
     #symmetrize
@@ -100,7 +97,7 @@ end
         (haskey(v, "unfolded") && haskey(v, "gen")) || error("unfolding $k was not successful")
         s = split(string(k), "__")
         syst = symbol(s[1])
-        
+
         A = asymmetry(unf1["unfolded"])
         nom = deepcopy(unf1["unfolded"])
 
@@ -112,7 +109,7 @@ end
         elseif length(s)==1 && syst in [:mcstat, :stat, :fiterror]
             println(s, " ", contents(v["error"])|>diag)
             a = asymmetry_error(v["unfolded"], v["error"])
-            asymmetries[:up][syst] = A + a 
+            asymmetries[:up][syst] = A + a
             asymmetries[:down][syst] = A - a
             unf_histos[syst][:up] = deepcopy(v["unfolded"])
             unf_histos[syst][:down] = deepcopy(v["unfolded"])
@@ -151,9 +148,10 @@ end
 
 #    tot_du = asymdf[:dup].^2 |> sum |> sqrt
 #    tot_dd = asymdf[:ddown].^2 |> sum |> sqrt;
+    da_bias = BIAS[lepton]
+    push!(asymdf, [:unfolding_bias, A + da_bias, A - da_bias, da_bias, da_bias])
     push!(asymdf, [:statistical, A+Astat, A-Astat, Astat, Astat])
     asymdf[:d] = max(abs(asymdf[:dup]), abs(asymdf[:ddown]))
-
     Asyst = asymdf[1:end-2, :d].^2 |> sum |> sqrt
     push!(asymdf, [:systematic, A+Asyst, A-Asyst, Asyst, Asyst, Asyst])
     push!(asymdf, [:nominal, A, A, 0.0, 0.0, 0.0])
@@ -209,15 +207,27 @@ end
 
     eplot(ax, norm_gen(unf1["unfolded"]), color="black", label="unfolded data", ls="none", marker="o")
     N = contents(norm_gen(unf1["unfolded"]))
-
     barplot(ax, norm_gen(unf1["gen"]), "green", label="generated (POWHEG)", do_error=false, lw=2)
     barplot(ax, rebin(comphep_proj, 2:nrebin:27-nrebin), "red", label="generated (CompHEP)", ls="--", lw=2, do_error=false)
+    chi2unfolded0 = Chi2Test(
+        to_root(unf1["gen"]),
+        convert(Ptr{TH1}, to_root(norm_gen(unf1["unfolded"])).p),
+        "UW CHI2/NDF"
+    )
+    x = (contents(unf1["gen"]) - contents(norm_gen(unf1["unfolded"])))
+    x = x[2:end-2]
+    println("x = ", x)
+
+    covm = contents(unf1["error"])[2:end-2, 2:end-2]
+    println("covm = ", covm)
+    chi2unfolded = first(0.5 * transpose(x) * inv(covm) * x)
+    println("chi2 unfolded = $chi2unfolded $chi2unfolded0")
 
     variations = {:up=>Any[], :down=>Any[]}
     for d in [:up, :down]
         for k in systs
             k in [:nominal, :stat, :mcstat, :fiterror] && continue
-            println("$k $d")
+            #println("$k $d")
             delta = contents(
                 norm_gen(unf1["unfolded"]) -
         #        norm_gen(histos_d[symbol("$(k)__$(d)")]["unfolded"])
@@ -292,14 +302,14 @@ end
 #     effh2[2*i] = effh[i]/2
 # end
 # effh2[nb_reco] = 0
-# 
+#
 # tm = transpose(contents(tot_tm)[2:end-1, 2:end-1]);
 # for i=1:nb_gen
 #     tm[:, i] = tm[:, i]/sum(tm[:, i])
 # end
 # tm[isnan(tm)] = 0
 # tm
-# 
+#
 # x = tm * (effh .* contents(unf1["unfolded"])[2:end-1]);
 # h = Histogram([10000000 for i=1:nb_reco], x, linspace(-1, 1, nb_reco));
 # ax = axes()
@@ -311,24 +321,24 @@ end
 # grid()
 # xticks(rbins)
 # svfg("$BASE/results/plots/unfolding/unfolded_comparison_$(lepton)")
-# 
+#
 # hratio = Histogram(
 # [1 for i=1:nb_reco+2],
 # vcat(0, contents(h), 0) ./ contents(hd["tchan"]),
 #     edges(hd["tchan"])
 # );
 # hratio.bin_contents[isnan(hratio.bin_contents)] = 0
-# 
+#
 # hratio_n = Histogram(
 # [1 for i=1:nb_reco+2],
 # vcat(0, contents(normed(h)), 0) ./ contents(normed(hd["tchan"])),
 #     edges(hd["tchan"])
 # );
 # hratio_n.bin_contents[isnan(hratio_n.bin_contents)] = 0
-# 
-# 
+#
+#
 # # In[197]:
-# 
+#
 # ax = axes()
 # barplot(ax, hratio, "black"; do_error=false, ls="-.", label="unfolded / nominal")
 # barplot(ax, hratio_n, "black"; do_error=false, ls="-", label="unfolded / nominal (normed)")
@@ -339,7 +349,7 @@ end
 # legend(loc="best")
 # xticks(rbins)
 # svfg("$BASE/results/plots/unfolding/unfolded_comparison_ratio_$(lepton)")
-# 
+#
 #
 
 #Reco-level plot
@@ -368,11 +378,11 @@ ylabel(VARS[:differential_cos_theta], fontsize=18)
 rslegend(ax)
 xticks(rbins)
 svfg("$BASE/results/plots/results/cos_theta_lj_2j_1t_$(lepton)_bdt_0_6")
-# 
-# 
+#
+#
 # #### Correlation matrix parametrization
 # hcorr = unf1["correlation"];
-# 
+#
 # imshow(contents(hcorr)[2:end-2, 2:end-2], interpolation="nearest")
 # colorbar()
 # xlabel("bins")
