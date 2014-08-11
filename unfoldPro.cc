@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
                 } 
                 catch (std::exception e)
                 {
-                    log(ERROR,"while parsing the given fixed tau: "+std::string(e.what()));
+                    log(ERROR,"while parsing the given fixed tau: %s\n",e.what());
                 }
             }
             else if (parser.OptionId() ==OTP_SCANTAU)

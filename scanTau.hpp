@@ -40,7 +40,7 @@ TMatrixD convertHistToMatrix(const TH2D& from)
     return matrix;
 }
 
-ScanResult scanTau(TH2F* responseMatrix, TH1F* input)
+ScanResult scanTau(TH2* responseMatrix, TH1* input, bool writeCanvas=true)
 {
     const int N = 2000;
     const int NBINS = responseMatrix->GetNbinsX();
@@ -186,9 +186,10 @@ ScanResult scanTau(TH2F* responseMatrix, TH1F* input)
     legend.AddEntry("",globalrho_max_tau,"");
     
     legend.Draw("Same");
-    
-    cv_subway.Write();
-    
+    if (writeCanvas)
+    {
+        cv_subway.Write();
+    }
     ScanResult scanResult;
     scanResult.taumean=pmean_min_tau;
     scanResult.pmean=pmean_min;
