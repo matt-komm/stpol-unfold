@@ -7,7 +7,7 @@ using PyCall, PyPlot;
 include("$BASE/src/analysis/hplot.jl");
 include("$BASE/src/analysis/python_plots.jl");
 
-const hist_path = "../../results/hists/Aug1/merged"
+const hist_path = "../../results/hists/Aug5/merged"
 
 titles = {
     :mu=>"\$\\mu^\\pm\$, 2J1T, BDT>0.6",
@@ -18,11 +18,17 @@ titles = {
 
 const toload = ["unfolded", "gen", "correlation", "genrec",  "error"];
 const lepton = symbol(ARGS[1])
+const unfolded_histos = convert(ASCIIString, ARGS[2])
+const FITRESULTS = {
+    :mu=>FitResult("$BASE/results/fits/$(ARGS[3])/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/$(ARGS[3])/nominal/ele.json"),
+    :combined=>FitResult("$BASE/results/fits/$(ARGS[3])/nominal/combined.json")
+}
 const bdt = "0.60000"
 const BIAS = {:mu=>0.0183, :ele=>0.0333, :combined=>0.0240}
 
 #Load histograms
-    histos = readdir("$BASE/src/stpol-unfold/histos/");
+    histos = readdir(unfolded_histos)
     histos = filter(x->contains(x, string(lepton)), histos) |> collect
     histos = filter(x->contains(x, ".root"), histos) |> collect;
     histos_d = Dict()
@@ -30,10 +36,10 @@ const BIAS = {:mu=>0.0183, :ele=>0.0333, :combined=>0.0240}
         s = join(split(h, "__")[2:end], "__")
         s = s[1:end-5]
         histos_d[symbol(s)] = load_hists_from_file(
-            "$BASE/src/stpol-unfold/histos/$h", name->name in toload
+            "$unfolded_histos/$h", name->name in toload
         );
 
-        tf = TFile("$BASE/src/stpol-unfold/histos/$h")
+        tf = TFile("$unfolded_histos/$h")
         histos_d[symbol(s)]["unfolded"] = load_with_errors(tf, "unfolded";error_type = :errors)
         Close(tf)
         #println(s)
@@ -42,7 +48,7 @@ const BIAS = {:mu=>0.0183, :ele=>0.0333, :combined=>0.0240}
     tms = {
         k => load_hists_from_file("$hist_path/$bdt/$lepton/tmatrix_nocharge__gen_$(k).root") for k in [:ele, :mu, :tau]
     };
-    comphep_proj = tms[:ele]["tm__comphep_nominal__proj_x"] + tms[:mu]["tm__comphep_nominal__proj_x"] + tms[:tau]["tm__comphep_nominal__proj_x"]
+    comphep_proj = tms[:ele]["tm__comphep__nominal__proj_x"] + tms[:mu]["tm__comphep__nominal__proj_x"] + tms[:tau]["tm__comphep__nominal__proj_x"]
     comphep_proj = comphep_proj * FITRESULTS[lepton][:beta_signal]
     hists = load_hists_from_file("$hist_path/$bdt/$lepton/cos_theta_lj.root") |> remove_prefix;
 
