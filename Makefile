@@ -185,7 +185,7 @@ do_unfold_combined:
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
 		$(REGMODE) \
-		--output=$(OUTPUTFOLDER)/combined__nominal.root 
+		--output=$(OUTPUTFOLDER)/combined__generator.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
@@ -286,7 +286,7 @@ do_unfold_ele:
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
 		$(REGMODE) \
-		--output=$(OUTPUTFOLDER)/ele__nominal.root 
+		--output=$(OUTPUTFOLDER)/ele__generator.root 
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
