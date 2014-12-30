@@ -9,7 +9,9 @@
 
 #include "TH1.h"
 #include "TH2.h"
-#include "TMatrix.h"
+#include "TMatrixD.h"
+#include "TROOT.h"
+#include "TMath.h"
 
 #include <functional>
 

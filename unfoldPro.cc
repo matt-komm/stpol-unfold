@@ -4,9 +4,10 @@
 #include "loadFitResult.hpp"
 #include "scanTau.hpp"
 #include "logging.hpp"
+#include "asymmetryCalculation.hpp"
 
-#include "TH1F.h"
-#include "TH2F.h"
+#include "TH1D.h"
+#include "TH2D.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TMath.h"
@@ -99,7 +100,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
         }
     }
     
-    TFile outputFile(outputFileName.c_str(),"RECREATE");
+    TFile outputFile((outputFileName+".root").c_str(),"RECREATE");
     
     
     if (fixedTau>0.0)
@@ -112,7 +113,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
         log(INFO,"regularization scan gives: tau=%5.4e @ rho=%4.3f\n",scanResult.taumean,scanResult.pmean);
         tunfold.DoUnfold(scanResult.taumean,dataHist,1.0);
     }
-    TH1F *unfoldedHist = new TH1F("unfolded","unfolded", REBIN_GEN, -1, 1);
+    TH1D *unfoldedHist = new TH1D("unfolded","unfolded", REBIN_GEN, -1, 1);
 	tunfold.GetOutput(unfoldedHist);
 	unfoldedHist->Write();
 	
@@ -155,8 +156,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
 	        }
         }
 	}
-	errorMatrix->Write();
-	
+	errorMatrix->Write();	
 	outputFile.Close();
 }
 

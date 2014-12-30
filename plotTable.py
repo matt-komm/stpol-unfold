@@ -207,8 +207,8 @@ if __name__=="__main__":
             "pu","btag_bc","btag_l","qcd_antiiso","qcd_yield","wjets_flavour_light","wjets_flavour_heavy",
             "fiterror","bias","mcstat"]
 
-    basefolder1=os.path.join(os.getcwd(),"histos")
-    #basefolder2=os.path.join(os.getcwd(),"histos_mc")
+    basefolder1=os.path.join(os.getcwd(),"histos/tunfold")
+    basefolder2=os.path.join(os.getcwd(),"histos/2bin")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
@@ -217,10 +217,10 @@ if __name__=="__main__":
 
     muBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("ele__") and f.endswith(".csv")])
-    '''
+    
     muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
-    '''
+    
     
     hist = ROOT.TH2F("hist","",len(dicts),0,len(dicts),50,0,0.14)
     cv = ROOT.TCanvas("cv","",1200,600)
@@ -244,7 +244,7 @@ if __name__=="__main__":
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
         legend.AddEntry(box,"mu. ch. (mc)","F") if index==0 else 0
-        '''
+        
         box = createBox(eleBinDictn,sys,index,index+0.45)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
@@ -255,7 +255,7 @@ if __name__=="__main__":
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        '''
+        
     legend.Draw("Same")
     hist.Draw("AXIS SAME")
     cv.Update()
