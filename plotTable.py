@@ -12,8 +12,8 @@ ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
-ROOT.gStyle.SetPadLeftMargin(0.15)
-ROOT.gStyle.SetPadRightMargin(0.2)
+ROOT.gStyle.SetPadLeftMargin(0.08)
+ROOT.gStyle.SetPadRightMargin(0.1)
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
@@ -201,43 +201,62 @@ def createBox(sysDict,sysEntry,ypos1,ypos2):
         return box
     
 if __name__=="__main__":
-    dicts =["statistical","generator","tchan_scale","ttjets_scale","wzjets_scale",
-            "mass","wjets_shape","wjets_flavor","top_weight","wzjets_matching","ttjets_matching",
+    dicts =["stat","generator","tchan_scale","ttjets_scale","wzjets_scale",
+            "mass","wjets_shape","top_weight","wzjets_matching","ttjets_matching",
             "pdf","jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
-            "pu","btag_bc","btag_l","lepton_weight","qcd_range","qcd_cont",
-            "fituncertainty","bias","limited_mc"]
+            "pu","btag_bc","btag_l","qcd_antiiso","qcd_yield","wjets_flavour_light","wjets_flavour_heavy",
+            "fiterror","bias","mcstat"]
 
-    eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
-    eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
-    muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
-    muBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("mu_") and f.endswith(".csv")])
+    basefolder1=os.path.join(os.getcwd(),"histos")
+    #basefolder2=os.path.join(os.getcwd(),"histos_mc")
+    #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
+    #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
+    #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
     
-    hist = ROOT.TH2F("hist","",len(dicts),0,len(dicts),50,0,0.13)
-    cv = ROOT.TCanvas("cv","",800,600)
+    
+
+    muBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("mu__") and f.endswith(".csv")])
+    eleBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("ele__") and f.endswith(".csv")])
+    '''
+    muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
+    eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
+    '''
+    
+    hist = ROOT.TH2F("hist","",len(dicts),0,len(dicts),50,0,0.14)
+    cv = ROOT.TCanvas("cv","",1200,600)
     hist.Draw("AXIS")
+    
+    legend = ROOT.TLegend(0.905,0.75,0.99,0.9)
+    legend.SetFillColor(0)
+    legend.SetTextFont(62)
+    legend.SetBorderSize(0)
     
     for index in range(len(dicts)):
         sys = dicts[index]
         hist.GetXaxis().SetBinLabel(index+1,sys)
         
-        box = createBox(eleTUnfoldDict,sys,index,index+0.45)
+        box = createBox(eleBinDict,sys,index,index+0.45)
         box.SetFillColor(ROOT.kAzure-4)
         box.Draw("SameF")
+        legend.AddEntry(box,"ele. ch. (mc)","F") if index==0 else 0
         
-        box = createBox(muTUnfoldDict,sys,index+0.45,index+0.90)
+        box = createBox(muBinDict,sys,index+0.45,index+0.90)
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
-        
-        box = createBox(eleBinDict,sys,index,index+0.45)
+        legend.AddEntry(box,"mu. ch. (mc)","F") if index==0 else 0
+        '''
+        box = createBox(eleBinDictn,sys,index,index+0.45)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
+        legend.AddEntry(box,"mc only","F") if index==0 else 0
         
-        box = createBox(muBinDict,sys,index+0.45,index+0.9)
+        box = createBox(muBinDictn,sys,index+0.45,index+0.9)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        
+        '''
+    legend.Draw("Same")
     hist.Draw("AXIS SAME")
     cv.Update()
     cv.WaitPrimitive()

@@ -201,152 +201,159 @@ CSimpleOpt::SOption options[] ={
 
 int main(int argc, char* argv[])
 {
-    CSimpleOpt parser(argc,argv,options);
-    
-    std::string systematic = "nominal";
-    std::string fitResultPrefix="";
-    std::string fitResultFile="mu.txt";
-    std::string covarianceFile="mu_cov.root";
-    std::vector<std::string> histFiles;
-    std::vector<std::string> responseFiles;
-    std::string responseMatrixName = "tm";
-    std::string outputFile = "out.root";
-    
-    bool noStat = false;
-    bool noMCStat = false;
-    bool noFitError = false;
-    bool mcOnly = false;
-    
-    double fixedTau=-1.0;
-    
-    gErrorIgnoreLevel = kPrint | kInfo | kWarning;
-    
-    setupLogging();
-    
-    while (parser.Next())
+    try
     {
-        if (parser.LastError() == SO_SUCCESS)
+        CSimpleOpt parser(argc,argv,options);
+        
+        std::string systematic = "nominal";
+        std::string fitResultPrefix="";
+        std::string fitResultFile="mu.txt";
+        std::string covarianceFile="mu_cov.root";
+        std::vector<std::string> histFiles;
+        std::vector<std::string> responseFiles;
+        std::string responseMatrixName = "tm";
+        std::string outputFile = "out.root";
+        
+        bool noStat = false;
+        bool noMCStat = false;
+        bool noFitError = false;
+        bool mcOnly = false;
+        
+        double fixedTau=-1.0;
+        
+        gErrorIgnoreLevel = kPrint | kInfo | kWarning;
+        
+        setupLogging();
+        
+        while (parser.Next())
         {
-            if (parser.OptionId() == OPT_SYS) 
+            if (parser.LastError() == SO_SUCCESS)
             {
-                systematic=parser.OptionArg();
-            }
-            else if (parser.OptionId() == OPT_HISTFILE) 
-            {
-                histFiles.push_back(parser.OptionArg());
-            }
-            else if (parser.OptionId() == OPT_FITRESULTPREFIX) 
-            {
-                fitResultPrefix = parser.OptionArg();
-            }
-            else if (parser.OptionId() == OPT_FITRESULT) 
-            {
-                fitResultFile = parser.OptionArg();
-            }
-            else if (parser.OptionId() == OPT_FITCOVARIANCE) 
-            {
-                covarianceFile = parser.OptionArg();
-            }
-            else if (parser.OptionId() == OPT_RESPONSEFILE)
-            {
-                responseFiles.push_back(parser.OptionArg());
-            }
-            else if (parser.OptionId() == OPT_RESPONSEMATRIXNAME)
-            {
-                responseMatrixName=parser.OptionArg();
-            }
-            else if (parser.OptionId() == OPT_OUTPUT)
-            {
-                outputFile  = parser.OptionArg();
-            }
-            else if (parser.OptionId() ==OPT_NOSTAT)
-            {
-                noStat=true;
-            }
-            else if (parser.OptionId() ==OPT_NOMC)
-            {
-                noMCStat=true;
-            }
-            else if (parser.OptionId() ==OPT_NOFITERROR)
-            {
-                noFitError = true;
-            }
-            else if (parser.OptionId() ==OPT_MCONLY)
-            {
-                mcOnly=true;
-            }
-            else if (parser.OptionId() ==OTP_FIXEDTAU)
-            {
-                try
+                if (parser.OptionId() == OPT_SYS) 
                 {
-                    fixedTau=stod(std::string(parser.OptionArg()));
-                } 
-                catch (std::exception e)
-                {
-                    log(ERROR,"while parsing the given fixed tau: %s\n",e.what());
+                    systematic=parser.OptionArg();
                 }
+                else if (parser.OptionId() == OPT_HISTFILE) 
+                {
+                    histFiles.push_back(parser.OptionArg());
+                }
+                else if (parser.OptionId() == OPT_FITRESULTPREFIX) 
+                {
+                    fitResultPrefix = parser.OptionArg();
+                }
+                else if (parser.OptionId() == OPT_FITRESULT) 
+                {
+                    fitResultFile = parser.OptionArg();
+                }
+                else if (parser.OptionId() == OPT_FITCOVARIANCE) 
+                {
+                    covarianceFile = parser.OptionArg();
+                }
+                else if (parser.OptionId() == OPT_RESPONSEFILE)
+                {
+                    responseFiles.push_back(parser.OptionArg());
+                }
+                else if (parser.OptionId() == OPT_RESPONSEMATRIXNAME)
+                {
+                    responseMatrixName=parser.OptionArg();
+                }
+                else if (parser.OptionId() == OPT_OUTPUT)
+                {
+                    outputFile  = parser.OptionArg();
+                }
+                else if (parser.OptionId() ==OPT_NOSTAT)
+                {
+                    noStat=true;
+                }
+                else if (parser.OptionId() ==OPT_NOMC)
+                {
+                    noMCStat=true;
+                }
+                else if (parser.OptionId() ==OPT_NOFITERROR)
+                {
+                    noFitError = true;
+                }
+                else if (parser.OptionId() ==OPT_MCONLY)
+                {
+                    mcOnly=true;
+                }
+                else if (parser.OptionId() ==OTP_FIXEDTAU)
+                {
+                    try
+                    {
+                        fixedTau=stod(std::string(parser.OptionArg()));
+                    } 
+                    catch (std::exception e)
+                    {
+                        log(ERROR,"while parsing the given fixed tau: %s\n",e.what());
+                    }
+                }
+                else if (parser.OptionId() ==OTP_SCANTAU)
+                {
+                    fixedTau=-1.0; //neg value will trigger a scan
+                }   
             }
-            else if (parser.OptionId() ==OTP_SCANTAU)
+            else
             {
-                fixedTau=-1.0; //neg value will trigger a scan
-            }   
+                log(CRITICAL,"Invalid argument: %s\n", parser.OptionText());
+                return 1;
+            }
+        }
+        
+        
+        
+        log(INFO,"histfiles: \n");
+        for (const std::string& histFile: histFiles)
+        {
+            log(INFO," ... %s\n",histFile.c_str());
+        }
+        
+        log(INFO,"responseFiles: \n");
+        for (unsigned int i = 0; i< responseFiles.size();++i)
+        {
+            log(INFO," ... %s\n",responseFiles[i].c_str());
+        }
+        
+        log(INFO,"matrix name: %s\n",(responseMatrixName+"__"+systematic).c_str());
+        
+        log(INFO,"systematic:\n ... %s\n",systematic.c_str());
+        
+        log(INFO,"fit:\n");
+        log(INFO," ... scale: %s\n",(fitResultPrefix+"/"+systematic+"/"+fitResultFile).c_str());
+        log(INFO," ... covariance: %s\n",(fitResultPrefix+"/"+systematic+"/"+covarianceFile).c_str());
+
+        if (fixedTau<0.0)
+        {
+            log(INFO,"will scan for optimal regularization\n");
         }
         else
         {
-            log(CRITICAL,"Invalid argument: %s\n", parser.OptionText());
-            return 1;
+            log(INFO,"use fixed regularization: %e\n",fixedTau);
         }
+        
+        doUnfolding(
+            histFiles,
+            SIGNAL,
+            BACKGROUND,
+            DATA,
+            responseFiles,
+            responseMatrixName,
+            fitResultPrefix+"/"+systematic+"/"+fitResultFile,
+            fitResultPrefix+"/"+systematic+"/"+covarianceFile,
+            outputFile,
+            systematic,
+            noStat, //stat unc
+            noMCStat, //mcstat unc
+            noFitError, //fitunc
+            mcOnly, //only mc
+            fixedTau
+        );
+    
     }
-    
-    
-    
-    log(INFO,"histfiles: \n");
-    for (const std::string& histFile: histFiles)
+    catch (std::string s)
     {
-        log(INFO," ... %s\n",histFile.c_str());
+        std::cout<<"Exception: "<<s.c_str()<<std::endl;
     }
-    
-    log(INFO,"responseFiles: \n");
-    for (unsigned int i = 0; i< responseFiles.size();++i)
-    {
-        log(INFO," ... %s\n",responseFiles[i].c_str());
-    }
-    
-    log(INFO,"matrix name: %s\n",(responseMatrixName+"__"+systematic).c_str());
-    
-    log(INFO,"systematic:\n ... %s\n",systematic.c_str());
-    
-    log(INFO,"fit:\n");
-    log(INFO," ... scale: %s\n",(fitResultPrefix+"/"+systematic+"/"+fitResultFile).c_str());
-    log(INFO," ... covariance: %s\n",(fitResultPrefix+"/"+systematic+"/"+covarianceFile).c_str());
-
-    if (fixedTau<0.0)
-    {
-        log(INFO,"will scan for optimal regularization\n");
-    }
-    else
-    {
-        log(INFO,"use fixed regularization: %e\n",fixedTau);
-    }
-    
-    doUnfolding(
-        histFiles,
-        SIGNAL,
-        BACKGROUND,
-        DATA,
-        responseFiles,
-        responseMatrixName,
-        fitResultPrefix+"/"+systematic+"/"+fitResultFile,
-        fitResultPrefix+"/"+systematic+"/"+covarianceFile,
-        outputFile,
-        systematic,
-        noStat, //stat unc
-        noMCStat, //mcstat unc
-        noFitError, //fitunc
-        mcOnly, //only mc
-        fixedTau
-    );
-    
-    
+        
     return 0;
 }

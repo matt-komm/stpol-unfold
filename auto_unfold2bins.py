@@ -188,9 +188,14 @@ def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,respo
         print " ... A=",asymmetry.getMean(0)," +- ",asymmetry.getUncertainty(0)
 
     return {"mean":asymmetry.getMean(0),"uncertainty":asymmetry.getUncertainty(0)}
-
+    
+    
+def getScale(histFiles,nameRef, sysRef, fitResultRef, name, sys, fitResult):
+    refHist = readHist1d(histFiles,HISTPREFIX+nameRef,sysRef,fitResultRef[nameRef]["scale"],1)
+    hist = readHist1d(histFiles,HISTPREFIX+name,sys,fitResult[name]["scale"],1)
+    return hist.Integral()/refHist.Integral()
+    
 if __name__=="__main__":
-
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose",action="store_true", dest="verbose", default=False, help="Verbose output")
@@ -203,6 +208,8 @@ if __name__=="__main__":
     parser.add_option("--fitResult",action="store",dest="fitResult",default="mu.txt",help="Path to the fit result")
     parser.add_option("--fitCovariance",action="store",dest="fitCovariance",default="mu_cov.root",help="Path to the fit covariance root file")
     parser.add_option("--output",action="store",dest="output",default="out.csv",help="The output file")
+    parser.add_option("--overrideOutputSysName",action="store",dest="outputsysname",default=None,help="Overrides the sys name stored in the csv file")
+    parser.add_option("--normalizeSysToNominal",action="store_true",dest="normsys",default=False,help="Normalizes the sys hists to nominal. Discards fit result.")
     parser.add_option("--no-stat",action="store_false",default=True,dest="stat",help="Deactivates statistical uncertainties (taken from data).")
     parser.add_option("--no-mcstat",action="store_false",default=True,dest="mcstat",help="Deactivates limited MC statistics uncertainties (taken from background MC).")
     parser.add_option("--no-fiterror",action="store_false",default=True,dest="fiterror",help="Deactivates uncertainties from the fit (taken from file with fit result).")
@@ -217,7 +224,10 @@ if __name__=="__main__":
         print "systematic:"
         print " ... "+options.systematic
         print
-        print "fit: "
+        print "sys: "
+    
+
+    if (verbose):
         if options.systematic=="nominal":
             print " ... scale: "+os.path.join(options.fitResultPrefix,"nominal",options.fitResult)
             print " ... covaraince: "+os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
@@ -227,12 +237,15 @@ if __name__=="__main__":
             print " ... covaraince (up): "+os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
             print " ... covaraince (down): "+os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
         print
-
-
+            
+    if (options.outputsysname):
+        print "WARNING: will override the output sys name in the csv file to: ",options.outputsysname
+        
     outputFile = open(options.output, 'wb')
     writer = csv.DictWriter(outputFile, ["syst","up","down","dup","ddown","d"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
     writer.writeheader()
     if options.systematic=="nominal":
+
         fitResult = readFitResult(
             os.path.join(options.fitResultPrefix,"nominal",options.fitResult),
             os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
@@ -252,7 +265,7 @@ if __name__=="__main__":
         )
         if options.stat and options.mcstat and options.fiterror:
             writer.writerow({
-                "syst":"nominal",
+                "syst":options.outputsysname if options.outputsysname else "nominal",
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
@@ -261,7 +274,7 @@ if __name__=="__main__":
             })
         elif options.stat and not options.mcstat and not options.fiterror:
             writer.writerow({
-                "syst":"stat",
+                "syst":options.outputsysname if options.outputsysname else "stat",
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
@@ -270,7 +283,7 @@ if __name__=="__main__":
             })
         elif not options.stat and options.mcstat and not options.fiterror:
             writer.writerow({
-                "syst":"mcstat",
+                "syst":options.outputsysname if options.outputsysname else "mcstat",
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
@@ -279,7 +292,7 @@ if __name__=="__main__":
             })
         elif not options.stat and not options.mcstat and options.fiterror:
             writer.writerow({
-                "syst":"fiterror",
+                "syst":options.outputsysname if options.outputsysname else "fiterror",
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
@@ -289,7 +302,7 @@ if __name__=="__main__":
         else:
             print "WARNING: systematic configuration not known"
             writer.writerow({
-                "syst":"unknown",
+                "syst":options.outputsysname if options.outputsysname else "unknown",
                 "up":result["mean"]+0.5*result["uncertainty"],
                 "down":result["mean"]-0.5*result["uncertainty"],
                 "dup":0.5*result["uncertainty"],
@@ -298,10 +311,33 @@ if __name__=="__main__":
             })
 
     else:
+
         fitResultNominal = readFitResult(
             os.path.join(options.fitResultPrefix,"nominal",options.fitResult),
             os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
         )
+        fitResultUp = readFitResult(
+            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult),
+            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
+        )
+        fitResultDown = readFitResult(
+            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult),
+            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
+        )
+        if (options.normsys):
+            fitResultUp=fitResultNominal
+            fitResultDown=fitResultNominal
+            for histName in fitResultNominal.keys():
+                scaleUp=getScale(options.histFiles,histName, options.systematic+"__up", fitResultNominal, 
+                                histName, "nominal", fitResultNominal)
+                scaleDown=getScale(options.histFiles,histName, options.systematic+"__down", fitResultNominal, 
+                                histName, "nominal", fitResultNominal)
+                                
+                print histName,options.systematic,"up",scaleUp
+                print histName,options.systematic,"down",scaleDown
+                fitResultUp[histName]["scale"]=fitResultNominal[histName]["scale"]*scaleUp
+                fitResultDown[histName]["scale"]=fitResultNominal[histName]["scale"]*scaleDown
+            
         resultNominal = doUnfolding(
             options.histFiles,
             SIGNAL,
@@ -315,11 +351,7 @@ if __name__=="__main__":
             useMCStatUnc=False,
             useFitUnc=False
         )
-
-        fitResultUp = readFitResult(
-            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult),
-            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
-        )
+            
         resultUp = doUnfolding(
             options.histFiles,
             SIGNAL,
@@ -334,10 +366,6 @@ if __name__=="__main__":
             useFitUnc=False
         )
 
-        fitResultDown = readFitResult(
-            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult),
-            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
-        )
         resultDown = doUnfolding(
             options.histFiles,
             SIGNAL,
@@ -353,7 +381,7 @@ if __name__=="__main__":
         )
         unc = max(math.fabs(resultNominal["mean"]-resultDown["mean"]),math.fabs(resultNominal["mean"]-resultUp["mean"]))
         writer.writerow({
-            "syst":options.systematic,
+            "syst":options.outputsysname if options.outputsysname else options.systematic,
             "up":resultUp["mean"],
             "down":resultDown["mean"],
             "dup":resultUp["mean"]-resultNominal["mean"],

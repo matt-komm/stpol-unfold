@@ -354,6 +354,7 @@ unfold_2bin_mu:
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
 		--responseMatrixName="tm__comphep" \
+		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/mu__generator.csv
 
 	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
@@ -417,6 +418,7 @@ unfold_2bin_ele:
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
 		--responseMatrixName="tm__comphep" \
+		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/ele__generator.csv
 
 	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
