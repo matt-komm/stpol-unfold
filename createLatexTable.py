@@ -6,54 +6,90 @@ import os.path
 def formatUnc(unc):
 
     return "{0:6.5f}".format(unc)
+    
+tableHeader=["","systematic"]
+tableTotal=["","total uncertainty"]
+    
+tableRows=[
+    ["stat","statistical"],
+    ["generator","signal modeling"],
+    ["tchan_scale","t-channel scale"],
+    ["ttjets_scale","\\tt+jets scale"],
+    ["wzjets_scale","W+jets scale"],
+    ["mass","top quark mass"],
+    ["wjets_shape","W+jets shape"],
+    ["wjets_flavour","W+jets flavour"],
+    ["top_weight","top pT modeling"],
+    ["wzjets_matching","W+jets matching"],
+    ["ttjets_matching","\\tt+jets matching"],
+    ["pdf","PDF"],
+    ["jes","JES"],
+    ["jer","JER"],
+    ["met","MET"],
+    ["lepton_id","lepton id"],
+    ["lepton_iso","lepton isolation"],
+    ["lepton_trigger","lepton trigger"],        
+    ["pu","pileup"],
+    ["btag_bc","b-tagging efficiency"],
+    ["btag_l","mis-tagging efficiency"],
+    ["lepton_weight","lepton weight"],
+    #["qcd_yield","QCD yield"],
+    #["qcd_antiiso","QCD template"],
+    ["fiterror","ML-fit uncertainty"],
+    ["bias","unfolding bias"],
+    ["mcstat","limited MC"]
+]
+    
+def readCSV(folder=os.getcwd(),match="mu_"):
+    sysDict={}
+    for f in os.listdir(os.path.join(os.getcwd(),folder)):
+        if f.startswith(match) and f.endswith(".csv"):
+            inFile = open(os.path.join(os.getcwd(),folder,f),"rb")
+            csvFile = csv.DictReader(inFile, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+            result = csvFile.next()
+            sysDict[result["syst"]]=result
+            inFile.close()
+    return sysDict
+    
 
-sysDictMu={}
-for f in os.listdir(os.getcwd()):
-    if os.path.isfile(f) and f.startswith("mu_") and f.endswith(".csv"):
-        inFile = open(f,"rb")
-        print f
-        csvFile = csv.DictReader(inFile, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
-        result = csvFile.next()
-        sysDictMu[result["syst"]]=result
-        inFile.close()
-        
-sysDictEle={}
-for f in os.listdir(os.getcwd()):
-    if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv"):
-        inFile = open(f,"rb")
-        print f
-        csvFile = csv.DictReader(inFile, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
-        result = csvFile.next()
-        sysDictEle[result["syst"]]=result
-        inFile.close()
+def addColumn(header,sysDict):
+    tableHeader.append(header)
+    totalSum2=0.0
+    for row in range(len(tableRows)):
+        sysName= tableRows[row][0]
+        if sysDict.has_key(sysName):
+            value=sysDict[sysName]["d"]
+            totalSum2+=value**2
+            tableRows[row].append(formatUnc(value))
+        else:
+            tableRows[row].append("-")
+    tableTotal.append(formatUnc(math.sqrt(totalSum2)))
+    
+addColumn("TUnfold muon",readCSV("histos/tunfold","mu_"))
+addColumn("TUnfold electron",readCSV("histos/tunfold","ele_"))
+addColumn("2-bin muon",readCSV("histos/2bin","mu_"))
+addColumn("2-bin electron",readCSV("histos/2bin","ele_"))
 
 outFile = open("table.tex","w")
-outFile.write("\\begin{tabular}[htc]{|r || c | c|}\n")
-outFile.write("\hline \n")
-outFile.write("systematic & $\delta A_{\mu}$ & $\delta A_{e}$ \\\\\n")
-outFile.write("\hline \n")
-totalMu=0.0
-totalEle=0.0
-for sys in ["statistical","generator","tchan_scale","ttjets_scale","wzjets_scale",
-            "mass","wjets_shape","wjets_flavor","top_weight","wzjets_matching","ttjets_matching",
-            "pdf","jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
-            "pu","btag_bc","btag_l","lepton_weight","qcd_range","qcd_cont",
-            "fituncertainty","bias","limited_mc"]:
-    outFile.write(sys.replace("_"," ")+" & ")
-    if sysDictMu.has_key(sys):
-        unc = math.fabs(sysDictMu[sys]["d"])
-        outFile.write(formatUnc(unc)+" & ")
-        totalMu+=unc**2
-    else:
-        outFile.write("- & ")
-    if sysDictEle.has_key(sys):
-        unc = math.fabs(sysDictEle[sys]["d"])
-        outFile.write(formatUnc(unc)+" \\\\ \n")
-        totalEle+=unc**2
-    else:
-        outFile.write("- \\\\ \n")
-outFile.write("\hline \n")
-outFile.write("total & "+formatUnc(math.sqrt(totalMu))+" & "+formatUnc(math.sqrt(totalEle))+" \\\\\n")
-outFile.write("\hline \n")
+outFile.write("\\begin{tabular}[htc]{|r || c | c || c | c |}\n")
+outFile.write("\\hline \n")
+
+outFile.write("systematic & $\delta A_{\mu}$ & $\delta A_{e}$  & $\delta A_{\mu}$ & $\delta A_{e}$ \\\\\n")
+outFile.write("\\hline \n")
+for row in range(len(tableRows)):
+    formattedRow=tableRows[row][1]
+    for i in range(2,len(tableRows[row])):
+        formattedRow+=" & "+tableRows[row][i]
+    formattedRow+=" \\\\ "
+    outFile.write(formattedRow+"\n")
+
+outFile.write("\\hline \n")
+formattedRow=tableTotal[1]
+for i in range(2,len(tableTotal)):
+    formattedRow+=" & "+tableTotal[i]
+formattedRow+=" \\\\ "
+outFile.write(formattedRow+"\n")
+    
+outFile.write("\\hline \n")
 outFile.write("\\end{tabular}\n")
 outFile.close()

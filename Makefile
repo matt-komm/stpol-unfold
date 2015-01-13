@@ -46,6 +46,8 @@ do_unfold_mu:
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
 		$(REGMODE) \
+		--no-mcstat \
+		--no-fiterror \
 		--output=$(OUTPUTFOLDER)/mu__nominal 
 		
 	for SYS in $(SYSLIST); do \
@@ -59,6 +61,8 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__up \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__up \
+			--no-mcstat \
+		    --no-fiterror \
 			$(REGMODE); \
 		./unfoldPro \
 			--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
@@ -70,6 +74,8 @@ do_unfold_mu:
 			--fitCovariance=mu_cov.root \
 			--sys=$$(echo $$SYS)__down \
 			--output=$(OUTPUTFOLDER)/mu__$$(echo $$SYS)__down \
+			--no-mcstat \
+		    --no-fiterror \
 			$(REGMODE); \
 		./collectUnfoldProResult \
 	        --nominal=$(OUTPUTFOLDER)/mu__nominal.root \
@@ -93,13 +99,15 @@ do_unfold_mu:
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
 		$(REGMODE) \
+		--no-mcstat \
+		--no-fiterror \
 		--output=$(OUTPUTFOLDER)/mu__generator 
 	./collectUnfoldProResult \
         --nominal=$(OUTPUTFOLDER)/mu__nominal.root \
         --down=$(OUTPUTFOLDER)/mu__generator.root \
         --up=$(OUTPUTFOLDER)/mu__generator.root \
         --output=$(OUTPUTFOLDER)/mu__generator.csv \
-        --sys=generator; \
+        --sys=generator
 	
 
 	./unfoldPro \
@@ -133,7 +141,7 @@ do_unfold_mu:
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/mu__mcstat \
 		--no-stat \
-		--no-fiterror
+		--no-fiterror 
 	./collectUnfoldProResult \
 	    --nominal=$(OUTPUTFOLDER)/mu__mcstat.root \
 	    --output=$(OUTPUTFOLDER)/mu__mcstat.csv \
@@ -173,6 +181,8 @@ do_unfold_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
+		--no-mcstat \
+		--no-fiterror \
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__nominal 
 	
@@ -187,6 +197,8 @@ do_unfold_combined:
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__up \
 			$(REGMODE) \
+			--no-mcstat \
+		    --no-fiterror \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__up; \
 		./unfoldPro \
 			--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
@@ -198,6 +210,8 @@ do_unfold_combined:
 			--fitCovariance=combined_cov.root \
 			--sys=$$(echo $$SYS)__down \
 			$(REGMODE) \
+			--no-mcstat \
+		    --no-fiterror \
 			--output=$(OUTPUTFOLDER)/combined__$$(echo $$SYS)__down; \
 		./collectUnfoldProResult \
 	        --nominal=$(OUTPUTFOLDER)/combined__nominal.root \
@@ -217,6 +231,8 @@ do_unfold_combined:
 		--fitCovariance=combined_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
+		--no-mcstat \
+		--no-fiterror \
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__generator 
 	./collectUnfoldProResult \
@@ -238,7 +254,7 @@ do_unfold_combined:
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__stat \
 		--no-mcstat \
-		--no-fiterro
+		--no-fiterror
 	./collectUnfoldProResult \
 	    --nominal=$(OUTPUTFOLDER)/combined__stat.root \
 	    --output=$(OUTPUTFOLDER)/combined__stat.csv \
@@ -296,6 +312,8 @@ do_unfold_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
+	    --no-mcstat \
+		--no-fiterror \
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__nominal 
 	
@@ -310,6 +328,8 @@ do_unfold_ele:
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__up \
 			$(REGMODE) \
+			--no-mcstat \
+	        --no-fiterror \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__up; \
 	   ./unfoldPro \
 			--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
@@ -321,6 +341,8 @@ do_unfold_ele:
 			--fitCovariance=ele_cov.root \
 			--sys=$$(echo $$SYS)__down \
 			$(REGMODE) \
+			--no-mcstat \
+		    --no-fiterror \
 			--output=$(OUTPUTFOLDER)/ele__$$(echo $$SYS)__down; \
 		./collectUnfoldProResult \
 	        --nominal=$(OUTPUTFOLDER)/ele__nominal.root \
@@ -342,6 +364,8 @@ do_unfold_ele:
 		--fitCovariance=ele_cov.root \
 		--responseMatrixName="tm__comphep" \
 		--sys=nominal \
+		--no-mcstat \
+		--no-fiterror \
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__generator 
 	./collectUnfoldProResult \
@@ -349,7 +373,7 @@ do_unfold_ele:
         --down=$(OUTPUTFOLDER)/ele__generator.root \
         --up=$(OUTPUTFOLDER)/ele__generator.root \
         --output=$(OUTPUTFOLDER)/ele__generator.csv \
-        --sys=generator; \
+        --sys=generator \
 
 	./unfoldPro \
 		--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \

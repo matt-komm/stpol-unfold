@@ -226,7 +226,7 @@ if __name__=="__main__":
     cv = ROOT.TCanvas("cv","",1200,600)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.905,0.75,0.99,0.9)
+    legend = ROOT.TLegend(0.905,0.7,0.99,0.9)
     legend.SetFillColor(0)
     legend.SetTextFont(62)
     legend.SetBorderSize(0)
@@ -238,18 +238,20 @@ if __name__=="__main__":
         box = createBox(eleBinDict,sys,index,index+0.45)
         box.SetFillColor(ROOT.kAzure-4)
         box.Draw("SameF")
-        legend.AddEntry(box,"ele. ch. (mc)","F") if index==0 else 0
+        legend.AddEntry(box,"ele. ch.","F") if index==0 else 0
+        legend.AddEntry("","(tunfold)","") if index==0 else 0
         
         box = createBox(muBinDict,sys,index+0.45,index+0.90)
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
-        legend.AddEntry(box,"mu. ch. (mc)","F") if index==0 else 0
+        legend.AddEntry(box,"mu ch.","F") if index==0 else 0
+        legend.AddEntry("","(tunfold)","") if index==0 else 0
         
         box = createBox(eleBinDictn,sys,index,index+0.45)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        legend.AddEntry(box,"mc only","F") if index==0 else 0
+        legend.AddEntry(box,"2-bin","F") if index==0 else 0
         
         box = createBox(muBinDictn,sys,index+0.45,index+0.9)
         box.SetLineColor(ROOT.kBlack)

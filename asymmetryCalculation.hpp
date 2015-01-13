@@ -12,8 +12,54 @@
 #include "TMatrixD.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TRandom.h"
+#include "TDecompChol.h"
 
 #include <functional>
+#include <vector>
+
+TMatrixD convert(TH2* cov)
+{
+    const int N = cov->GetNbinsX();
+    TMatrixD covMatrix(N,N);
+    
+    for (int i=0; i<N;++i)
+    {
+        for (int j=0; j<N;++j)
+        {
+            covMatrix[i][j]=cov->GetBinContent(i+1,j+1);
+        }
+    }
+    return covMatrix;
+}
+
+TMatrixD decompose(const TMatrixD& cov)
+{
+    TDecompChol decomp(cov);
+    const TMatrixD& a = decomp.GetU();
+    return a;
+}
+
+std::vector<double> randGaus(const TH1* mean, const TMatrixD& a)
+{
+    const int N = mean->GetNbinsX();
+    std::vector<double> z(N);
+    for (unsigned int i=0; i<N;++i)
+    {
+        z[i]=gRandom->Gaus(0.0,1.0);
+    }
+    std::vector<double> x(N);
+    for (unsigned int i=0; i<N;++i)
+    {
+        x[i]=mean->GetBinContent(i+1);
+        for (unsigned int j=0; j<N;++j)
+        {
+            x[i]+=z[j]*a[i][j];
+        }
+    }
+    return x;
+    
+}
 
 struct Asymmetry
 {
@@ -49,6 +95,9 @@ double chi2A(const TH1* hist, const TMatrixD* invcov, const double *xx)
 
 
 
+
+
+
 Asymmetry estimateAsymmetry(
     const TH1* hist, const TH2* cov, 
     const char * minName = "Minuit2",
@@ -62,18 +111,33 @@ Asymmetry estimateAsymmetry(
     
     normHist->Scale(1.0/hist->Integral());
     normCov->Scale(1.0/hist->Integral()/hist->Integral());
-
-    const int N = hist->GetNbinsX();
-
-    TMatrixD covMatrix(N,N);
     
-    for (int i=0; i<N;++i)
+    TMatrixD covMatrix = convert(normCov);
+    TMatrixD decompA = decompose(covMatrix);
+    
+    
+    TH1D asymHist("asy","",4000,-1,1);
+    for (unsigned int itoy=0; itoy<1000; ++itoy)
     {
-        for (int j=0; j<N;++j)
+        double sumUp=0.0;
+        double sumDown=0.0;
+        for (unsigned int ibin=0; ibin<hist->GetNbinsX();++ibin)
         {
-            covMatrix[i][j]=normCov->GetBinContent(i+1,j+1);
+            std::vector<double> x = randGaus(normHist,decompA);
+            if (hist->GetBinCenter(ibin+1)<0)
+            {
+                sumDown+=x[ibin];
+            }
+            else
+            {
+                sumUp+=x[ibin];
+            }
         }
+        asymHist.Fill((sumUp-sumDown)/(sumUp+sumDown));
     }
+    
+    
+
     TMatrixD invCovMatrix = TMatrixD(TMatrixD::kInverted,covMatrix);
     
     
@@ -84,7 +148,7 @@ Asymmetry estimateAsymmetry(
     min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2 
     min->SetMaxIterations(10000);  // for GSL 
     min->SetTolerance(0.001);
-    min->SetPrintLevel(1);
+    min->SetPrintLevel(2);
     //const double xx[1] = {0.5};
     std::function<double(const TH1*, const TMatrixD*, const double*)> unboundFct = chi2A;
     std::function<double(const double*)> boundFct = std::bind(unboundFct,normHist, &invCovMatrix, std::placeholders::_1);
@@ -102,7 +166,11 @@ Asymmetry estimateAsymmetry(
     const double *error = min->Errors();
     log(INFO,"min: %f\n",xs[0]);
     log(INFO,"err: %f\n",error[0]);
+    
+    
     Asymmetry res;
+    //res.mean=asymHist.GetMean();
+    //res.uncertainty=asymHist.GetRMS();
     res.mean=xs[0];
     res.uncertainty=error[0];
     return res;

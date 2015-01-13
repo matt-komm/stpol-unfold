@@ -90,18 +90,20 @@ void doUnfolding(const std::vector<std::string>& histFiles,
     tunfold.SetBias(responseHist->ProjectionX());
     tunfold.SetInput(dataHist);
     
-    //TODO: decorrelate bgs first!
+    TH1F* subtractedData = new TH1F("substractedData","",REBIN_RECO,-1,1);
+    subtractedData->Add(dataHist);
     for (FitResult::const_iterator it = fitFactors.begin(); it != fitFactors.end(); ++it)
     {
         if (backgroundHistNames.find(it->first)!=backgroundHistNames.end())
         {
             TH1F* bgHist = loadHistogram1D(histFiles,HISTPREFIX+it->first,sys,1.0,REBIN_RECO);
             tunfold.SubtractBackground(bgHist,it->first.c_str(),fitFactors[it->first][0],fitFactors[it->first][1]);
+            subtractedData->Add(bgHist,-1.0*fitFactors[it->first][0]);
         }
     }
     
     TFile outputFile((outputFileName+".root").c_str(),"RECREATE");
-    
+    subtractedData->Write();
     
     if (fixedTau>0.0)
     {

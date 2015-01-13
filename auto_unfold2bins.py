@@ -148,7 +148,7 @@ def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,respo
 
 
 
-    #TODO: decorrelate before subtracting - or define correlation between bgs
+
     for histName in fitResult.keys():
         if histName in backgroundHistNames:
             backgroundHist=readHist1d(histFiles,HISTPREFIX+histName,systematic,fitResult[histName]["scale"],REBIN_RECO)
@@ -187,7 +187,7 @@ def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,respo
         print "final result:"
         print " ... A=",asymmetry.getMean(0)," +- ",asymmetry.getUncertainty(0)
 
-    return {"mean":asymmetry.getMean(0),"uncertainty":asymmetry.getUncertainty(0)}
+    return {"mean":asymmetry.getMeanSampled(0),"uncertainty":asymmetry.getUncertaintySampled(0)}
     
     
 def getScale(histFiles,nameRef, sysRef, fitResultRef, name, sys, fitResult):
