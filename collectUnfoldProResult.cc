@@ -161,9 +161,8 @@ int main(int argc, char* argv[])
         down=downA.mean;
         gStyle->SetOptStat(0);
         gStyle->SetLabelSize(0.045,"XYZ");
-        TCanvas cv("cv","",400,600);
-        cv.Divide(1,2);
-        cv.cd(1);
+        TCanvas cv1("cv1","",400,600);
+       
         TH2D axis1("axis1","",50,-1,1,50,0,1.1*std::max({nominalHist->GetMaximum(),upHist->GetMaximum(),downHist->GetMaximum()}));
         axis1.Draw("AXIS");
         nominalHist->SetMarkerStyle(21);
@@ -175,7 +174,9 @@ int main(int argc, char* argv[])
         downHist->SetLineWidth(2);
         downHist->Draw("SameLHISTP");
         
-        cv.cd(2);
+        cv1.Print((output+"_input.pdf").c_str());
+        
+        TCanvas cv2("cv2","",400,600);
         TH2D axis2("axis2","",50,-1,1,50,0,1.1*std::max({nominalHistUnfolded->GetMaximum(),upHistUnfolded->GetMaximum(),downHistUnfolded->GetMaximum()}));
         axis2.Draw("AXIS");
         nominalHistUnfolded->SetMarkerStyle(21);
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
         downHistUnfolded->SetLineWidth(2);
         downHistUnfolded->Draw("SameLHISTP");
         
-        cv.Print((output+".pdf").c_str());
+        cv2.Print((output+"_unfolded.pdf").c_str());
         
     }
     

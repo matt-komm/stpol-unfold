@@ -15,16 +15,14 @@ ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
-ROOT.gStyle.SetPadTopMargin(0.1)
-ROOT.gStyle.SetPadLeftMargin(0.15)
+ROOT.gStyle.SetPadTopMargin(0.05)
+ROOT.gStyle.SetPadLeftMargin(0.12)
 ROOT.gStyle.SetPadRightMargin(0.25)
-ROOT.gStyle.SetPadBottomMargin(0.15)
+ROOT.gStyle.SetPadBottomMargin(0.13)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
-ROOT.gStyle.SetTitleFontSize(0.05)
-ROOT.gStyle.SetTitleSize(0.06, "XYZ")
-ROOT.gStyle.SetLabelSize(0.05, "XYZ")
+ROOT.gStyle.SetLabelSize(0.055, "XYZ")
 ROOT.gStyle.SetNdivisions(510, "XYZ")
 
 ROOT.gStyle.SetOptFit()
@@ -108,11 +106,7 @@ ROOT.gStyle.SetStatW(0.15)
 # For the Global title:
 
 ROOT.gStyle.SetOptTitle(0)
-ROOT.gStyle.SetTitleFont(42)
-ROOT.gStyle.SetTitleColor(1)
-ROOT.gStyle.SetTitleTextColor(1)
-ROOT.gStyle.SetTitleFillColor(10)
-ROOT.gStyle.SetTitleFontSize(0.03)
+
 # ROOT.gStyle.SetTitleH(0) # Set the height of the title box
 # ROOT.gStyle.SetTitleW(0) # Set the width of the title box
 #ROOT.gStyle.SetTitleX(0.35) # Set the position of the title box
@@ -123,12 +117,11 @@ ROOT.gStyle.SetTitleFontSize(0.03)
 # For the axis titles:
 ROOT.gStyle.SetTitleColor(1, "XYZ")
 ROOT.gStyle.SetTitleFont(42, "XYZ")
-#ROOT.gStyle.SetTitleSize(0.06, "XYZ")
-ROOT.gStyle.SetTitleSize(0.048, "XYZ")
+ROOT.gStyle.SetTitleSize(0.06, "XYZ")
 # ROOT.gStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
 # ROOT.gStyle.SetTitleYSize(Float_t size = 0.02)
 ROOT.gStyle.SetTitleXOffset(0.9)
-ROOT.gStyle.SetTitleYOffset(1.15)
+ROOT.gStyle.SetTitleYOffset(1.05)
 #ROOT.gStyle.SetTitleOffset(1.1, "Y") # Another way to set the Offset
 
 # For the axis labels:
@@ -136,7 +129,7 @@ ROOT.gStyle.SetTitleYOffset(1.15)
 ROOT.gStyle.SetLabelColor(1, "XYZ")
 ROOT.gStyle.SetLabelFont(42, "XYZ")
 ROOT.gStyle.SetLabelOffset(0.0077, "XYZ")
-ROOT.gStyle.SetLabelSize(0.04, "XYZ")
+ROOT.gStyle.SetLabelSize(0.045, "XYZ")
 #ROOT.gStyle.SetLabelSize(0.04, "XYZ")
 
 # For the axis:
@@ -258,7 +251,7 @@ if __name__=="__main__":
     nb=len(unfoldedA)
     start = ROOT.TColor.CreateGradientColorTable(Number,numpy.array(Length),numpy.array(Red),numpy.array(Green),numpy.array(Blue),nb)
 
-    legend=ROOT.TLegend(0.76,0.9,0.99,0.25)
+    legend=ROOT.TLegend(0.755,0.9,0.99,0.2)
     legend.SetTextFont(42)
     legend.SetFillColor(ROOT.kWhite)
     legend.SetBorderSize(0)
