@@ -7,6 +7,7 @@ import ROOT
 import os
 import os.path
 
+import numpy,scipy,scipy.optimize
 
 
 
@@ -19,9 +20,9 @@ ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetPadTopMargin(0.07)
-ROOT.gStyle.SetPadLeftMargin(0.12)
+ROOT.gStyle.SetPadLeftMargin(0.16)
 ROOT.gStyle.SetPadRightMargin(0.05)
-ROOT.gStyle.SetPadBottomMargin(0.13)
+ROOT.gStyle.SetPadBottomMargin(0.12)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
@@ -120,11 +121,11 @@ ROOT.gStyle.SetOptTitle(0)
 # For the axis titles:
 ROOT.gStyle.SetTitleColor(1, "XYZ")
 ROOT.gStyle.SetTitleFont(42, "XYZ")
-ROOT.gStyle.SetTitleSize(0.06, "XYZ")
+ROOT.gStyle.SetTitleSize(0.057, "XYZ")
 # ROOT.gStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
 # ROOT.gStyle.SetTitleYSize(Float_t size = 0.02)
-ROOT.gStyle.SetTitleXOffset(0.9)
-ROOT.gStyle.SetTitleYOffset(1.05)
+ROOT.gStyle.SetTitleXOffset(1.0)
+ROOT.gStyle.SetTitleYOffset(1.15)
 #ROOT.gStyle.SetTitleOffset(1.1, "Y") # Another way to set the Offset
 
 # For the axis labels:
@@ -142,6 +143,7 @@ ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetStripDecimals(True)
 ROOT.gStyle.SetTickLength(0.03, "XYZ")
 ROOT.gStyle.SetNdivisions(510, "XYZ")
+ROOT.gStyle.SetNdivisions(512, "Y")
 
 ROOT.gStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
 ROOT.gStyle.SetPadTickY(1)
@@ -205,10 +207,16 @@ sysNames=[
     #"lepton_weight",
     "qcd_yield",
     "qcd_antiiso",
-    #"fiterror",
+    "fiterror",
     "mcstat",
 ]
 
+'''
+sysNames=[
+    "nominal",
+    "stat"
+]
+'''
 def calculateChi2(hist1,covHist1,hist2,covHist2=None):
     chi2=0.0
     
@@ -240,30 +248,102 @@ def diceGaus(output,hist,covHist):
     mean=numpy.zeros(N)
     cov=numpy.zeros((N,N))
     for i in range(N):
-        mean[i]=hist.GetBinContent(i+1)
         for j in range(N):
             cov[i][j]=covHist.GetBinContent(i+1,j+1)
     diced=numpy.random.multivariate_normal(mean,cov)
     for i in range(N):
-        output[i]+=diced[i]-mean[i]
+        output[i]+=diced[i]
             
 def diceShape(output,nominalHist,upHist,downHist):
     d=ROOT.gRandom.Gaus(0.0,1.0)
     for i in range(nominalHist.GetNbinsX()):
+        
         up=upHist.GetBinContent(i+1)
         nom=nominalHist.GetBinContent(i+1)
         down=downHist.GetBinContent(i+1)
+        
+        #symmetrize if only one-sided
+        '''
+        if (up<nom and down<nom) or (up>nom and down>nom):
+            diff=max(math.fabs(up-nom),math.fabs(down-nom))
+            up=nom+diff
+            down=nom-diff
+        '''
+        #symmetrize always
+        diff=max(math.fabs(up-nom),math.fabs(down-nom))
+        up=nom+diff
+        down=nom-diff
+
         if d>1:
             output[i]+= (up-nom)*math.fabs(d)
         elif d<-1:
             output[i]+= (down-nom)*math.fabs(d)
         else:
             output[i]+= d/2.0*(up-down)+(d*d-math.fabs(d*d*d)/2.0)*(up+down-2.0*nom)
+            
+def normalize(output):
+    s=0.0
+    for i in range(len(output)):
+        if output[i]<0.0:
+            output[i]=0.0
+        s+=output[i]
+    for i in range(len(output)):
+        output[i]=output[i]/s*len(output)/2.0
+        
+def calculateAsymmetry(output,cov):
+    if type(output)==type(ROOT.TH1D()):
+        norm=output.Integral()
+        N=output.GetNbinsX()
+    else:
+        norm=sum(output)
+        N=len(output)
+    measured=numpy.zeros(N)
+    covMatrix=numpy.zeros((N,N))
+    for i in range(N):
+        if type(output)==type(ROOT.TH1D()):
+            measured[i]=output.GetBinContent(i+1)/norm
+        else:
+            measured[i]=output[i]/norm
+        for j in range(N):
+            covMatrix[i][j]=cov.GetBinContent(i+1,j+1)/norm**2
+    covMatrixInf=numpy.linalg.inv(covMatrix)
+    
+    def chi2(p):
+        chi2Sum=0.0
+        expect=numpy.zeros(N)
+        for i in range(N):
+            icos=-1.0+2.0/N*i+2.0/N*0.5
+            expect[i]=2.0/N*0.5*(1.0+2.0*p[0]*icos)
+        for i in range(N):
+            for j in range(N):
+                chi2Sum+=(measured[i]-expect[i])*covMatrixInf[i][j]*(measured[j]-expect[j])
+        return numpy.array([math.sqrt(chi2Sum)])
+        
+        
+    p0 = numpy.array([0.4])
+    #print chi2(p0)
+    p1, success = scipy.optimize.leastsq(chi2, p0)#,method='BFGS',tol=0.001, jac=False, bounds=[(-1.0,1.0)])
+    return p1
+    
+    '''
+    N=len(output)
+    sumUp=0.0
+    sumDown=0.0
+    for i in range(N/2):
+        sumUp+=output[N/2+i]
+        sumDown+=output[i]
+    return (sumUp-sumDown)/(sumUp+sumDown)
+    '''
+        
+def applyLineStyle(line,color=ROOT.kBlack):
+    line.SetLineWidth(2)
+    line.SetLineColor(color)
 
-def readHistograms(folder,prefix="ele__"):
+def readHistograms(folder,prefix="mu__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","generator","mcstat","fiterror"]:
+            
             fileName=os.path.join(folder,prefix+sys+".root")
             if os.path.exists(fileName):
                 histDict[sys]={"isShape":False,"unfolded":{},"input":{}}
@@ -277,6 +357,8 @@ def readHistograms(folder,prefix="ele__"):
                 histDict[sys]["unfolded"]["gen"]=rootFile.Get("gen")
                 histDict[sys]["unfolded"]["gen"].SetDirectory(0)
                 rootFile.Close()
+            else:
+                print
         else:
             
             upFileName=os.path.join(folder,prefix+sys+"__up.root")
@@ -301,50 +383,132 @@ def readHistograms(folder,prefix="ele__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","scan","0.3","tunfold")
+folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold")
 
 sysDict = readHistograms(folderTUnfold)
 
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
+
+
+#cv1=ROOT.TCanvas("cv1","",800,600)
+statCov=sysDict["nominal"]["unfolded"]["error"]
+
+#statCov.Draw("colz")
+#cv1.WaitPrimitive()
+
 genHist=sysDict["nominal"]["unfolded"]["gen"]
 
-NTOYS=1000
+asymmetryHist=ROOT.TH1F("asym","",10000,-2.0,2.0)
+
+NTOYS=40000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 
 for toy in range(NTOYS):
-    
+    if toy%500==0:
+        print "process... ",100.0*toy/NTOYS,"%"
     for ibin in range(nominalHist.GetNbinsX()):
         output[toy][ibin]=nominalHist.GetBinContent(ibin+1)
-        
+     
     for sysName in sysDict.keys():
+        if sysName=="nominal":
+            continue
         if not sysDict[sysName]["isShape"]:
             diceGaus(output[toy],nominalHist,sysDict[sysName]["unfolded"]["error"])
         else:
             diceShape(output[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"])
+    
+    asymmetryHist.Fill(calculateAsymmetry(output[toy],statCov))  
+    normalize(output[toy])
+   
 
+#print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
 downSys,upSys=numpy.percentile(output, [15.85,84.15],0)
 
+#cv2=ROOT.TCanvas("cv2","",800,600)
+#asymmetryHist.Draw()
+#cv2.WaitPrimitive()
+print asymmetryHist.GetMean(),"+-",asymmetryHist.GetRMS()
 
 rootObj=[]
 
+
 cv=ROOT.TCanvas("cv","",800,600)
-axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*; a.u.",50,-1,1,50,0.0,max(upSys)*1.1)
+
+axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
 axis.Draw("AXIS")
 
-legend=ROOT.TLegend(0.17,0.9,0.4,0.7)
+legend=ROOT.TLegend(0.19,0.89,0.45,0.68)
 legend.SetBorderSize(0)
+legend.SetTextFont(42)
 legend.SetFillColor(ROOT.kWhite)
 
+
+statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
+nominalHist.Scale(1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)
+genHist.Scale(1.0/genHist.Integral()*genHist.GetNbinsX()/2.0)
+
 for ibin in range(len(downSys)):
+    n=nominalHist.GetBinContent(ibin+1)
     c=nominalHist.GetBinCenter(ibin+1)
     w=nominalHist.GetBinWidth(ibin+1)
-    u=max(0.0,upSys[ibin])
-    d=max(0.0,downSys[ibin])
+    u=upSys[ibin]
+    d=downSys[ibin]
+    print ibin,u,d
+    #u=max(0.0,upSys[ibin])
+    #d=max(0.0,downSys[ibin])
+    lineSysUp=ROOT.TLine(c-0.15*w,u,c+0.15*w,u)
+    lineSysDown=ROOT.TLine(c-0.15*w,d,c+0.15*w,d)
+    lineSysMid=ROOT.TLine(c,d,c,u)
+    applyLineStyle(lineSysUp,ROOT.kBlack)
+    applyLineStyle(lineSysDown,ROOT.kBlack)
+    applyLineStyle(lineSysMid,ROOT.kBlack)
+    
+    rootObj.append(lineSysUp)
+    rootObj.append(lineSysDown)
+    rootObj.append(lineSysMid)
+    #lineSysUp.Draw("Same")
+    #lineSysDown.Draw("Same")
+    lineSysMid.Draw("Same")
+    '''
     box=ROOT.TBox(c-0.5*w,d,c+0.5*w,u)
     box.SetFillColor(17)
     box.SetLineColor(15)
     rootObj.append(box)
     box.Draw("LFSAME")
+    '''
+    '''
+    if ibin==0:
+        legend.AddEntry(lineSysUp,"stat.+sys. uncertainty","PE")
+    '''
+    u=n+math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
+    d=n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
+    print ibin,u,d
+    #u=max(0.0,upSys[ibin])
+    #d=max(0.0,downSys[ibin])
+    lineStatUp=ROOT.TLine(c-0.12*w,u,c+0.12*w,u)
+    lineStatDown=ROOT.TLine(c-0.12*w,d,c+0.12*w,d)
+    lineStatMid=ROOT.TLine(c,d,c,u)
+    applyLineStyle(lineStatUp,ROOT.kBlack)
+    applyLineStyle(lineStatDown,ROOT.kBlack)
+    applyLineStyle(lineStatMid,ROOT.kBlack)
+    rootObj.append(lineStatUp)
+    rootObj.append(lineStatDown)
+    rootObj.append(lineStatMid)
+    lineStatUp.Draw("Same")
+    lineStatDown.Draw("Same")
+    #lineStatMid.Draw("Same")
+    '''
+    box=ROOT.TBox(c-0.5*w,d,c+0.5*w,u)
+    box.SetFillColor(ROOT.kOrange+6)
+    box.SetLineColor(ROOT.kOrange+10)
+    rootObj.append(box)
+    box.Draw("LFSAME")
+    '''
+    '''
+    if ibin==0:
+        legend.AddEntry(lineStatUp,"stat. uncertainty","PE")
+    '''
+    print nominalHist.GetBinError(ibin+1),
     
 nominalHist.SetMarkerStyle(21)
 nominalHist.SetMarkerSize(1.2)
@@ -357,14 +521,12 @@ genHist.SetLineStyle(2)
 genHist.Draw("SameLhist")
 legend.AddEntry(genHist,"PowHeg SM","L")
 
-legend.AddEntry(box,"uncertainty","F")
-
 pave=ROOT.TPaveText(0.5,0.92,0.96,0.98,"NDC")
 pave.SetFillColor(ROOT.kWhite)
 pave.SetTextFont(42)
 pave.SetTextAlign(31)
-pave.AddText("e+jets, 18.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-#pave.AddText("#mu+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+pave.AddText("#mu+jets, 15.3 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 pave.Draw("SAME")
 
 axis.Draw("AXIS SAME ")

@@ -90,6 +90,7 @@ std::vector<NeymanResult> doNeyman(TH2F* responseMatrix, TH2F* comphep1000Matrix
     
     
     std::vector<NeymanResult> results;
+
     for (int i = 0; i<N;++i)
     {
         
@@ -98,7 +99,7 @@ std::vector<NeymanResult> doNeyman(TH2F* responseMatrix, TH2F* comphep1000Matrix
         
         TH1D genDist=generateWeightedHist(comphep1000Gen,comphep1100Gen,comphep0100Gen,vl,vr);
         TH1D recoDist=generateWeightedHist(comphep1000Reco,comphep1100Reco,comphep0100Reco,vl,vr);
-        for (int i=0;i<REBIN_GEN;++i)
+        for (int i=0;i<REBIN_RECO;++i)
         {
             recoDist.SetBinError(i+1,sqrt(recoDist.GetBinContent(i+1)));
         }
@@ -228,15 +229,23 @@ int main(int argc, char* argv[])
     }
     log(INFO,"matrix name: %s\n",(responseMatrixName).c_str());
     
+    
     TH2F* responseHist = loadHistogram2D(responseFiles,responseMatrixName,"",1.0,REBIN_GEN,REBIN_RECO);
+    log(INFO,"A(response,gen)= %f\n",calcAsymmetry(responseHist->ProjectionX()));
+    
     TH2F* comphep1000 = loadHistogram2D(responseFiles,comphep1000Name,"",1.0,REBIN_GEN,REBIN_RECO);
+    log(INFO,"A(comphep1000,gen)= %f\n",calcAsymmetry(comphep1000->ProjectionX()));
+        
     TH2F* comphep1100 = loadHistogram2D(responseFiles,comphep1100Name,"",1.0,REBIN_GEN,REBIN_RECO);
+    log(INFO,"A(comphep1100,gen)= %f\n",calcAsymmetry(comphep1100->ProjectionX()));
+    
     TH2F* comphep0100 = loadHistogram2D(responseFiles,comphep0100Name,"",1.0,REBIN_GEN,REBIN_RECO);
+    log(INFO,"A(comphep0100,gen)= %f\n",calcAsymmetry(comphep0100->ProjectionX()));
     
     std::vector<NeymanResult> neymanResults = doNeyman(responseHist,comphep1000,comphep1100,comphep0100,11,fixedTau);
     
     
-    std::ofstream file(outputFile);
+    std::ofstream file(outputFile,std::ios_base::trunc | std::ios_base::out);
     file<<"\"vl\",\"vr\",\"generated\",\"unfolded\",\"uncertainty\",\"bias\""<<std::endl;
     for (const NeymanResult& result: neymanResults)
     {

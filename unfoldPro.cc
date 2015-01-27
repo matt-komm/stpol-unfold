@@ -149,14 +149,27 @@ void doUnfolding(const std::vector<std::string>& histFiles,
 	}
     if (!noFitUnc)
     {
+        TH2D* fitMatrix = new TH2D("error","error",REBIN_GEN,1,REBIN_GEN,REBIN_GEN,1,REBIN_GEN);
         for (FitResult::const_iterator it = fitFactors.begin(); it != fitFactors.end(); ++it)
         {
             if (backgroundHistNames.find(it->first)!=backgroundHistNames.end())
             {
                 //add error through fit of background normalization
-	            tunfold.GetEmatrixSysBackgroundScale(errorMatrix,it->first.c_str(), 0, false); 
+	            tunfold.GetEmatrixSysBackgroundScale(fitMatrix,it->first.c_str(), 0, false); 
 	        }
         }
+        for (int i = 0; i < REBIN_GEN; ++i)
+        {
+            for (int j = 0; j < REBIN_GEN; ++j)
+            {
+                if (i!=j)
+                {
+                    //ignore tiny correlations
+                    fitMatrix->SetBinContent(i+1,j+1,0.0);
+                }
+            }
+        }
+        errorMatrix->Add(fitMatrix);
 	}
 	errorMatrix->Write();	
 	outputFile.Close();

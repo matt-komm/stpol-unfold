@@ -12,9 +12,10 @@ ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
-ROOT.gStyle.SetPadLeftMargin(0.08)
-ROOT.gStyle.SetPadRightMargin(0.1)
-ROOT.gStyle.SetPadBottomMargin(0.15)
+ROOT.gStyle.SetPadLeftMargin(0.3)
+ROOT.gStyle.SetPadRightMargin(0.05)
+ROOT.gStyle.SetPadTopMargin(0.01)
+ROOT.gStyle.SetPadBottomMargin(0.1)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
@@ -132,7 +133,8 @@ ROOT.gStyle.SetTitleYOffset(1.15)
 ROOT.gStyle.SetLabelColor(1, "XYZ")
 ROOT.gStyle.SetLabelFont(42, "XYZ")
 ROOT.gStyle.SetLabelOffset(0.0077, "XYZ")
-ROOT.gStyle.SetLabelSize(0.04, "XYZ")
+ROOT.gStyle.SetLabelSize(0.033, "X")
+ROOT.gStyle.SetLabelSize(0.04, "Y")
 #ROOT.gStyle.SetLabelSize(0.04, "XYZ")
 
 # For the axis:
@@ -140,8 +142,8 @@ ROOT.gStyle.SetLabelSize(0.04, "XYZ")
 ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetStripDecimals(True)
-ROOT.gStyle.SetTickLength(0.03, "XYZ")
-ROOT.gStyle.SetNdivisions(510, "XYZ")
+ROOT.gStyle.SetTickLength(0.02, "XYZ")
+ROOT.gStyle.SetNdivisions(505, "XYZ")
 
 ROOT.gStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
 ROOT.gStyle.SetPadTickY(1)
@@ -178,6 +180,37 @@ ROOT.gStyle.SetLineScalePS(2)
 ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetPaintTextFormat("7.4f")
 
+sysNames=[
+    ["stat","statistical"],
+    ["generator","signal modeling"],
+    ["tchan_scale","t-channel scale"],
+    ["ttjets_scale","tt+jets scale"],
+    ["wzjets_scale","W+jets scale"],
+    ["mass","top quark mass"],
+    ["wjets_shape","W+jets shape"],
+    ["wjets_flavour_heavy","W+jets heavy flavour"],
+    ["wjets_flavour_light","W+jets light flavour"],
+    ["top_weight","top pT modeling"],
+    ["wzjets_matching","W+jets matching"],
+    ["ttjets_matching","tt+jets matching"],
+    #["pdf","PDF"],
+    ["jes","JES"],
+    ["jer","JER"],
+    ["met","MET"],
+    ["lepton_id","lepton id"],
+    ["lepton_iso","lepton isolation"],
+    ["lepton_trigger","lepton trigger"],        
+    ["pu","pileup"],
+    ["btag_bc","b-tagging efficiency"],
+    ["btag_l","mis-tagging efficiency"],
+    #["lepton_weight","lepton weight"],
+    ["qcd_yield","QCD yield"],
+    ["qcd_antiiso","QCD template"],
+    ["fiterror","ML-fit uncertainty"],
+    ["bias","unfolding bias"],
+    ["mcstat","limited MC"]
+]
+
 rootObj=[]
 
 def loadDict(fileList):
@@ -192,18 +225,21 @@ def loadDict(fileList):
     
 def createBox(sysDict,sysEntry,ypos1,ypos2):
     if sysDict.has_key(sysEntry):
-        box = ROOT.TBox(ypos1,0,ypos2,float(sysDict[sysEntry]["d"]))
+        box = ROOT.TBox(0,ypos1,float(sysDict[sysEntry]["d"]),ypos2)
         rootObj.append(box)
         return box
     else:
         box = ROOT.TBox(0,0,0,0)
         rootObj.append(box)
         return box
+        
+
     
 if __name__=="__main__":
     dicts =["stat","generator","tchan_scale","ttjets_scale","wzjets_scale",
             "mass","wjets_shape","top_weight","wzjets_matching","ttjets_matching",
-            "pdf","jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
+            #"pdf",
+            "jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
             "pu","btag_bc","btag_l","qcd_antiiso","qcd_yield","wjets_flavour_light","wjets_flavour_heavy",
             "fiterror","bias","mcstat"]
 
@@ -222,43 +258,55 @@ if __name__=="__main__":
     eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
     
     
-    hist = ROOT.TH2F("hist","",len(dicts),0,len(dicts),50,0,0.14)
-    cv = ROOT.TCanvas("cv","",1200,600)
+    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.1,len(dicts),0,len(dicts))
+    cv = ROOT.TCanvas("cv","",800,800)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.905,0.7,0.99,0.9)
-    legend.SetFillColor(0)
-    legend.SetTextFont(62)
+    legend = ROOT.TLegend(0.65,0.78,0.9,0.95)
+    legend.SetFillColor(ROOT.kWhite)
+    legend.SetFillStyle(1001)
+    legend.SetTextFont(42)
     legend.SetBorderSize(0)
     
     for index in range(len(dicts)):
         sys = dicts[index]
-        hist.GetXaxis().SetBinLabel(index+1,sys)
+        label="<empty>"
+        for match in sysNames:
+            if match[0]==sys:
+                label=match[1]
+        if label=="<empty>":
+            print sys
+        hist.GetYaxis().SetBinLabel(index+1,label)
         
-        box = createBox(eleBinDict,sys,index,index+0.45)
+        line = ROOT.TLine(-0.04,index,0.0,index)
+        rootObj.append(line)
+        line.Draw("Same")
+        
+        box = createBox(eleBinDict,sys,index+0.1,index+0.5)
         box.SetFillColor(ROOT.kAzure-4)
         box.Draw("SameF")
-        legend.AddEntry(box,"ele. ch.","F") if index==0 else 0
+        legend.AddEntry(box,"electron ch.","F") if index==0 else 0
         legend.AddEntry("","(tunfold)","") if index==0 else 0
         
-        box = createBox(muBinDict,sys,index+0.45,index+0.90)
+        box = createBox(muBinDict,sys,index+0.5,index+0.9)
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
-        legend.AddEntry(box,"mu ch.","F") if index==0 else 0
+        legend.AddEntry(box,"muon ch.","F") if index==0 else 0
         legend.AddEntry("","(tunfold)","") if index==0 else 0
         
-        box = createBox(eleBinDictn,sys,index,index+0.45)
+        box = createBox(eleBinDictn,sys,index+0.1,index+0.5)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        legend.AddEntry(box,"2-bin","F") if index==0 else 0
+        legend.AddEntry(box,"2-bin analytical","F") if index==0 else 0
         
-        box = createBox(muBinDictn,sys,index+0.45,index+0.9)
+        box = createBox(muBinDictn,sys,index+0.5,index+0.9)
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
         
-    legend.Draw("Same")
+    
     hist.Draw("AXIS SAME")
+    legend.Draw("Same")
     cv.Update()
     cv.WaitPrimitive()

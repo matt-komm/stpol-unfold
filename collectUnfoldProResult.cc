@@ -150,8 +150,8 @@ int main(int argc, char* argv[])
     double down = -1;
     if (fromError)
     {
-        up=mean+nominalA.uncertainty*0.5;
-        down=mean-nominalA.uncertainty*0.5;
+        up=mean+nominalA.uncertainty;
+        down=mean-nominalA.uncertainty;
     }
     else
     {
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
     
     
     std::ofstream ouputFile(output.c_str());
-    ouputFile<<"\"syst\",\"up\",\"down\",\"dup\",\"ddown\",\"d\""<<std::endl;
+    ouputFile<<"\"syst\",\"mean\",\"up\",\"down\",\"dup\",\"ddown\",\"d\""<<std::endl;
     ouputFile<<("\""+sysName+"\",").c_str()<<mean<<","<<up<<","<<down<<","<<fabs(mean-up)
              <<","<<fabs(mean-down)<<","<<std::max(fabs(mean-down),fabs(mean-up))<<std::endl;
     ouputFile.close();

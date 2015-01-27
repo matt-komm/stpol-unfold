@@ -15,10 +15,10 @@ ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
-ROOT.gStyle.SetPadTopMargin(0.05)
+ROOT.gStyle.SetPadTopMargin(0.07)
 ROOT.gStyle.SetPadLeftMargin(0.12)
 ROOT.gStyle.SetPadRightMargin(0.25)
-ROOT.gStyle.SetPadBottomMargin(0.13)
+ROOT.gStyle.SetPadBottomMargin(0.12)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
@@ -121,7 +121,7 @@ ROOT.gStyle.SetTitleSize(0.06, "XYZ")
 # ROOT.gStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
 # ROOT.gStyle.SetTitleYSize(Float_t size = 0.02)
 ROOT.gStyle.SetTitleXOffset(0.9)
-ROOT.gStyle.SetTitleYOffset(1.05)
+ROOT.gStyle.SetTitleYOffset(1.00)
 #ROOT.gStyle.SetTitleOffset(1.1, "Y") # Another way to set the Offset
 
 # For the axis labels:
@@ -129,7 +129,7 @@ ROOT.gStyle.SetTitleYOffset(1.05)
 ROOT.gStyle.SetLabelColor(1, "XYZ")
 ROOT.gStyle.SetLabelFont(42, "XYZ")
 ROOT.gStyle.SetLabelOffset(0.0077, "XYZ")
-ROOT.gStyle.SetLabelSize(0.045, "XYZ")
+ROOT.gStyle.SetLabelSize(0.048, "XYZ")
 #ROOT.gStyle.SetLabelSize(0.04, "XYZ")
 
 # For the axis:
@@ -138,7 +138,7 @@ ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetStripDecimals(True)
 ROOT.gStyle.SetTickLength(0.03, "XYZ")
-ROOT.gStyle.SetNdivisions(510, "XYZ")
+ROOT.gStyle.SetNdivisions(508, "XYZ")
 
 ROOT.gStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
 ROOT.gStyle.SetPadTickY(1)
@@ -221,21 +221,32 @@ if __name__=="__main__":
     
     
     cv=ROOT.TCanvas("cv","",800,600)
-    axis=ROOT.TH2F("axis",";unfolded(A);generated(A)",50,0.0,0.55,50,0.0,0.55)
+    axis=ROOT.TH2F("axis",";unfolded(A);generated(A)",50,0.0,0.5,50,0.0,0.5)
     axis.Draw("AXIS")
     
-    errorBandX=numpy.zeros(len(generatedA)*2)
-    errorBandY=numpy.zeros(len(generatedA)*2)
+    errorBandX=numpy.zeros(len(generatedA)*2+1)
+    errorBandY=numpy.zeros(len(generatedA)*2+1)
     for i in range(len(generatedA)):
         errorBandX[i]=unfoldedA[i]+uncertaintyA[i]
         errorBandY[i]=generatedA[i]
-        errorBandX[-1-i]=unfoldedA[i]-uncertaintyA[i]
-        errorBandY[-1-i]=generatedA[i]
+        errorBandX[-2-i]=unfoldedA[i]-uncertaintyA[i]
+        errorBandY[-2-i]=generatedA[i]
+    errorBandX[-1]=errorBandX[0]
+    errorBandY[-1]=errorBandY[0]
         
     poly=ROOT.TPolyLine(len(errorBandX),errorBandX,errorBandY)
     poly.SetFillColor(ROOT.kGray)
-    poly.SetLineColor(0)
+    poly.SetLineColor(ROOT.kGray+1)
+    poly.SetFillStyle(1001)
+    poly.SetLineWidth(2)
+    #poly.SetLineColor(0)
     poly.Draw("FSame")
+    
+    poly2=ROOT.TPolyLine(len(errorBandX),errorBandX,errorBandY)
+    poly2.SetFillColor(ROOT.kGray)
+    poly2.SetLineColor(ROOT.kGray+1)
+    poly2.SetLineWidth(2)
+    poly2.Draw("LSame")
 
     bisector = ROOT.TF1("bisector","x",-1,1)
     bisector.SetLineColor(ROOT.kBlack)
@@ -245,14 +256,15 @@ if __name__=="__main__":
 
     Number = 5
     Red   = [0.00, 0.00, 0.87, 1.00, 0.71]
-    Green = [ 0.00, 0.81, 1.00, 0.20, 0.00]
+    Green = [ 0.00, 0.81, 1.0, 0.20, 0.00]
     Blue   =[  0.71, 1.00, 0.12, 0.00, 0.00]
     Length = [ 0.00, 0.34, 0.61, 0.84, 1.00 ]
     nb=len(unfoldedA)
     start = ROOT.TColor.CreateGradientColorTable(Number,numpy.array(Length),numpy.array(Red),numpy.array(Green),numpy.array(Blue),nb)
 
-    legend=ROOT.TLegend(0.755,0.9,0.99,0.2)
-    legend.SetTextFont(42)
+    legend=ROOT.TLegend(0.755,0.93,0.99,0.2)
+    legend.SetTextFont(43)
+    legend.SetTextSize(22)
     legend.SetFillColor(ROOT.kWhite)
     legend.SetBorderSize(0)
 
@@ -263,18 +275,28 @@ if __name__=="__main__":
     for i in range(len(unfoldedA)):
 
         
-        legendName="VL=%2.1f VR=%2.1f"%(vl[i],vr[i])
+        legendName="V_{L}=%2.1f, V_{R}=%2.1f"%(vl[i],vr[i])
         marker = ROOT.TMarker(unfoldedA[i],generatedA[i],21)
         rootObj.append(marker)
         marker.SetMarkerColor(start+i)
         marker.SetMarkerSize(1.2)
         marker.Draw("Same")
         legend.AddEntry(marker,legendName,"P")
+        
+    legend.AddEntry(poly,"stat. uncertainty","F")
 
 
 
     legend.Draw("Same")
+    
+    pave = ROOT.TPaveText(0.2,0.93,0.755,0.99,"NDC")
+    pave.AddText("#mu+jets")
+    pave.SetFillColor(ROOT.kWhite)
+    pave.SetTextFont(42)
+    pave.SetTextAlign(31)
+    pave.Draw("SAme")
 
     axis.Draw("AXIS SAME")
     cv.Update()
     cv.Print(args[1])
+    cv.WaitPrimitive()

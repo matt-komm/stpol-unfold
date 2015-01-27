@@ -240,7 +240,7 @@ scans=[]
 for folder in os.listdir(basefolder):
     scans.append({
         "cut":(float(folder)),
-        "sys":readCSV(os.path.join(basefolder,folder,"tunfold"),"ele_")
+        "sys":readCSV(os.path.join(basefolder,folder),"ele_")
     })
  
 scans=sorted(scans[:],cmp=lambda x,y: int(1000*(x["cut"]-y["cut"])))
@@ -267,7 +267,7 @@ c.setCoordinateStyle(style)
 c.draw()
 '''
 cv = ROOT.TCanvas("cv","",800,600)
-axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.15,0.9,50,0.0,0.15)
+axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.2,0.8,50,0.0,0.13)
 axis.Draw("AXIS")
 
 rootObj=[]

@@ -242,7 +242,7 @@ if __name__=="__main__":
         print "WARNING: will override the output sys name in the csv file to: ",options.outputsysname
         
     outputFile = open(options.output, 'wb')
-    writer = csv.DictWriter(outputFile, ["syst","up","down","dup","ddown","d"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+    writer = csv.DictWriter(outputFile, ["syst","mean","up","down","dup","ddown","d"], restval='NAN', extrasaction='raise', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
     writer.writeheader()
     if options.systematic=="nominal":
 
@@ -266,48 +266,53 @@ if __name__=="__main__":
         if options.stat and options.mcstat and options.fiterror:
             writer.writerow({
                 "syst":options.outputsysname if options.outputsysname else "nominal",
-                "up":result["mean"]+0.5*result["uncertainty"],
-                "down":result["mean"]-0.5*result["uncertainty"],
-                "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"],
-                "d":0.5*result["uncertainty"]
+                "mean":result["mean"],
+                "up":result["mean"]+result["uncertainty"],
+                "down":result["mean"]-result["uncertainty"],
+                "dup":result["uncertainty"],
+                "ddown":result["uncertainty"],
+                "d":result["uncertainty"]
             })
         elif options.stat and not options.mcstat and not options.fiterror:
             writer.writerow({
                 "syst":options.outputsysname if options.outputsysname else "stat",
-                "up":result["mean"]+0.5*result["uncertainty"],
-                "down":result["mean"]-0.5*result["uncertainty"],
-                "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"],
-                "d":0.5*result["uncertainty"]
+                "mean":result["mean"],
+                "up":result["mean"]+result["uncertainty"],
+                "down":result["mean"]-result["uncertainty"],
+                "dup":result["uncertainty"],
+                "ddown":result["uncertainty"],
+                "d":result["uncertainty"]
             })
         elif not options.stat and options.mcstat and not options.fiterror:
             writer.writerow({
                 "syst":options.outputsysname if options.outputsysname else "mcstat",
-                "up":result["mean"]+0.5*result["uncertainty"],
-                "down":result["mean"]-0.5*result["uncertainty"],
-                "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"],
-                "d":0.5*result["uncertainty"]
+                "mean":result["mean"],
+                "up":result["mean"]+result["uncertainty"],
+                "down":result["mean"]-result["uncertainty"],
+                "dup":result["uncertainty"],
+                "ddown":result["uncertainty"],
+                "d":result["uncertainty"]
             })
         elif not options.stat and not options.mcstat and options.fiterror:
             writer.writerow({
                 "syst":options.outputsysname if options.outputsysname else "fiterror",
-                "up":result["mean"]+0.5*result["uncertainty"],
-                "down":result["mean"]-0.5*result["uncertainty"],
-                "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"],
-                "d":0.5*result["uncertainty"]
+                "mean":result["mean"],
+                "up":result["mean"]+result["uncertainty"],
+                "down":result["mean"]-result["uncertainty"],
+                "dup":result["uncertainty"],
+                "ddown":result["uncertainty"],
+                "d":result["uncertainty"]
             })
         else:
             print "WARNING: systematic configuration not known"
             writer.writerow({
                 "syst":options.outputsysname if options.outputsysname else "unknown",
-                "up":result["mean"]+0.5*result["uncertainty"],
-                "down":result["mean"]-0.5*result["uncertainty"],
-                "dup":0.5*result["uncertainty"],
-                "ddown":0.5*result["uncertainty"],
-                "d":0.5*result["uncertainty"]
+                "mean":result["mean"],
+                "up":result["mean"]+result["uncertainty"],
+                "down":result["mean"]-result["uncertainty"],
+                "dup":result["uncertainty"],
+                "ddown":result["uncertainty"],
+                "d":result["uncertainty"]
             })
 
     else:
@@ -382,6 +387,7 @@ if __name__=="__main__":
         unc = max(math.fabs(resultNominal["mean"]-resultDown["mean"]),math.fabs(resultNominal["mean"]-resultUp["mean"]))
         writer.writerow({
             "syst":options.outputsysname if options.outputsysname else options.systematic,
+            "mean":resultNominal["mean"],
             "up":resultUp["mean"],
             "down":resultDown["mean"],
             "dup":resultUp["mean"]-resultNominal["mean"],

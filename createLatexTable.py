@@ -36,8 +36,8 @@ tableRows=[
     #["lepton_weight","lepton weight"],
     ["qcd_yield","QCD yield"],
     ["qcd_antiiso","QCD template"],
-    #["fiterror","ML-fit uncertainty"],
-    #["bias","unfolding bias"],
+    ["fiterror","ML-fit uncertainty"],
+    ["bias","unfolding bias"],
     ["mcstat","limited MC"]
 ]
     
