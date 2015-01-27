@@ -214,7 +214,7 @@ sysNames=[
 '''
 sysNames=[
     "nominal",
-    "stat"
+    "generator"
 ]
 '''
 def calculateChi2(hist1,covHist1,hist2,covHist2=None):
@@ -261,7 +261,7 @@ def diceShape(output,nominalHist,upHist,downHist):
         up=upHist.GetBinContent(i+1)
         nom=nominalHist.GetBinContent(i+1)
         down=downHist.GetBinContent(i+1)
-        
+        #print i,down/downHist.Integral()*3
         #symmetrize if only one-sided
         '''
         if (up<nom and down<nom) or (up>nom and down>nom):
@@ -269,17 +269,24 @@ def diceShape(output,nominalHist,upHist,downHist):
             up=nom+diff
             down=nom-diff
         '''
+        
         #symmetrize always
+        '''
         diff=max(math.fabs(up-nom),math.fabs(down-nom))
+        #print nom,down,diff,nom-diff
         up=nom+diff
         down=nom-diff
-
+        '''
+        
+        #d=-1.0
+        
         if d>1:
             output[i]+= (up-nom)*math.fabs(d)
         elif d<-1:
             output[i]+= (down-nom)*math.fabs(d)
         else:
             output[i]+= d/2.0*(up-down)+(d*d-math.fabs(d*d*d)/2.0)*(up+down-2.0*nom)
+    #print output/sum(output)*3
             
 def normalize(output):
     s=0.0
@@ -342,7 +349,7 @@ def applyLineStyle(line,color=ROOT.kBlack):
 def readHistograms(folder,prefix="mu__"):
     histDict={}
     for sys in sysNames:
-        if sys in ["nominal","stat","generator","mcstat","fiterror"]:
+        if sys in ["nominal","stat","mcstat","fiterror"]:
             
             fileName=os.path.join(folder,prefix+sys+".root")
             if os.path.exists(fileName):
@@ -357,8 +364,22 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["gen"]=rootFile.Get("gen")
                 histDict[sys]["unfolded"]["gen"].SetDirectory(0)
                 rootFile.Close()
-            else:
-                print
+                
+        elif sys == "generator":
+            fileName=os.path.join(folder,prefix+sys+".root")
+            if os.path.exists(fileName):
+                histDict[sys]={"isShape":True,"unfolded":{},"input":{}}
+                rootFile=ROOT.TFile(fileName)
+                histDict[sys]["input"]["up"]=rootFile.Get("substractedData")
+                histDict[sys]["input"]["up"].SetDirectory(0)
+                histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
+                histDict[sys]["unfolded"]["up"].SetDirectory(0)
+                
+                histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"]
+                histDict[sys]["unfolded"]["down"]=histDict[sys]["unfolded"]["up"]
+                
+                rootFile.Close()
+             
         else:
             
             upFileName=os.path.join(folder,prefix+sys+"__up.root")
@@ -398,9 +419,9 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 
 genHist=sysDict["nominal"]["unfolded"]["gen"]
 
-asymmetryHist=ROOT.TH1F("asym","",10000,-2.0,2.0)
+asymmetryHist=ROOT.TH1F("asym","",500,-2.0,2.0)
 
-NTOYS=40000
+NTOYS=10000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 
 for toy in range(NTOYS):
@@ -420,13 +441,12 @@ for toy in range(NTOYS):
     asymmetryHist.Fill(calculateAsymmetry(output[toy],statCov))  
     normalize(output[toy])
    
-
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
-downSys,upSys=numpy.percentile(output, [15.85,84.15],0)
+downSys,mean,upSys=numpy.percentile(output, [15.866,50.0,84.134],0)
 
-#cv2=ROOT.TCanvas("cv2","",800,600)
-#asymmetryHist.Draw()
-#cv2.WaitPrimitive()
+cv2=ROOT.TCanvas("cv2","",800,600)
+asymmetryHist.Draw()
+cv2.WaitPrimitive()
 print asymmetryHist.GetMean(),"+-",asymmetryHist.GetRMS()
 
 rootObj=[]
@@ -453,14 +473,14 @@ for ibin in range(len(downSys)):
     w=nominalHist.GetBinWidth(ibin+1)
     u=upSys[ibin]
     d=downSys[ibin]
-    print ibin,u,d
+    #print ibin,u,d
     #u=max(0.0,upSys[ibin])
     #d=max(0.0,downSys[ibin])
-    lineSysUp=ROOT.TLine(c-0.15*w,u,c+0.15*w,u)
-    lineSysDown=ROOT.TLine(c-0.15*w,d,c+0.15*w,d)
+    lineSysUp=ROOT.TLine(c-0.17*w,u,c+0.17*w,u)
+    lineSysDown=ROOT.TLine(c-0.17*w,d,c+0.17*w,d)
     lineSysMid=ROOT.TLine(c,d,c,u)
-    applyLineStyle(lineSysUp,ROOT.kBlack)
-    applyLineStyle(lineSysDown,ROOT.kBlack)
+    #applyLineStyle(lineSysUp,ROOT.kBlack)
+    #applyLineStyle(lineSysDown,ROOT.kBlack)
     applyLineStyle(lineSysMid,ROOT.kBlack)
     
     rootObj.append(lineSysUp)
@@ -482,7 +502,7 @@ for ibin in range(len(downSys)):
     '''
     u=n+math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
     d=n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
-    print ibin,u,d
+    #print ibin,u,d
     #u=max(0.0,upSys[ibin])
     #d=max(0.0,downSys[ibin])
     lineStatUp=ROOT.TLine(c-0.12*w,u,c+0.12*w,u)
@@ -508,7 +528,6 @@ for ibin in range(len(downSys)):
     if ibin==0:
         legend.AddEntry(lineStatUp,"stat. uncertainty","PE")
     '''
-    print nominalHist.GetBinError(ibin+1),
     
 nominalHist.SetMarkerStyle(21)
 nominalHist.SetMarkerSize(1.2)
@@ -520,6 +539,8 @@ genHist.SetLineWidth(4)
 genHist.SetLineStyle(2)
 genHist.Draw("SameLhist")
 legend.AddEntry(genHist,"PowHeg SM","L")
+
+
 
 pave=ROOT.TPaveText(0.5,0.92,0.96,0.98,"NDC")
 pave.SetFillColor(ROOT.kWhite)
