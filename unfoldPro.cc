@@ -176,7 +176,7 @@ void doUnfolding(const std::vector<std::string>& histFiles,
 	
 	for (int i = 0; i < unfoldedHist->GetNbinsX(); ++i)
 	{
-	    //unfoldedHist->SetBinError(i+1,TMath::Sqrt(errorMatrix->GetBinContent(i+1,i+1)));
+	    unfoldedHist->SetBinError(i+1,TMath::Sqrt(errorMatrix->GetBinContent(i+1,i+1)));
 	}
 	
 	unfoldedHist->Write();

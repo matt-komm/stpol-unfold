@@ -211,12 +211,12 @@ sysNames=[
     "mcstat",
 ]
 
-'''
+
 sysNames=[
     "nominal",
-    "generator"
+    "tchan_scale"
 ]
-'''
+
 def calculateChi2(hist1,covHist1,hist2,covHist2=None):
     chi2=0.0
     
@@ -271,12 +271,11 @@ def diceShape(output,nominalHist,upHist,downHist):
         '''
         
         #symmetrize always
-        '''
+        
         diff=max(math.fabs(up-nom),math.fabs(down-nom))
         #print nom,down,diff,nom-diff
         up=nom+diff
         down=nom-diff
-        '''
         
         #d=-1.0
         
@@ -363,6 +362,12 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["error"].SetDirectory(0)
                 histDict[sys]["unfolded"]["gen"]=rootFile.Get("gen")
                 histDict[sys]["unfolded"]["gen"].SetDirectory(0)
+                
+                norm=histDict[sys]["unfolded"]["nominal"].Integral()
+                histDict[sys]["unfolded"]["nominal"].Scale(3.0/norm)
+                histDict[sys]["unfolded"]["error"].Scale((3.0/norm)**2)
+                histDict[sys]["unfolded"]["gen"].Scale(3.0/histDict[sys]["unfolded"]["gen"].Integral())
+                
                 rootFile.Close()
                 
         elif sys == "generator":
@@ -375,8 +380,18 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
                 
-                histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"]
-                histDict[sys]["unfolded"]["down"]=histDict[sys]["unfolded"]["up"]
+                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
+                
+                #symmetrize uncertainty
+                histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"].Clone()
+                histDict[sys]["input"]["down"].SetDirectory(0)
+                histDict[sys]["input"]["down"].Scale(-1.0)
+                histDict[sys]["input"]["down"].Add(histDict["nominal"]["input"]["nominal"],2.0)
+                histDict[sys]["unfolded"]["down"]=histDict[sys]["unfolded"]["up"].Clone()
+                histDict[sys]["unfolded"]["down"].SetDirectory(0)
+                histDict[sys]["unfolded"]["down"].Scale(-1.0)
+                histDict[sys]["unfolded"]["down"].Add(histDict["nominal"]["unfolded"]["nominal"],2.0)
+                
                 
                 rootFile.Close()
              
@@ -391,12 +406,14 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["input"]["up"].SetDirectory(0)
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
+                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
                 rootFile.Close()
                 rootFile=ROOT.TFile(downFileName)
                 histDict[sys]["input"]["down"]=rootFile.Get("substractedData")
                 histDict[sys]["input"]["down"].SetDirectory(0)
                 histDict[sys]["unfolded"]["down"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["down"].SetDirectory(0)
+                histDict[sys]["unfolded"]["down"].Scale(3.0/histDict[sys]["unfolded"]["down"].Integral())
                 rootFile.Close()
     return histDict
     
@@ -421,7 +438,7 @@ genHist=sysDict["nominal"]["unfolded"]["gen"]
 
 asymmetryHist=ROOT.TH1F("asym","",500,-2.0,2.0)
 
-NTOYS=10000
+NTOYS=1000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 
 for toy in range(NTOYS):
@@ -439,20 +456,20 @@ for toy in range(NTOYS):
             diceShape(output[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"])
     
     asymmetryHist.Fill(calculateAsymmetry(output[toy],statCov))  
-    normalize(output[toy])
+    #normalize(output[toy])
    
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
 downSys,mean,upSys=numpy.percentile(output, [15.866,50.0,84.134],0)
 
-cv2=ROOT.TCanvas("cv2","",800,600)
-asymmetryHist.Draw()
-cv2.WaitPrimitive()
+#cv2=ROOT.TCanvas("cv2","",800,600)
+#asymmetryHist.Draw()
+#cv2.WaitPrimitive()
 print asymmetryHist.GetMean(),"+-",asymmetryHist.GetRMS()
 
 rootObj=[]
 
 
-cv=ROOT.TCanvas("cv","",800,600)
+cv=ROOT.TCanvas("cv","",750,600)
 
 axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
 axis.Draw("AXIS")
@@ -462,10 +479,11 @@ legend.SetBorderSize(0)
 legend.SetTextFont(42)
 legend.SetFillColor(ROOT.kWhite)
 
-
+'''
 statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
 nominalHist.Scale(1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)
 genHist.Scale(1.0/genHist.Integral()*genHist.GetNbinsX()/2.0)
+'''
 
 for ibin in range(len(downSys)):
     n=nominalHist.GetBinContent(ibin+1)
