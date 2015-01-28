@@ -117,11 +117,13 @@ void doUnfolding(const std::vector<std::string>& histFiles,
     }
     TH1D *unfoldedHist = new TH1D("unfolded","unfolded", REBIN_GEN, -1, 1);
 	tunfold.GetOutput(unfoldedHist);
-	unfoldedHist->Write();
+	
 	
 	
 	TH2D *hrhoij = new TH2D("correlation","correlation",REBIN_GEN,1,REBIN_GEN,REBIN_GEN,1,REBIN_GEN);
 	tunfold.GetRhoIJ(hrhoij);
+	
+	
 	hrhoij->Write();
 	TH1D *hrhoi = new TH1D("1dcorr","1dcorr",REBIN_GEN,1,REBIN_GEN);
 	tunfold.GetRhoI(hrhoi);
@@ -171,6 +173,14 @@ void doUnfolding(const std::vector<std::string>& histFiles,
         }
         errorMatrix->Add(fitMatrix);
 	}
+	
+	for (int i = 0; i < unfoldedHist->GetNbinsX(); ++i)
+	{
+	    //unfoldedHist->SetBinError(i+1,TMath::Sqrt(errorMatrix->GetBinContent(i+1,i+1)));
+	}
+	
+	unfoldedHist->Write();
+	
 	errorMatrix->Write();	
 	outputFile.Close();
 }

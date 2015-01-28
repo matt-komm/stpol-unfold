@@ -54,6 +54,7 @@ TH1F* loadHistogram1D(
         if (!result)
         {
             result = new TH1F(*hist);
+            result->Sumw2();
             result->SetDirectory(0);
         }
         else
@@ -108,6 +109,7 @@ TH2F* loadHistogram2D(
         if (!result)
         {
             result = new TH2F(*hist);
+            result->Sumw2();
             result->SetDirectory(0);
         }
         else

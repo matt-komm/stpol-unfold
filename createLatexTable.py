@@ -5,7 +5,7 @@ import os.path
 
 def formatUnc(unc):
 
-    return "{0:6.5f}".format(unc)
+    return "{0:5.4f}".format(unc)
     
 tableHeader=["","systematic"]
 tableTotal=["","total uncertainty"]
@@ -61,7 +61,10 @@ def addColumn(header,sysDict):
         if sysDict.has_key(sysName):
             value=sysDict[sysName]["d"]
             totalSum2+=value**2
-            tableRows[row].append(formatUnc(value))
+            if (sysDict[sysName]["dup"]-sysDict[sysName]["ddown"])<0.0005:
+                tableRows[row].append("$\\pm%4.3f}$" % (sysDict[sysName]["d"]))
+            else:
+                tableRows[row].append("${}^{%+4.3f}_{%+4.3f}$" % (sysDict[sysName]["dup"],-1*sysDict[sysName]["ddown"] ))
         else:
             tableRows[row].append("-")
     tableTotal.append(formatUnc(math.sqrt(totalSum2)))
@@ -81,7 +84,8 @@ for row in range(len(tableRows)):
     formattedRow=tableRows[row][1]
     for i in range(2,len(tableRows[row])):
         formattedRow+=" & "+tableRows[row][i]
-    formattedRow+=" \\\\ "
+    formattedRow+=" \\\\ \\hline"
+    
     outFile.write(formattedRow+"\n")
 
 outFile.write("\\hline \n")

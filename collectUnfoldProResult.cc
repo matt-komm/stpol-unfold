@@ -2,6 +2,8 @@
 #include "TH2D.h"
 #include "TFile.h"
 #include "TStyle.h"
+#include "TLegend.h"
+#include "TF1.h"
 
 #include "SimpleOpt.h"
 #include "logging.hpp"
@@ -40,13 +42,17 @@ Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullp
         input->Add(data);
     }
     TH1D* hist = (TH1D*)f.Get("unfolded");
+    
+    double scale = hist->Integral()*2.0/hist->GetNbinsX();
+    hist->Scale(1.0/scale);
+    TH2D* cov = (TH2D*)f.Get("error");  
+    cov->Scale(1.0/(scale*scale));
+    
     if (unfolded!=nullptr)
     {
         unfolded->Add(hist);
     }
-    TH2D* cov = (TH2D*)f.Get("error");  
-    
-    Asymmetry asy = estimateAsymmetry(hist,cov);
+    Asymmetry asy = estimateAsymmetry(unfolded,cov);
     f.Close();
     return asy;
 }
@@ -160,34 +166,170 @@ int main(int argc, char* argv[])
         up=upA.mean;
         down=downA.mean;
         gStyle->SetOptStat(0);
-        gStyle->SetLabelSize(0.045,"XYZ");
-        TCanvas cv1("cv1","",400,600);
-       
-        TH2D axis1("axis1","",50,-1,1,50,0,1.1*std::max({nominalHist->GetMaximum(),upHist->GetMaximum(),downHist->GetMaximum()}));
+        gStyle->SetLabelSize(20,"XYZ");
+        gStyle->SetLabelFont(43,"XYZ");
+        gStyle->SetTitleSize(28,"XYZ");
+        gStyle->SetTitleFont(43,"XYZ");
+        gStyle->SetTitleOffset(1.1,"X");
+        gStyle->SetTitleOffset(1.4,"Y");
+        gStyle->SetTickLength(0.015/(1-0.135-0.02),"X");
+        gStyle->SetTickLength(0.015/(1-0.5),"Y");
+        
+        TLegend legend(0.17,0.96,0.5,0.8);
+        legend.SetTextFont(43);
+        legend.SetTextSize(20);
+        legend.SetTextAlign(12);
+        legend.SetBorderSize(0);
+        legend.SetFillColor(0);
+        
+        legend.AddEntry(nominalHist,"nominal","PE");
+        legend.AddEntry(upHist,(sysName+" up").c_str(),"L");
+        legend.AddEntry(downHist,(sysName+" down").c_str(),"L");
+        
+        TCanvas cv1("cv1","",600,600);
+        cv1.Divide(1,2,0,0);
+        cv1.GetPad(1)->SetPad(0.0, 0.0, 1.0, 1.0);
+        cv1.GetPad(1)->SetFillStyle(0);
+        cv1.GetPad(1)->SetLeftMargin(0.135);
+        cv1.GetPad(1)->SetBottomMargin(0.57);
+        cv1.GetPad(1)->SetTopMargin(0.02);
+        cv1.GetPad(1)->SetRightMargin(0.02);
+        cv1.GetPad(1)->SetTickx(1);
+        cv1.GetPad(1)->SetTicky(1);
+        
+        cv1.GetPad(2)->SetPad(0.0, 0.0, 1.0, 1.0);
+        cv1.GetPad(2)->SetFillStyle(0);
+        cv1.GetPad(2)->SetLeftMargin(0.135);
+        cv1.GetPad(2)->SetBottomMargin(0.12);
+        cv1.GetPad(2)->SetTopMargin(0.43);
+        cv1.GetPad(2)->SetRightMargin(0.02);
+        cv1.GetPad(2)->SetTickx(1);
+        cv1.GetPad(2)->SetTicky(1);
+        
+        cv1.cd(1);
+        
+        TH2D axis1("axis1",";reco cos#theta_{l}*;events / 0.17",50,-1,1,50,0,1.1*std::max({nominalHist->GetMaximum(),upHist->GetMaximum(),downHist->GetMaximum()}));
+        axis1.GetXaxis()->SetTitleSize(0);
+        axis1.GetXaxis()->SetLabelSize(0);
         axis1.Draw("AXIS");
+        
+        nominalHist->SetLineColor(kBlack);
+        nominalHist->SetLineWidth(2);
         nominalHist->SetMarkerStyle(21);
         nominalHist->Draw("SameLP");
-        upHist->SetLineColor(kRed+1);
+        upHist->SetLineColor(kOrange+10);
         upHist->SetLineWidth(2);
         upHist->Draw("SameLHISTP");
-        downHist->SetLineColor(kGreen+1);
+        downHist->SetLineColor(kAzure-4);
         downHist->SetLineWidth(2);
         downHist->Draw("SameLHISTP");
+        legend.Draw("Same");
         
+        
+        cv1.cd(2);
+        
+        
+        TH1* nominalHistRes=(TH1*)nominalHist->Clone("nominalHistRes");
+        for (int i = 0; i < nominalHist->GetNbinsX(); ++i)
+        {
+            nominalHistRes->SetBinError(i+1,nominalHistRes->GetBinError(i+1)/nominalHistRes->GetBinContent(i+1));
+            nominalHistRes->SetBinContent(i+1,1.0);
+        }
+        
+        double range1 = std::fabs(nominalHistRes->GetBinError(2));
+        TH2D axis1res("axis1res",";reco cos#theta_{l}*;sys / nominal",50,-1,1,50,1.0-1.15*range1,1.0+1.15*range1);
+        axis1res.Draw("AXIS");
+        
+        nominalHistRes->Draw("SameL");
+        TH1* upHistRes=(TH1*)upHist->Clone("upHistRes");
+        upHistRes->Divide(nominalHist);
+        upHistRes->Draw("SameLHIST");
+        TH1* downHistRes=(TH1*)downHist->Clone("downHistRes");
+        downHistRes->Divide(nominalHist);
+        downHistRes->Draw("SameLHIST");
         cv1.Print((output+"_input.pdf").c_str());
         
-        TCanvas cv2("cv2","",400,600);
-        TH2D axis2("axis2","",50,-1,1,50,0,1.1*std::max({nominalHistUnfolded->GetMaximum(),upHistUnfolded->GetMaximum(),downHistUnfolded->GetMaximum()}));
+        TCanvas cv2("cv2","",600,600);
+        cv2.Divide(1,2,0,0);
+        cv2.GetPad(1)->SetPad(0.0, 0.0, 1.0, 1.0);
+        cv2.GetPad(1)->SetFillStyle(0);
+        cv2.GetPad(1)->SetLeftMargin(0.135);
+        cv2.GetPad(1)->SetBottomMargin(0.57);
+        cv2.GetPad(1)->SetTopMargin(0.02);
+        cv2.GetPad(1)->SetRightMargin(0.02);
+        cv2.GetPad(1)->SetTickx(1);
+        cv2.GetPad(1)->SetTicky(1);
+        
+        cv2.GetPad(2)->SetPad(0.0, 0.0, 1.0, 1.0);
+        cv2.GetPad(2)->SetFillStyle(0);
+        cv2.GetPad(2)->SetLeftMargin(0.135);
+        cv2.GetPad(2)->SetBottomMargin(0.12);
+        cv2.GetPad(2)->SetTopMargin(0.43);
+        cv2.GetPad(2)->SetRightMargin(0.02);
+        cv2.GetPad(2)->SetTickx(1);
+        cv2.GetPad(2)->SetTicky(1);
+        cv2.cd(1);
+        
+        TH2D axis2("axis2",";unfolded cos#theta_{l}*;events / 0.33",50,-1,1,50,0,1.1*std::max({nominalHistUnfolded->GetMaximum(),upHistUnfolded->GetMaximum(),downHistUnfolded->GetMaximum()}));
+        axis2.GetXaxis()->SetTitleSize(0);
+        axis2.GetXaxis()->SetLabelSize(0);
         axis2.Draw("AXIS");
+        
+        nominalHistUnfolded->SetLineColor(kBlack);
+        nominalHistUnfolded->SetLineWidth(2);
         nominalHistUnfolded->SetMarkerStyle(21);
         nominalHistUnfolded->Draw("SameLP");
-        upHistUnfolded->SetLineColor(kRed+1);
-        upHistUnfolded->SetLineWidth(2);
-        upHistUnfolded->Draw("SameLHISTP");
-        downHistUnfolded->SetLineColor(kGreen+1);
-        downHistUnfolded->SetLineWidth(2);
-        downHistUnfolded->Draw("SameLHISTP");
         
+        upHistUnfolded->SetLineColor(kOrange+10);
+        upHistUnfolded->SetLineWidth(2);
+        upHistUnfolded->Draw("SameLHIST");
+        
+        downHistUnfolded->SetLineColor(kAzure-4);
+        downHistUnfolded->SetLineWidth(2);
+        downHistUnfolded->Draw("SameLHIST");
+        legend.Draw("Same");
+        
+        cv2.cd(2);
+        TH1* nominalHistUnfoldedRes = (TH1*)nominalHistUnfolded->Clone("downHistUnfoldedRes");
+        for (int i = 0; i < nominalHistUnfolded->GetNbinsX(); ++i)
+        {
+            nominalHistUnfoldedRes->SetBinError(i+1,nominalHistUnfoldedRes->GetBinError(i+1)/nominalHistUnfoldedRes->GetBinContent(i+1));
+            nominalHistUnfoldedRes->SetBinContent(i+1,1.0);
+        }
+        //nominalHistUnfoldedRes->Divide(nominalHistUnfolded);
+        TH1* upHistUnfoldedRes = (TH1*)upHistUnfolded->Clone("upHistUnfoldedRes");
+        upHistUnfoldedRes->Divide(nominalHistUnfolded);
+        TH1* downHistUnfoldedRes = (TH1*)downHistUnfolded->Clone("downHistUnfoldedRes");
+        downHistUnfoldedRes->Divide(nominalHistUnfolded);
+        
+        double range2 = std::fabs(nominalHistUnfoldedRes->GetBinError(2));
+        TH2D axis2res("axis2res",";unfolded cos#theta_{l}*;sys / nominal",50,-1,1,50,1.0-1.15*range2,1.0+1.15*range2);
+        axis2res.Draw("AXIS");
+        
+        nominalHistUnfoldedRes->Draw("SameL");
+        
+        TF1 upFit("upFit","[0]+x*[1]",-1,1);
+        upFit.SetLineColor(kOrange+10);
+        upFit.SetLineStyle(2);
+        upFit.SetLineWidth(2);
+        upFit.SetParameter(0,1.0);
+        upFit.SetParameter(1,upA.mean-nominalA.mean);
+        upFit.Draw("SameL");
+        
+        
+        upHistUnfoldedRes->Draw("SameLHIST");
+        
+        TF1 downFit("downFit","[0]+x*[1]",-1,1);
+        downFit.SetLineColor(kAzure-4);
+        downFit.SetLineStyle(2);
+        downFit.SetLineWidth(2);
+        downFit.SetParameter(0,1.0);
+        downFit.SetParameter(1,downA.mean-nominalA.mean);
+        downFit.Draw("SameL");
+        
+        
+        downHistUnfoldedRes->Draw("SameLHIST");
+
         cv2.Print((output+"_unfolded.pdf").c_str());
         
     }
