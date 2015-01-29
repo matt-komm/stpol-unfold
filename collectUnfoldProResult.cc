@@ -32,7 +32,7 @@ CSimpleOpt::SOption options[] ={
 
 };
 
-Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullptr)
+Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullptr, TH2D* covHist = nullptr)
 {
     TFile f(file.c_str());
     TH1D* data = (TH1D*)f.Get("substractedData");
@@ -52,9 +52,52 @@ Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullp
     {
         unfolded->Add(hist);
     }
+    if (covHist!=nullptr)
+    {
+        covHist->Add(cov);
+    }
     Asymmetry asy = estimateAsymmetry(unfolded,cov);
     f.Close();
     return asy;
+}
+
+void smooth(TH1* hist, double asymmetry, int N=2, float alpha=0.3)
+{
+    TH1* new_hist=(TH1*)hist->Clone();
+    for (int iter = 0; iter<N; ++iter)
+    {
+        for (int i = 0; i < hist->GetNbinsX(); ++i)
+        {
+            double n1=hist->GetBinContent(i)-0.5-asymmetry*(hist->GetBinCenter(i));
+            double n2=hist->GetBinContent(i+1)-0.5-asymmetry*(hist->GetBinCenter(i+1));
+            double n3=hist->GetBinContent(i+2)-0.5-asymmetry*(hist->GetBinCenter(i+2));
+            
+            if (i==0)
+            {
+                n1=n1*0;
+                n2=n2*(1.0-0.5*alpha);
+                n3=n3*0.5*alpha;
+            }
+            else if (i==hist->GetNbinsX()-1)
+            {
+                n1=n1*0.5*alpha;
+                n2=n2*(1.0-0.5*alpha);
+                n3=n3*0;
+            }
+            else
+            {
+                n1=n1*0.5*alpha;
+                n2=n2*(1-alpha);
+                n3=n3*0.5*alpha;
+            }
+            
+            new_hist->SetBinContent(i+1,n1+n2+n3+0.5+asymmetry*(hist->GetBinCenter(i+1)));
+        }
+        for (int i = 0; i < hist->GetNbinsX(); ++i)
+        {
+            hist->SetBinContent(i+1,new_hist->GetBinContent(i+1));
+        }
+    }
 }
 
 
@@ -150,7 +193,12 @@ int main(int argc, char* argv[])
     TH1D* upHistUnfolded=new TH1D("upUnfolded","",6,-1,1);
     TH1D* downHistUnfolded=new TH1D("downUnfolded","",6,-1,1);
     
-    Asymmetry nominalA = loadFromFile(nominalFile,nominalHist,nominalHistUnfolded);
+    TH2D* nominalCov=new TH2D("nominalCov","",6,1,6,6,1,6);
+    TH2D* upCov=new TH2D("upCov","",6,1,6,6,1,6);
+    TH2D* downCov=new TH2D("downCov","",6,1,6,6,1,6);
+    
+    
+    Asymmetry nominalA = loadFromFile(nominalFile,nominalHist,nominalHistUnfolded,nominalCov);
     double mean = nominalA.mean;
     double up = -1;
     double down = -1;
@@ -161,8 +209,20 @@ int main(int argc, char* argv[])
     }
     else
     {
-        Asymmetry upA = loadFromFile(upFile,upHist,upHistUnfolded);
-        Asymmetry downA = loadFromFile(downFile,downHist,downHistUnfolded);
+        Asymmetry upA = loadFromFile(upFile,upHist,upHistUnfolded,upCov);
+        Asymmetry downA = loadFromFile(downFile,downHist,downHistUnfolded,downCov);
+        
+        if (sysName=="generator")
+        {
+            downHist->Scale(-1.0);
+            downHist->Add(nominalHist,2.0);
+            
+            downHistUnfolded->Scale(-1.0);
+            downHistUnfolded->Add(nominalHistUnfolded,2.0);
+            
+            downA=estimateAsymmetry(downHistUnfolded,downCov);
+        }
+        
         up=upA.mean;
         down=downA.mean;
         gStyle->SetOptStat(0);
@@ -284,9 +344,30 @@ int main(int argc, char* argv[])
         upHistUnfolded->SetLineWidth(2);
         upHistUnfolded->Draw("SameLHIST");
         
+        TF1 upFit("upFit","[0]+x*[1]",-1,1);
+        upFit.SetParameter(0,0.5);
+        upFit.SetParameter(1,upA.mean);
+        
+        TH1* upSmooth = (TH1*)upHistUnfolded->Clone();
+        smooth(upSmooth,upA.mean);
+        Asymmetry upSmoothA=estimateAsymmetry(upSmooth,upCov);
+        upSmooth->SetLineStyle(3);
+        upSmooth->Draw("SameLHIST");
+        
         downHistUnfolded->SetLineColor(kAzure-4);
         downHistUnfolded->SetLineWidth(2);
         downHistUnfolded->Draw("SameLHIST");
+        
+        TF1 downFit("downFit","[0]+x*[1]",-1,1);
+        downFit.SetParameter(0,0.5);
+        downFit.SetParameter(1,downA.mean);
+        
+        TH1* downSmooth = (TH1*)downHistUnfolded->Clone();
+        smooth(downSmooth,downA.mean);
+        Asymmetry downSmoothA=estimateAsymmetry(downSmooth,downCov);
+        downSmooth->SetLineStyle(3);
+        downSmooth->Draw("SameLHIST");
+        
         legend.Draw("Same");
         
         cv2.cd(2);
@@ -308,29 +389,41 @@ int main(int argc, char* argv[])
         
         nominalHistUnfoldedRes->Draw("SameL");
         
-        TF1 upFit("upFit","[0]+x*[1]",-1,1);
-        upFit.SetLineColor(kOrange+10);
-        upFit.SetLineStyle(2);
-        upFit.SetLineWidth(2);
-        upFit.SetParameter(0,1.0);
-        upFit.SetParameter(1,upA.mean-nominalA.mean);
-        upFit.Draw("SameL");
+        TF1 upFitRes("upFitRes","[0]+x*[1]",-1,1);
+        upFitRes.SetLineColor(kOrange+10);
+        upFitRes.SetLineStyle(2);
+        upFitRes.SetLineWidth(2);
+        upFitRes.SetParameter(0,1.0);
+        upFitRes.SetParameter(1,upA.mean-nominalA.mean);
+        upFitRes.Draw("SameL");
         
         
         upHistUnfoldedRes->Draw("SameLHIST");
         
-        TF1 downFit("downFit","[0]+x*[1]",-1,1);
-        downFit.SetLineColor(kAzure-4);
-        downFit.SetLineStyle(2);
-        downFit.SetLineWidth(2);
-        downFit.SetParameter(0,1.0);
-        downFit.SetParameter(1,downA.mean-nominalA.mean);
-        downFit.Draw("SameL");
+        TH1* upSmoothRes = (TH1*)upSmooth->Clone();
+        upSmoothRes->Divide(nominalHistUnfolded);
+        upSmoothRes->Draw("SameLHIST");
+        
+        
+        TF1 downFitRes("downFitRes","[0]+x*[1]",-1,1);
+        downFitRes.SetLineColor(kAzure-4);
+        downFitRes.SetLineStyle(2);
+        downFitRes.SetLineWidth(2);
+        downFitRes.SetParameter(0,1.0);
+        downFitRes.SetParameter(1,downA.mean-nominalA.mean);
+        downFitRes.Draw("SameL");
+        
+        TH1* downSmoothRes = (TH1*)downSmooth->Clone();
+        downSmoothRes->Divide(nominalHistUnfolded);
+        downSmoothRes->Draw("SameLHIST");
         
         
         downHistUnfoldedRes->Draw("SameLHIST");
 
         cv2.Print((output+"_unfolded.pdf").c_str());
+        
+        up=upSmoothA.mean;
+        down=downSmoothA.mean;
         
     }
     
@@ -338,8 +431,8 @@ int main(int argc, char* argv[])
     
     std::ofstream ouputFile(output.c_str());
     ouputFile<<"\"syst\",\"mean\",\"up\",\"down\",\"dup\",\"ddown\",\"d\""<<std::endl;
-    ouputFile<<("\""+sysName+"\",").c_str()<<mean<<","<<up<<","<<down<<","<<fabs(mean-up)
-             <<","<<fabs(mean-down)<<","<<std::max(fabs(mean-down),fabs(mean-up))<<std::endl;
+    ouputFile<<("\""+sysName+"\",").c_str()<<mean<<","<<up<<","<<down<<","<<(up-mean)
+             <<","<<(down-mean)<<","<<std::max(fabs(mean-up),fabs(mean-down))<<std::endl;
     ouputFile.close();
     //std::cout<<nominalA.mean<<" +- "<<nominalA.uncertainty<<std::endl;
     

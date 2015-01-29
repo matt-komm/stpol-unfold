@@ -244,7 +244,8 @@ if __name__=="__main__":
             "fiterror","bias","mcstat"]
 
     basefolder1=os.path.join(os.getcwd(),"histos/tunfold")
-    basefolder2=os.path.join(os.getcwd(),"histos/2bin")
+    #basefolder2=os.path.join(os.getcwd(),"histos/2bin")
+    basefolder2=os.path.join(os.getcwd(),"histos/tunfold_smooth5")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])

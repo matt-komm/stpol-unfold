@@ -270,7 +270,7 @@ if __name__=="__main__":
                 "up":result["mean"]+result["uncertainty"],
                 "down":result["mean"]-result["uncertainty"],
                 "dup":result["uncertainty"],
-                "ddown":result["uncertainty"],
+                "ddown":-result["uncertainty"],
                 "d":result["uncertainty"]
             })
         elif options.stat and not options.mcstat and not options.fiterror:
@@ -280,7 +280,7 @@ if __name__=="__main__":
                 "up":result["mean"]+result["uncertainty"],
                 "down":result["mean"]-result["uncertainty"],
                 "dup":result["uncertainty"],
-                "ddown":result["uncertainty"],
+                "ddown":-result["uncertainty"],
                 "d":result["uncertainty"]
             })
         elif not options.stat and options.mcstat and not options.fiterror:
@@ -290,7 +290,7 @@ if __name__=="__main__":
                 "up":result["mean"]+result["uncertainty"],
                 "down":result["mean"]-result["uncertainty"],
                 "dup":result["uncertainty"],
-                "ddown":result["uncertainty"],
+                "ddown":-result["uncertainty"],
                 "d":result["uncertainty"]
             })
         elif not options.stat and not options.mcstat and options.fiterror:
@@ -300,7 +300,7 @@ if __name__=="__main__":
                 "up":result["mean"]+result["uncertainty"],
                 "down":result["mean"]-result["uncertainty"],
                 "dup":result["uncertainty"],
-                "ddown":result["uncertainty"],
+                "ddown":-result["uncertainty"],
                 "d":result["uncertainty"]
             })
         else:
@@ -311,7 +311,7 @@ if __name__=="__main__":
                 "up":result["mean"]+result["uncertainty"],
                 "down":result["mean"]-result["uncertainty"],
                 "dup":result["uncertainty"],
-                "ddown":result["uncertainty"],
+                "ddown":-result["uncertainty"],
                 "d":result["uncertainty"]
             })
 
@@ -384,6 +384,9 @@ if __name__=="__main__":
             useMCStatUnc=False,
             useFitUnc=False
         )
+        if options.systematic=="generator":
+            resultDown["mean"]=resultNominal["mean"]-(resultUp["mean"]-resultNominal["mean"])
+        
         unc = max(math.fabs(resultNominal["mean"]-resultDown["mean"]),math.fabs(resultNominal["mean"]-resultUp["mean"]))
         writer.writerow({
             "syst":options.outputsysname if options.outputsysname else options.systematic,
@@ -391,7 +394,7 @@ if __name__=="__main__":
             "up":resultUp["mean"],
             "down":resultDown["mean"],
             "dup":resultUp["mean"]-resultNominal["mean"],
-            "ddown":resultNominal["mean"]-resultDown["mean"],
+            "ddown":resultDown["mean"]-resultNominal["mean"],
             "d":unc
         })
     outputFile.close()

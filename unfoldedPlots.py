@@ -211,12 +211,12 @@ sysNames=[
     "mcstat",
 ]
 
-
+'''
 sysNames=[
     "nominal",
-    "tchan_scale"
+    "wzjets_scale"
 ]
-
+'''
 def calculateChi2(hist1,covHist1,hist2,covHist2=None):
     chi2=0.0
     
@@ -253,6 +253,42 @@ def diceGaus(output,hist,covHist):
     diced=numpy.random.multivariate_normal(mean,cov)
     for i in range(N):
         output[i]+=diced[i]
+        
+def smooth(hist, asymmetry, N=2, alpha=0.3):
+    new_hist=hist.Clone()
+    for iter in range(N):
+    
+        for i in range(hist.GetNbinsX()):
+        
+            n1=hist.GetBinContent(i)-0.5-asymmetry*(hist.GetBinCenter(i))
+            n2=hist.GetBinContent(i+1)-0.5-asymmetry*(hist.GetBinCenter(i+1))
+            n3=hist.GetBinContent(i+2)-0.5-asymmetry*(hist.GetBinCenter(i+2))
+            
+            if (i==0):
+            
+                n1=n1*0
+                n2=n2*(1.0-0.5*alpha)
+                n3=n3*0.5*alpha
+            
+            elif (i==hist.GetNbinsX()-1):
+            
+                n1=n1*0.5*alpha
+                n2=n2*(1.0-0.5*alpha)
+                n3=n3*0
+            
+            else:
+            
+                n1=n1*0.5*alpha
+                n2=n2*(1-alpha)
+                n3=n3*0.5*alpha
+            
+            new_hist.SetBinContent(i+1,n1+n2+n3+0.5+asymmetry*(hist.GetBinCenter(i+1)))
+        
+        for i in range(hist.GetNbinsX()):
+            hist.SetBinContent(i+1,new_hist.GetBinContent(i+1))
+        
+    
+
             
 def diceShape(output,nominalHist,upHist,downHist):
     d=ROOT.gRandom.Gaus(0.0,1.0)
@@ -271,12 +307,12 @@ def diceShape(output,nominalHist,upHist,downHist):
         '''
         
         #symmetrize always
-        
+        '''
         diff=max(math.fabs(up-nom),math.fabs(down-nom))
         #print nom,down,diff,nom-diff
         up=nom+diff
         down=nom-diff
-        
+        '''
         #d=-1.0
         
         if d>1:
@@ -328,9 +364,8 @@ def calculateAsymmetry(output,cov):
         
     p0 = numpy.array([0.4])
     #print chi2(p0)
-    p1, success = scipy.optimize.leastsq(chi2, p0)#,method='BFGS',tol=0.001, jac=False, bounds=[(-1.0,1.0)])
+    p1, cov_x, infodict,msg, ler = scipy.optimize.leastsq(chi2, p0,full_output=True)#,method='BFGS',tol=0.001, jac=False, bounds=[(-1.0,1.0)])
     return p1
-    
     '''
     N=len(output)
     sumUp=0.0
@@ -393,6 +428,7 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["down"].Add(histDict["nominal"]["unfolded"]["nominal"],2.0)
                 
                 
+                
                 rootFile.Close()
              
         else:
@@ -421,7 +457,7 @@ def readHistograms(folder,prefix="mu__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold")
+folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold_smooth5")
 
 sysDict = readHistograms(folderTUnfold)
 
@@ -436,10 +472,29 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 
 genHist=sysDict["nominal"]["unfolded"]["gen"]
 
-asymmetryHist=ROOT.TH1F("asym","",500,-2.0,2.0)
+for sysName in sysDict.keys():
+    if sysName=="nominal":
+        continue
+    if sysDict[sysName]["isShape"]:
+            smooth(sysDict[sysName]["unfolded"]["up"],
+                calculateAsymmetry(
+                    sysDict[sysName]["unfolded"]["up"],
+                    statCov
+                ),
+        
+        )
+            smooth(sysDict[sysName]["unfolded"]["down"],
+                calculateAsymmetry(
+                    sysDict[sysName]["unfolded"]["down"],
+                    statCov
+                ),
+        )
 
-NTOYS=1000
+
+
+NTOYS=5000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
+asymmetries=numpy.zeros(NTOYS)
 
 for toy in range(NTOYS):
     if toy%500==0:
@@ -455,16 +510,14 @@ for toy in range(NTOYS):
         else:
             diceShape(output[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"])
     
-    asymmetryHist.Fill(calculateAsymmetry(output[toy],statCov))  
-    #normalize(output[toy])
+    asymmetries[toy]=calculateAsymmetry(output[toy],statCov)  
+    normalize(output[toy])
    
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
 downSys,mean,upSys=numpy.percentile(output, [15.866,50.0,84.134],0)
 
-#cv2=ROOT.TCanvas("cv2","",800,600)
-#asymmetryHist.Draw()
-#cv2.WaitPrimitive()
-print asymmetryHist.GetMean(),"+-",asymmetryHist.GetRMS()
+asymmetryDown,asymmetryMean,asymmetryUp=numpy.percentile(asymmetries, [15.866,50.0,84.134])
+print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmetryDown-asymmetryMean)
 
 rootObj=[]
 
