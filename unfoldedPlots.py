@@ -20,8 +20,8 @@ ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetPadTopMargin(0.07)
-ROOT.gStyle.SetPadLeftMargin(0.16)
-ROOT.gStyle.SetPadRightMargin(0.05)
+ROOT.gStyle.SetPadLeftMargin(0.14)
+ROOT.gStyle.SetPadRightMargin(0.015)
 ROOT.gStyle.SetPadBottomMargin(0.12)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
@@ -214,9 +214,12 @@ sysNames=[
 '''
 sysNames=[
     "nominal",
-    "wzjets_scale"
+    "wzjets_matching"
 ]
 '''
+
+rootObj=[]
+
 def calculateChi2(hist1,covHist1,hist2,covHist2=None):
     chi2=0.0
     
@@ -307,12 +310,12 @@ def diceShape(output,nominalHist,upHist,downHist):
         '''
         
         #symmetrize always
-        '''
+        
         diff=max(math.fabs(up-nom),math.fabs(down-nom))
         #print nom,down,diff,nom-diff
         up=nom+diff
         down=nom-diff
-        '''
+        
         #d=-1.0
         
         if d>1:
@@ -376,11 +379,40 @@ def calculateAsymmetry(output,cov):
     return (sumUp-sumDown)/(sumUp+sumDown)
     '''
         
-def applyLineStyle(line,color=ROOT.kBlack):
-    line.SetLineWidth(2)
+def applyLineStyle(line,color=ROOT.kBlack,width=2):
+    line.SetLineWidth(width)
     line.SetLineColor(color)
+    
+def drawSysBar(x,xwidth,ymin,ymax):
+    lineSysUp=ROOT.TLine(x-0.15*xwidth,ymax,x+0.15*xwidth,ymax)
+    lineSysDown=ROOT.TLine(x-0.15*xwidth,ymin,x+0.15*xwidth,ymin)
+    lineSysMid=ROOT.TLine(x,ymin,x,ymax)
+    applyLineStyle(lineSysUp,ROOT.kBlack,width=5)
+    applyLineStyle(lineSysDown,ROOT.kBlack,width=5)
+    applyLineStyle(lineSysMid,ROOT.kBlack)
+    
+    rootObj.append(lineSysUp)
+    rootObj.append(lineSysDown)
+    rootObj.append(lineSysMid)
+    lineSysUp.Draw("Same")
+    lineSysDown.Draw("Same")
+    lineSysMid.Draw("Same")
+    
+def drawStatBar(x,xwidth,ymin,ymax):
+    lineStatUp=ROOT.TLine(x-0.07*xwidth,ymax,x+0.07*xwidth,ymax)
+    lineStatDown=ROOT.TLine(x-0.07*xwidth,ymin,x+0.07*xwidth,ymin)
+    lineStatMid=ROOT.TLine(x,ymin,x,ymax)
+    applyLineStyle(lineStatUp,ROOT.kBlack,width=3)
+    applyLineStyle(lineStatDown,ROOT.kBlack,width=3)
+    applyLineStyle(lineStatMid,ROOT.kBlack)
+    rootObj.append(lineStatUp)
+    rootObj.append(lineStatDown)
+    rootObj.append(lineStatMid)
+    lineStatUp.Draw("Same")
+    lineStatDown.Draw("Same")
+    lineStatMid.Draw("Same")
 
-def readHistograms(folder,prefix="mu__"):
+def readHistograms(folder,prefix="ele__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:
@@ -457,7 +489,7 @@ def readHistograms(folder,prefix="mu__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold_smooth5")
+folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold")
 
 sysDict = readHistograms(folderTUnfold)
 
@@ -472,6 +504,7 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 
 genHist=sysDict["nominal"]["unfolded"]["gen"]
 
+'''
 for sysName in sysDict.keys():
     if sysName=="nominal":
         continue
@@ -489,10 +522,9 @@ for sysName in sysDict.keys():
                     statCov
                 ),
         )
+'''
 
-
-
-NTOYS=5000
+NTOYS=1000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -519,18 +551,26 @@ downSys,mean,upSys=numpy.percentile(output, [15.866,50.0,84.134],0)
 asymmetryDown,asymmetryMean,asymmetryUp=numpy.percentile(asymmetries, [15.866,50.0,84.134])
 print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmetryDown-asymmetryMean)
 
-rootObj=[]
 
 
-cv=ROOT.TCanvas("cv","",750,600)
 
-axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
+cv=ROOT.TCanvas("cv","",900,800)
+
+#axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
+axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;1 #/#sigma #times d#sigma #/d(cos#theta_{l}*) / "+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,1.05)
 axis.Draw("AXIS")
 
-legend=ROOT.TLegend(0.19,0.89,0.45,0.68)
+legend=ROOT.TLegend(0.18,0.88,0.5,0.70)
 legend.SetBorderSize(0)
-legend.SetTextFont(42)
+legend.SetTextFont(43)
+legend.SetTextSize(34)
 legend.SetFillColor(ROOT.kWhite)
+
+genHist.SetLineColor(ROOT.kBlue)
+genHist.SetLineWidth(4)
+genHist.SetLineStyle(2)
+genHist.Draw("Samehist")
+legend.AddEntry(genHist,"PowHeg SM","L")
 
 '''
 statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
@@ -543,87 +583,62 @@ for ibin in range(len(downSys)):
     c=nominalHist.GetBinCenter(ibin+1)
     w=nominalHist.GetBinWidth(ibin+1)
     u=upSys[ibin]
-    d=downSys[ibin]
-    #print ibin,u,d
-    #u=max(0.0,upSys[ibin])
-    #d=max(0.0,downSys[ibin])
-    lineSysUp=ROOT.TLine(c-0.17*w,u,c+0.17*w,u)
-    lineSysDown=ROOT.TLine(c-0.17*w,d,c+0.17*w,d)
-    lineSysMid=ROOT.TLine(c,d,c,u)
-    #applyLineStyle(lineSysUp,ROOT.kBlack)
-    #applyLineStyle(lineSysDown,ROOT.kBlack)
-    applyLineStyle(lineSysMid,ROOT.kBlack)
+    d=max(0,downSys[ibin])
+    drawSysBar(c,w,d,u)
     
-    rootObj.append(lineSysUp)
-    rootObj.append(lineSysDown)
-    rootObj.append(lineSysMid)
-    #lineSysUp.Draw("Same")
-    #lineSysDown.Draw("Same")
-    lineSysMid.Draw("Same")
-    '''
-    box=ROOT.TBox(c-0.5*w,d,c+0.5*w,u)
-    box.SetFillColor(17)
-    box.SetLineColor(15)
-    rootObj.append(box)
-    box.Draw("LFSAME")
-    '''
-    '''
-    if ibin==0:
-        legend.AddEntry(lineSysUp,"stat.+sys. uncertainty","PE")
-    '''
     u=n+math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
-    d=n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
-    #print ibin,u,d
-    #u=max(0.0,upSys[ibin])
-    #d=max(0.0,downSys[ibin])
-    lineStatUp=ROOT.TLine(c-0.12*w,u,c+0.12*w,u)
-    lineStatDown=ROOT.TLine(c-0.12*w,d,c+0.12*w,d)
-    lineStatMid=ROOT.TLine(c,d,c,u)
-    applyLineStyle(lineStatUp,ROOT.kBlack)
-    applyLineStyle(lineStatDown,ROOT.kBlack)
-    applyLineStyle(lineStatMid,ROOT.kBlack)
-    rootObj.append(lineStatUp)
-    rootObj.append(lineStatDown)
-    rootObj.append(lineStatMid)
-    lineStatUp.Draw("Same")
-    lineStatDown.Draw("Same")
-    #lineStatMid.Draw("Same")
-    '''
-    box=ROOT.TBox(c-0.5*w,d,c+0.5*w,u)
-    box.SetFillColor(ROOT.kOrange+6)
-    box.SetLineColor(ROOT.kOrange+10)
-    rootObj.append(box)
-    box.Draw("LFSAME")
-    '''
-    '''
-    if ibin==0:
-        legend.AddEntry(lineStatUp,"stat. uncertainty","PE")
-    '''
+    d=max(0,n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1)))
+    drawStatBar(c,w,d,u)
+    
+    
+    
     
 nominalHist.SetMarkerStyle(21)
-nominalHist.SetMarkerSize(1.2)
+nominalHist.SetMarkerSize(1.25)
 nominalHist.Draw("SAME hist P")
 legend.AddEntry(nominalHist,"unfolded data","P")
-
-genHist.SetLineColor(ROOT.kBlue)
-genHist.SetLineWidth(4)
-genHist.SetLineStyle(2)
-genHist.Draw("SameLhist")
-legend.AddEntry(genHist,"PowHeg SM","L")
+entry = legend.AddEntry("","  =stat.,     =total","")
+entry.SetTextSize(30)
 
 
 
-pave=ROOT.TPaveText(0.5,0.92,0.96,0.98,"NDC")
-pave.SetFillColor(ROOT.kWhite)
-pave.SetTextFont(42)
-pave.SetTextAlign(31)
+paveLumi=ROOT.TPaveText(0.5,0.92,0.9985,0.98,"NDC")
+paveLumi.SetFillColor(ROOT.kWhite)
+paveLumi.SetTextFont(43)
+paveLumi.SetTextSize(38)
+paveLumi.SetTextAlign(31)
 #pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-pave.AddText("#mu+jets, 15.3 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-pave.Draw("SAME")
+paveLumi.AddText("#mu+jets, 15.3 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.Draw("SAME")
+
+
+paveCMS=ROOT.TPaveText(0.12,0.92,0.5,0.98,"NDC")
+paveCMS.SetFillColor(ROOT.kWhite)
+paveCMS.SetTextFont(63)
+paveCMS.SetTextSize(40)
+paveCMS.SetTextAlign(11)
+#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveCMS.AddText("CMS")
+paveCMS.Draw("SAME")
+
+pavePrel=ROOT.TPaveText(0.23,0.92,0.5,0.98,"NDC")
+pavePrel.SetFillColor(ROOT.kWhite)
+pavePrel.SetTextFont(53)
+pavePrel.SetTextSize(40)
+pavePrel.SetTextAlign(11)
+#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+pavePrel.AddText("Preliminary")
+pavePrel.Draw("SAME")
 
 axis.Draw("AXIS SAME ")
 
+
+
 legend.Draw("SAME")
+
+drawStatBar(-0.705,0.23,0.765,0.805)
+drawSysBar(-0.41,0.18,0.765,0.805)
+
 cv.Update()
 cv.WaitPrimitive()
 

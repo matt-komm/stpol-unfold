@@ -62,18 +62,19 @@ def addColumn(header,sysDict):
             #value=(0.5*(math.fabs(sysDict[sysName]["dup"])+math.fabs(sysDict[sysName]["ddown"])))
             value=math.fabs(sysDict[sysName]["d"])
             totalSum2+=value**2
-            print sysName, round(math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"]),5)
-            if math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"])<0.01:
+            #print sysName, round(math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"]),5)
+            if value<0.0005:
+                tableRows[row].append("$<10^{-3}$")
+            elif math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"])<0.01:
                 tableRows[row].append("$\\pm%4.3f$" % (sysDict[sysName]["d"]))
             else:
                 tableRows[row].append("${}^{%+4.3f}_{%+4.3f}$" % (sysDict[sysName]["dup"],sysDict[sysName]["ddown"] ))
         else:
             tableRows[row].append("-")
     tableTotal.append("$\\pm%4.3f$" % math.sqrt(totalSum2))
-    print
     
-addColumn("TUnfold muon",readCSV("histos/tunfold_smooth5","mu_"))
-addColumn("TUnfold electron",readCSV("histos/tunfold_smooth5","ele_"))
+addColumn("TUnfold muon",readCSV("histos/tunfold","mu_"))
+addColumn("TUnfold electron",readCSV("histos/tunfold","ele_"))
 addColumn("2-bin muon",readCSV("histos/2bin","mu_"))
 addColumn("2-bin electron",readCSV("histos/2bin","ele_"))
 

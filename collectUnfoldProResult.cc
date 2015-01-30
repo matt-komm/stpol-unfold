@@ -226,18 +226,18 @@ int main(int argc, char* argv[])
         up=upA.mean;
         down=downA.mean;
         gStyle->SetOptStat(0);
-        gStyle->SetLabelSize(20,"XYZ");
+        gStyle->SetLabelSize(32,"XYZ");
         gStyle->SetLabelFont(43,"XYZ");
-        gStyle->SetTitleSize(28,"XYZ");
+        gStyle->SetTitleSize(43,"XYZ");
         gStyle->SetTitleFont(43,"XYZ");
         gStyle->SetTitleOffset(1.1,"X");
         gStyle->SetTitleOffset(1.4,"Y");
-        gStyle->SetTickLength(0.015/(1-0.135-0.02),"X");
-        gStyle->SetTickLength(0.015/(1-0.5),"Y");
+        gStyle->SetTickLength(0.02/(1-0.135-0.02),"X");
+        gStyle->SetTickLength(0.02/(1-0.5),"Y");
         
-        TLegend legend(0.17,0.96,0.5,0.8);
+        TLegend legend(0.17,0.96,0.5,0.83);
         legend.SetTextFont(43);
-        legend.SetTextSize(20);
+        legend.SetTextSize(32);
         legend.SetTextAlign(12);
         legend.SetBorderSize(0);
         legend.SetFillColor(0);
@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
         legend.AddEntry(upHist,(sysName+" up").c_str(),"L");
         legend.AddEntry(downHist,(sysName+" down").c_str(),"L");
         
-        TCanvas cv1("cv1","",600,600);
+        TCanvas cv1("cv1","",900,900);
         cv1.Divide(1,2,0,0);
         cv1.GetPad(1)->SetPad(0.0, 0.0, 1.0, 1.0);
         cv1.GetPad(1)->SetFillStyle(0);
@@ -308,8 +308,9 @@ int main(int argc, char* argv[])
         downHistRes->Divide(nominalHist);
         downHistRes->Draw("SameLHIST");
         cv1.Print((output+"_input.pdf").c_str());
+        cv1.Print((output+"_input.png").c_str());
         
-        TCanvas cv2("cv2","",600,600);
+        TCanvas cv2("cv2","",900,900);
         cv2.Divide(1,2,0,0);
         cv2.GetPad(1)->SetPad(0.0, 0.0, 1.0, 1.0);
         cv2.GetPad(1)->SetFillStyle(0);
@@ -352,7 +353,7 @@ int main(int argc, char* argv[])
         smooth(upSmooth,upA.mean);
         Asymmetry upSmoothA=estimateAsymmetry(upSmooth,upCov);
         upSmooth->SetLineStyle(3);
-        upSmooth->Draw("SameLHIST");
+        //upSmooth->Draw("SameLHIST");
         
         downHistUnfolded->SetLineColor(kAzure-4);
         downHistUnfolded->SetLineWidth(2);
@@ -366,7 +367,7 @@ int main(int argc, char* argv[])
         smooth(downSmooth,downA.mean);
         Asymmetry downSmoothA=estimateAsymmetry(downSmooth,downCov);
         downSmooth->SetLineStyle(3);
-        downSmooth->Draw("SameLHIST");
+        //downSmooth->Draw("SameLHIST");
         
         legend.Draw("Same");
         
@@ -402,7 +403,7 @@ int main(int argc, char* argv[])
         
         TH1* upSmoothRes = (TH1*)upSmooth->Clone();
         upSmoothRes->Divide(nominalHistUnfolded);
-        upSmoothRes->Draw("SameLHIST");
+        //upSmoothRes->Draw("SameLHIST");
         
         
         TF1 downFitRes("downFitRes","[0]+x*[1]",-1,1);
@@ -415,15 +416,15 @@ int main(int argc, char* argv[])
         
         TH1* downSmoothRes = (TH1*)downSmooth->Clone();
         downSmoothRes->Divide(nominalHistUnfolded);
-        downSmoothRes->Draw("SameLHIST");
+        //downSmoothRes->Draw("SameLHIST");
         
         
         downHistUnfoldedRes->Draw("SameLHIST");
 
         cv2.Print((output+"_unfolded.pdf").c_str());
-        
-        up=upSmoothA.mean;
-        down=downSmoothA.mean;
+        cv2.Print((output+"_unfolded.png").c_str());
+        //up=upSmoothA.mean;
+        //down=downSmoothA.mean;
         
     }
     

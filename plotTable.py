@@ -245,7 +245,7 @@ if __name__=="__main__":
 
     basefolder1=os.path.join(os.getcwd(),"histos/tunfold")
     #basefolder2=os.path.join(os.getcwd(),"histos/2bin")
-    basefolder2=os.path.join(os.getcwd(),"histos/tunfold_smooth5")
+    basefolder2=os.path.join(os.getcwd(),"histos/tunfold_smooth")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
@@ -299,7 +299,7 @@ if __name__=="__main__":
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        legend.AddEntry(box,"2-bin analytical","F") if index==0 else 0
+        legend.AddEntry(box,"smoothing","F") if index==0 else 0
         
         box = createBox(muBinDictn,sys,index+0.5,index+0.9)
         box.SetLineColor(ROOT.kBlack)
