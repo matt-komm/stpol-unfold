@@ -140,7 +140,8 @@ ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetStripDecimals(True)
 ROOT.gStyle.SetTickLength(0.03, "XYZ")
-ROOT.gStyle.SetNdivisions(510, "XYZ")
+ROOT.gStyle.SetNdivisions(510, "X")
+ROOT.gStyle.SetNdivisions(516, "Y")
 
 ROOT.gStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
 ROOT.gStyle.SetPadTickY(1)
@@ -180,7 +181,8 @@ ROOT.gStyle.SetPaintTextFormat("7.4f")
 sysNames=[
     ["stat","statistical"],
     ["generator","signal modeling"],
-    ["tchan_scale","t-channel scale"],
+    #["tchan_scale","t-channel scale"],
+    ["me_weight","t-channel scale"],
     ["ttjets_scale","tt+jets scale"],
     ["wzjets_scale","W+jets scale"],
     ["mass","top quark mass"],
@@ -203,7 +205,7 @@ sysNames=[
     #["lepton_weight","lepton weight"],
     ["qcd_yield","QCD yield"],
     ["qcd_antiiso","QCD template"],
-    #["fiterror","ML-fit uncertainty"],
+    ["fiterror","ML-fit uncertainty"],
     #["bias","unfolding bias"],
     ["mcstat","limited MC"]
 ]
@@ -211,7 +213,8 @@ sysNames=[
 whiteList=[
     "stat",
     "generator",
-    "tchan_scale",
+    #"tchan_scale",
+    "me_weight",
     "ttjets_scale",
     "wzjets_scale",
     "mass",
@@ -223,24 +226,24 @@ whiteList=[
     "mcstat",
 ]
 
-def readCSV(folder=os.getcwd(),match="mu_"):
+def readCSV(folder,match):
     sysDict={}
     for f in os.listdir(folder):
         if f.startswith(match) and f.endswith(".csv"):
             inFile = open(os.path.join(folder,f),"rb")
             csvFile = csv.DictReader(inFile, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
             result = csvFile.next()
-            sysDict[result["syst"]]=result["d"]
+            sysDict[result["syst"]]=math.fabs(result["d"])
             inFile.close()
     return sysDict
     
     
-basefolder=os.path.join(os.getcwd(),"histos","scan")
+basefolder=os.path.join(os.getcwd(),"histos","scan","tunfold")
 scans=[]
 for folder in os.listdir(basefolder):
     scans.append({
         "cut":(float(folder)),
-        "sys":readCSV(os.path.join(basefolder,folder),"ele_")
+        "sys":readCSV(os.path.join(basefolder,folder),"combined_")
     })
  
 scans=sorted(scans[:],cmp=lambda x,y: int(1000*(x["cut"]-y["cut"])))
@@ -267,7 +270,7 @@ c.setCoordinateStyle(style)
 c.draw()
 '''
 cv = ROOT.TCanvas("cv","",800,600)
-axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.2,0.8,50,0.0,0.13)
+axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.2,0.8,50,0.0,0.135)
 axis.Draw("AXIS")
 
 rootObj=[]

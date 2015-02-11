@@ -44,8 +44,8 @@ ROOT.gStyle.SetCanvasDefY(0)
 ROOT.gStyle.SetPadBorderMode(0)
 # ROOT.gStyle.SetPadBorderSize(Width_t size = 1)
 ROOT.gStyle.SetPadColor(ROOT.TStyle.kWhite)
-ROOT.gStyle.SetPadGridX(True)
-ROOT.gStyle.SetPadGridY(True)
+#ROOT.gStyle.SetPadGridX(True)
+#ROOT.gStyle.SetPadGridY(True)
 ROOT.gStyle.SetGridColor(ROOT.kBlack)
 ROOT.gStyle.SetGridStyle(2)
 ROOT.gStyle.SetGridWidth(1)
@@ -245,17 +245,6 @@ def calculateChi2(hist1,covHist1,hist2,covHist2=None):
     return chi2/hist1.GetNbinsX()
     
 
-    
-def diceGaus(output,hist,covHist):
-    N=hist.GetNbinsX()
-    mean=numpy.zeros(N)
-    cov=numpy.zeros((N,N))
-    for i in range(N):
-        for j in range(N):
-            cov[i][j]=covHist.GetBinContent(i+1,j+1)
-    diced=numpy.random.multivariate_normal(mean,cov)
-    for i in range(N):
-        output[i]+=diced[i]
         
 def smooth(hist, asymmetry, N=2, alpha=0.3):
     new_hist=hist.Clone()
@@ -291,7 +280,16 @@ def smooth(hist, asymmetry, N=2, alpha=0.3):
             hist.SetBinContent(i+1,new_hist.GetBinContent(i+1))
         
     
-
+def diceGaus(output,hist,covHist):
+    N=hist.GetNbinsX()
+    mean=numpy.zeros(N)
+    cov=numpy.zeros((N,N))
+    for i in range(N):
+        for j in range(N):
+            cov[i][j]=covHist.GetBinContent(i+1,j+1)
+    diced=numpy.random.multivariate_normal(mean,cov)
+    for i in range(N):
+        output[i]+=diced[i]
             
 def diceShape(output,nominalHist,upHist,downHist):
     d=ROOT.gRandom.Gaus(0.0,1.0)
@@ -335,49 +333,70 @@ def normalize(output):
     for i in range(len(output)):
         output[i]=output[i]/s*len(output)/2.0
         
-def calculateAsymmetry(output,cov):
-    if type(output)==type(ROOT.TH1D()):
-        norm=output.Integral()
-        N=output.GetNbinsX()
-    else:
-        norm=sum(output)
-        N=len(output)
-    measured=numpy.zeros(N)
-    covMatrix=numpy.zeros((N,N))
-    for i in range(N):
+def calculateAsymmetry(output,cov=None):
+    if cov!=None:
         if type(output)==type(ROOT.TH1D()):
-            measured[i]=output.GetBinContent(i+1)/norm
+            norm=output.Integral()
+            N=output.GetNbinsX()
         else:
-            measured[i]=output[i]/norm
-        for j in range(N):
-            covMatrix[i][j]=cov.GetBinContent(i+1,j+1)/norm**2
-    covMatrixInf=numpy.linalg.inv(covMatrix)
-    
-    def chi2(p):
-        chi2Sum=0.0
-        expect=numpy.zeros(N)
+            norm=sum(output)
+            N=len(output)
+        measured=numpy.zeros(N)
+        covMatrix=numpy.zeros((N,N))
         for i in range(N):
-            icos=-1.0+2.0/N*i+2.0/N*0.5
-            expect[i]=2.0/N*0.5*(1.0+2.0*p[0]*icos)
-        for i in range(N):
+            if type(output)==type(ROOT.TH1D()):
+                measured[i]=output.GetBinContent(i+1)/norm
+            else:
+                measured[i]=output[i]/norm
             for j in range(N):
-                chi2Sum+=(measured[i]-expect[i])*covMatrixInf[i][j]*(measured[j]-expect[j])
-        return numpy.array([math.sqrt(chi2Sum)])
+                covMatrix[i][j]=cov.GetBinContent(i+1,j+1)/norm**2
+        covMatrixInf=numpy.linalg.inv(covMatrix)
+        
+        def chi2(p):
+            chi2Sum=0.0
+            expect=numpy.zeros(N)
+            for i in range(N):
+                icos=-1.0+2.0/N*i+2.0/N*0.5
+                expect[i]=2.0/N*0.5*(1.0+2.0*p[0]*icos)
+            for i in range(N):
+                for j in range(N):
+                    chi2Sum+=(measured[i]-expect[i])*covMatrixInf[i][j]*(measured[j]-expect[j])
+            return numpy.array([math.sqrt(chi2Sum)])
         
         
-    p0 = numpy.array([0.4])
-    #print chi2(p0)
-    p1, cov_x, infodict,msg, ler = scipy.optimize.leastsq(chi2, p0,full_output=True)#,method='BFGS',tol=0.001, jac=False, bounds=[(-1.0,1.0)])
-    return p1
-    '''
-    N=len(output)
-    sumUp=0.0
-    sumDown=0.0
-    for i in range(N/2):
-        sumUp+=output[N/2+i]
-        sumDown+=output[i]
-    return (sumUp-sumDown)/(sumUp+sumDown)
-    '''
+        p0 = numpy.array([0.4])
+        #print chi2(p0)
+        p1, cov_x, infodict,msg, ler = scipy.optimize.leastsq(chi2, p0,full_output=True)#,method='BFGS',tol=0.001, jac=False, bounds=[(-1.0,1.0)])
+        return p1
+    else:
+    
+        N=len(output)
+        sumUp=0.0
+        sumDown=0.0
+        for i in range(N/2):
+            sumUp+=output[N/2+i]
+            sumDown+=output[i]
+        return (sumUp-sumDown)/(sumUp+sumDown)
+        
+def calculatePvalue(asymmetryToys,value):
+    sortedToys=sorted(asymmetryToys)
+    mean=numpy.percentile(asymmetryToys, [50.0])[0]
+    N=len(asymmetryToys)
+    outsideInterval=0
+    if value>mean:
+        for i in reversed(range(len(sortedToys))):
+            if sortedToys[i]>value:
+                outsideInterval+=1
+            else:
+                break
+    else:
+        for i in range(len(sortedToys)):
+            if sortedToys[i]<value:
+                outsideInterval+=1
+            else:
+                break
+    return 1.0*outsideInterval/N
+    
         
 def applyLineStyle(line,color=ROOT.kBlack,width=2):
     line.SetLineWidth(width)
@@ -412,7 +431,7 @@ def drawStatBar(x,xwidth,ymin,ymax):
     lineStatDown.Draw("Same")
     lineStatMid.Draw("Same")
 
-def readHistograms(folder,prefix="ele__"):
+def readHistograms(folder,prefix="mu__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:
@@ -489,7 +508,7 @@ def readHistograms(folder,prefix="ele__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","tunfold")
+folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.3")
 
 sysDict = readHistograms(folderTUnfold)
 
@@ -524,7 +543,7 @@ for sysName in sysDict.keys():
         )
 '''
 
-NTOYS=1000
+NTOYS=5000
 output=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -550,9 +569,9 @@ downSys,mean,upSys=numpy.percentile(output, [15.866,50.0,84.134],0)
 
 asymmetryDown,asymmetryMean,asymmetryUp=numpy.percentile(asymmetries, [15.866,50.0,84.134])
 print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmetryDown-asymmetryMean)
-
-
-
+genA=calculateAsymmetry(genHist)
+print "Agen=%5.4f" % genA
+print "p-value=%5.4e" % calculatePvalue(asymmetries,genA)
 
 cv=ROOT.TCanvas("cv","",900,800)
 
@@ -567,8 +586,8 @@ legend.SetTextSize(34)
 legend.SetFillColor(ROOT.kWhite)
 
 genHist.SetLineColor(ROOT.kBlue)
-genHist.SetLineWidth(4)
-genHist.SetLineStyle(2)
+genHist.SetLineWidth(3)
+genHist.SetLineStyle(1)
 genHist.Draw("Samehist")
 legend.AddEntry(genHist,"PowHeg SM","L")
 
@@ -607,8 +626,8 @@ paveLumi.SetFillColor(ROOT.kWhite)
 paveLumi.SetTextFont(43)
 paveLumi.SetTextSize(38)
 paveLumi.SetTextAlign(31)
-#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-paveLumi.AddText("#mu+jets, 15.3 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#pave.AddText("e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.AddText("#mu+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveLumi.Draw("SAME")
 
 
@@ -636,8 +655,8 @@ axis.Draw("AXIS SAME ")
 
 legend.Draw("SAME")
 
-drawStatBar(-0.705,0.23,0.765,0.805)
-drawSysBar(-0.41,0.18,0.765,0.805)
+drawStatBar(-0.705,0.25,0.765,0.82)
+drawSysBar(-0.405,0.19,0.765,0.82)
 
 cv.Update()
 cv.WaitPrimitive()

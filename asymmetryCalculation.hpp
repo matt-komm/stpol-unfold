@@ -95,9 +95,6 @@ double chi2A(const TH1* hist, const TMatrixD* invcov, const double *xx)
 
 
 
-
-
-
 Asymmetry estimateAsymmetry(
     const TH1* hist, const TH2* cov, 
     const char * minName = "Minuit2",
@@ -148,7 +145,7 @@ Asymmetry estimateAsymmetry(
     min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2 
     min->SetMaxIterations(10000);  // for GSL 
     min->SetTolerance(0.001);
-    min->SetPrintLevel(2);
+    //min->SetPrintLevel(-1000000);
     //const double xx[1] = {0.5};
     std::function<double(const TH1*, const TMatrixD*, const double*)> unboundFct = chi2A;
     std::function<double(const double*)> boundFct = std::bind(unboundFct,normHist, &invCovMatrix, std::placeholders::_1);

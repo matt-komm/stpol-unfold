@@ -4,6 +4,8 @@
 #include "TStyle.h"
 #include "TLegend.h"
 #include "TF1.h"
+#include "TMatrixD.h"
+#include "TDecompChol.h"
 
 #include "SimpleOpt.h"
 #include "logging.hpp"
@@ -32,7 +34,7 @@ CSimpleOpt::SOption options[] ={
 
 };
 
-Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullptr, TH2D* covHist = nullptr)
+void loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullptr, TH2D* covHist = nullptr)
 {
     TFile f(file.c_str());
     TH1D* data = (TH1D*)f.Get("substractedData");
@@ -56,10 +58,114 @@ Asymmetry loadFromFile(std::string file,TH1D* input=nullptr,TH1D* unfolded=nullp
     {
         covHist->Add(cov);
     }
-    Asymmetry asy = estimateAsymmetry(unfolded,cov);
+    //Asymmetry asy = estimateAsymmetry(unfolded,cov);
     f.Close();
-    return asy;
 }
+
+TMatrixD* decompose(TH2* cov)
+{
+    int N = cov->GetNbinsX();
+    TMatrixD covM(N,N);
+    for (int i=0; i<N;++i)
+    {
+        for (int j=0; j<N;++j)
+        {
+            covM[i][j]=cov->GetBinContent(i+1,j+1);
+        }
+    }
+    TDecompChol cholM(covM);
+    cholM.Decompose();
+    const TMatrixD& u = cholM.GetU();
+    TMatrixD* decomp = new TMatrixD(N,N);
+    for (int i=0; i<N;++i)
+    {
+        for (int j=0; j<N;++j)
+        {
+            (*decomp)[i][j]=u[i][j];
+        }
+    }
+    return decomp;
+}
+
+void diceGaus(TH1& output, const TH1* hist, const TMatrixD* decomp)
+{
+    int N = hist->GetNbinsX();
+    std::vector<double> z(N);
+    for (int i = 0; i < N; ++i)
+    {
+        z[i]=gRandom->Gaus(0.0,1.0);
+    }
+    for (int i = 0; i < N; ++i)
+    {
+        //output.SetBinContent(i+1,0.0);//hist->GetBinContent(i+1);
+        for (int j = 0; j < N; ++j)
+        {
+            output.SetBinContent(i+1,output.GetBinContent(i+1)+(*decomp)[j][i]*z[j]);
+        }
+        output.Scale(1.0/output.Integral());
+    }
+}
+
+void diceTemplates(TH1& output, const TH1* nominalHist, const TH1* upHist, const TH1* downHist)
+{
+    double d=gRandom->Gaus(0.0,1.0);
+    for (int i = 0; i < nominalHist->GetNbinsX(); ++i)
+    {
+        
+        double up=upHist->GetBinContent(i+1);
+        double nom=nominalHist->GetBinContent(i+1);
+        double down=downHist->GetBinContent(i+1);
+        
+        
+        //symmetrize always
+        double diff=std::max(fabs(up-nom),fabs(down-nom));
+        up=nom+diff;
+        down=nom-diff;
+        
+        if (d>1)
+        {
+            output.SetBinContent(i+1,output.GetBinContent(i+1)+ (up-nom)*fabs(d));
+        }
+        else if (d<-1)
+        {
+            output.SetBinContent(i+1,output.GetBinContent(i+1)+ (down-nom)*fabs(d));
+        }
+        else
+        {
+            output.SetBinContent(i+1,output.GetBinContent(i+1)+ d/2.0*(up-down)+(d*d-fabs(d*d*d)/2.0)*(up+down-2.0*nom));
+        }
+    }
+}
+
+Asymmetry estimateStatAsymmetryToys(TH1* hist,TH2* cov)
+{
+    int NTOYS=10000;
+    std::vector<double> asymmetries(NTOYS);
+    int N = hist->GetNbinsX();
+    
+    TMatrixD* decomp = decompose(cov);
+    
+    
+    for (int itoy=0; itoy < NTOYS; ++itoy)
+    {
+        TH1* toys = (TH1*)hist->Clone();
+        diceGaus(*toys,hist,decomp);
+        
+        Asymmetry a = estimateAsymmetry(toys,cov);
+        asymmetries[itoy]=a.mean;
+        delete toys;
+    }
+    std::sort (asymmetries.begin(), asymmetries.end(), std::less<double>());
+    double up = asymmetries[int(NTOYS*0.15866)];
+    double mean = asymmetries[int(NTOYS*0.5)];
+    double down = asymmetries[int(NTOYS*0.84134)];
+    Asymmetry result;
+    result.mean=mean;
+    result.uncertainty=std::max(fabs(up-mean),fabs(down-mean));
+    return result;
+}
+
+
 
 void smooth(TH1* hist, double asymmetry, int N=2, float alpha=0.3)
 {
@@ -102,8 +208,8 @@ void smooth(TH1* hist, double asymmetry, int N=2, float alpha=0.3)
 
 
 int main(int argc, char* argv[])
-{
-    gErrorIgnoreLevel = kPrint | kInfo | kWarning;
+{ 
+    //gErrorIgnoreLevel = kInfo;//kFatal;//kError | kPrint | kInfo | kWarning;
     std::string nominalFile = "";
     std::string sysName = "";
     std::string upFile = "";
@@ -197,8 +303,10 @@ int main(int argc, char* argv[])
     TH2D* upCov=new TH2D("upCov","",6,1,6,6,1,6);
     TH2D* downCov=new TH2D("downCov","",6,1,6,6,1,6);
     
+    loadFromFile(nominalFile,nominalHist,nominalHistUnfolded,nominalCov);
+    //Asymmetry nominalA = estimateStatAsymmetryToys(nominalHistUnfolded,nominalCov);
+    Asymmetry nominalA = estimateAsymmetry(nominalHistUnfolded,nominalCov);
     
-    Asymmetry nominalA = loadFromFile(nominalFile,nominalHist,nominalHistUnfolded,nominalCov);
     double mean = nominalA.mean;
     double up = -1;
     double down = -1;
@@ -209,8 +317,10 @@ int main(int argc, char* argv[])
     }
     else
     {
-        Asymmetry upA = loadFromFile(upFile,upHist,upHistUnfolded,upCov);
-        Asymmetry downA = loadFromFile(downFile,downHist,downHistUnfolded,downCov);
+        loadFromFile(upFile,upHist,upHistUnfolded,upCov);
+        loadFromFile(downFile,downHist,downHistUnfolded,downCov);
+        Asymmetry upA = estimateAsymmetry(upHistUnfolded,upCov);
+        Asymmetry downA = estimateAsymmetry(downHistUnfolded,downCov);
         
         if (sysName=="generator")
         {

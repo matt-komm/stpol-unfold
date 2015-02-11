@@ -28,7 +28,7 @@ test:
 		$(REGMODE) \
 		--output=test
 	./collectUnfoldProResult \
-	    --nominal=histos/mu__nominal.root \
+	    --nominal=histos/tunfold/mu__nominal.root \
 	    --output=test.csv \
 	    --sys=nominal \
 	    --fromError

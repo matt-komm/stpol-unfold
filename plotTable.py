@@ -183,6 +183,7 @@ ROOT.gStyle.SetPaintTextFormat("7.4f")
 sysNames=[
     ["stat","statistical"],
     ["generator","signal modeling"],
+    ["me_weight","t-ch. scale rew."],
     ["tchan_scale","t-channel scale"],
     ["ttjets_scale","tt+jets scale"],
     ["wzjets_scale","W+jets scale"],
@@ -236,16 +237,20 @@ def createBox(sysDict,sysEntry,ypos1,ypos2):
 
     
 if __name__=="__main__":
-    dicts =["stat","generator","tchan_scale","ttjets_scale","wzjets_scale",
+    dicts =["stat","generator",
+            #"me_weight",
+            "tchan_scale","ttjets_scale","wzjets_scale",
             "mass","wjets_shape","top_weight","wzjets_matching","ttjets_matching",
             #"pdf",
             "jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
             "pu","btag_bc","btag_l","qcd_antiiso","qcd_yield","wjets_flavour_light","wjets_flavour_heavy",
-            "fiterror","bias","mcstat"]
+            "fiterror","bias","mcstat"
+            
+            ]
 
-    basefolder1=os.path.join(os.getcwd(),"histos/tunfold")
+    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/old/0.3")
     #basefolder2=os.path.join(os.getcwd(),"histos/2bin")
-    basefolder2=os.path.join(os.getcwd(),"histos/tunfold_smooth")
+    basefolder2=os.path.join(os.getcwd(),"histos/scan/tunfold/0.3")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
@@ -299,7 +304,7 @@ if __name__=="__main__":
         box.SetLineColor(ROOT.kBlack)
         box.SetFillStyle(0)
         box.Draw("SameL")
-        legend.AddEntry(box,"smoothing","F") if index==0 else 0
+        legend.AddEntry(box,"new BDTs","F") if index==0 else 0
         
         box = createBox(muBinDictn,sys,index+0.5,index+0.9)
         box.SetLineColor(ROOT.kBlack)
