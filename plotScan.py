@@ -233,7 +233,7 @@ def readCSV(folder,match):
             inFile = open(os.path.join(folder,f),"rb")
             csvFile = csv.DictReader(inFile, dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
             result = csvFile.next()
-            sysDict[result["syst"]]=math.fabs(result["d"])
+            sysDict[result["syst"]]=math.fabs(result["dup"])
             inFile.close()
     return sysDict
     
@@ -243,7 +243,7 @@ scans=[]
 for folder in os.listdir(basefolder):
     scans.append({
         "cut":(float(folder)),
-        "sys":readCSV(os.path.join(basefolder,folder),"combined_")
+        "sys":readCSV(os.path.join(basefolder,folder),"mu_")
     })
  
 scans=sorted(scans[:],cmp=lambda x,y: int(1000*(x["cut"]-y["cut"])))

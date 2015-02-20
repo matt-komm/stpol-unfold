@@ -12,7 +12,7 @@ tableTotal=["","total uncertainty"]
     
 tableRows=[
     ["stat","statistical"],
-    ["generator","signal modeling"],
+    ["generator","generator modeling"],
     ["tchan_scale","t-channel scale"],
     ["ttjets_scale","\\tt+jets scale"],
     ["wzjets_scale","W+jets scale"],
