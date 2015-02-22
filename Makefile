@@ -96,7 +96,7 @@ do_unfold_mu:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--sys=nominal \
 		$(REGMODE) \
 		--no-mcstat \
@@ -229,7 +229,7 @@ do_unfold_combined:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--sys=nominal \
 		--no-mcstat \
 		--no-fiterror \
@@ -362,7 +362,7 @@ do_unfold_ele:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--sys=nominal \
 		--no-mcstat \
 		--no-fiterror \
@@ -455,7 +455,7 @@ unfold_2bin_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=nominal \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/mu__generator.csv
 
@@ -519,7 +519,7 @@ unfold_2bin_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=nominal \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/ele__generator.csv
 
@@ -583,7 +583,7 @@ unfold_2bin_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=nominal \
-		--responseMatrixName="tm__comphep" \
+		--responseMatrixName="tm__aMCatNLO" \
 		--output=$(OUTPUTFOLDER)/combined__generator.csv
 
 	python auto_unfold2bins.py --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
