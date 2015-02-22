@@ -13,7 +13,7 @@ ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetPadLeftMargin(0.3)
-ROOT.gStyle.SetPadRightMargin(0.05)
+ROOT.gStyle.SetPadRightMargin(0.07)
 ROOT.gStyle.SetPadTopMargin(0.01)
 ROOT.gStyle.SetPadBottomMargin(0.1)
 ROOT.gStyle.SetMarkerSize(0.16)
@@ -181,35 +181,47 @@ ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetPaintTextFormat("7.4f")
 
 sysNames=[
-    ["stat","statistical"],
-    ["generator","signal modeling"],
-    ["me_weight","t-ch. scale rew."],
-    ["tchan_scale","t-channel scale"],
-    ["ttjets_scale","tt+jets scale"],
-    ["wzjets_scale","W+jets scale"],
-    ["mass","top quark mass"],
-    ["wjets_shape","W+jets shape"],
-    ["wjets_flavour_heavy","W+jets heavy flavour"],
-    ["wjets_flavour_light","W+jets light flavour"],
-    ["top_weight","top pT modeling"],
-    ["wzjets_matching","W+jets matching"],
-    ["ttjets_matching","tt+jets matching"],
-    #["pdf","PDF"],
-    ["jes","JES"],
-    ["jer","JER"],
-    ["met","MET"],
-    ["lepton_id","lepton id"],
-    ["lepton_iso","lepton isolation"],
-    ["lepton_trigger","lepton trigger"],        
-    ["pu","pileup"],
-    ["btag_bc","b-tagging efficiency"],
-    ["btag_l","mis-tagging efficiency"],
-    #["lepton_weight","lepton weight"],
-    ["qcd_yield","QCD yield"],
-    ["qcd_antiiso","QCD template"],
-    ["fiterror","ML-fit uncertainty"],
-    ["bias","unfolding bias"],
-    ["mcstat","limited MC"]
+
+['stat', "statistical"],
+
+#fitting
+['fiterror', "ML-fit uncertainty"],
+['diboson', "DiBoson fraction"],
+['dyjets', "DrellYan fraction"],
+['schan', "s-channel fraction"],
+['twchan', "tW-channel fraction"],
+['qcd_antiiso', "QCD shape"],
+['qcd_yield', "QCD yield"],
+
+#detector
+['btag_bc', "b tagging"],
+['btag_l', "mistagging"],
+['jer', "JER"],
+['jes', "JES"],
+['met', "unclustered \\MET"],
+['pu', "pileup"],
+['lepton_id', "lepton ID"],
+['lepton_iso', "lepton isolation"],
+['lepton_trigger', "trigger efficiency"],
+
+#add reweighting
+['top_weight', "top \\pT reweighting"],
+['wjets_flavour_heavy', "\\wjets heavy flavor yield"],
+['wjets_flavour_light', "\\wjets light flavor yield"],
+['wjets_shape', "\\wjets shape reweighting"],
+
+#theory
+['generator', "generator model"],
+['mass', "top quark mass"],
+['me_weight', "t-channel $Q^{2}$ scale"],
+#['tchan_scale', "$Q^{2}$ scale t-channel"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['ttjets_matching', "\\ttbar matching"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+['wzjets_matching', "\\wjets matching"],
+['pdf', "PDF"],
+
+['mcstat', "limited MC"],
 ]
 
 rootObj=[]
@@ -237,20 +249,11 @@ def createBox(sysDict,sysEntry,ypos1,ypos2):
 
     
 if __name__=="__main__":
-    dicts =["stat","generator",
-            #"me_weight",
-            "tchan_scale","ttjets_scale","wzjets_scale",
-            "mass","wjets_shape","top_weight","wzjets_matching","ttjets_matching",
-            #"pdf",
-            "jes","jer","met","lepton_id","lepton_iso","lepton_trigger",
-            "pu","btag_bc","btag_l","qcd_antiiso","qcd_yield","wjets_flavour_light","wjets_flavour_heavy",
-            "fiterror","bias","mcstat"
-            
-            ]
 
-    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/old/0.3")
+
+    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/0.60")
     #basefolder2=os.path.join(os.getcwd(),"histos/2bin")
-    basefolder2=os.path.join(os.getcwd(),"histos/scan/tunfold/0.3")
+    #basefolder2=os.path.join(os.getcwd(),"histos/scan/tunfold/0.6")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
@@ -259,57 +262,46 @@ if __name__=="__main__":
 
     muBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("ele__") and f.endswith(".csv")])
-    
+    combBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("combined__") and f.endswith(".csv")])
+    '''
     muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
+    '''
     
-    
-    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.1,len(dicts),0,len(dicts))
+    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.06,len(sysNames),0,len(sysNames))
     cv = ROOT.TCanvas("cv","",800,800)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.65,0.78,0.9,0.95)
+    legend = ROOT.TLegend(0.6,0.5,0.95,0.65)
     legend.SetFillColor(ROOT.kWhite)
     legend.SetFillStyle(1001)
     legend.SetTextFont(42)
     legend.SetBorderSize(0)
     
-    for index in range(len(dicts)):
-        sys = dicts[index]
-        label="<empty>"
-        for match in sysNames:
-            if match[0]==sys:
-                label=match[1]
-        if label=="<empty>":
-            print sys
-        hist.GetYaxis().SetBinLabel(index+1,label)
+    for index in range(len(sysNames)):
+        sys = sysNames[index]
         
-        line = ROOT.TLine(-0.04,index,0.0,index)
+        hist.GetYaxis().SetBinLabel(index+1,sys[1].replace("$","").replace("\\wjets","W+jets").replace("\\ttbar","t#bar{t}+jets").replace("\\",""))
+        
+        line = ROOT.TLine(-0.03,index,0.0,index)
         rootObj.append(line)
         line.Draw("Same")
         
-        box = createBox(eleBinDict,sys,index+0.1,index+0.5)
+        box = createBox(eleBinDict,sys[0],index+0.05,index+0.35)
         box.SetFillColor(ROOT.kAzure-4)
         box.Draw("SameF")
-        legend.AddEntry(box,"electron ch.","F") if index==0 else 0
-        legend.AddEntry("","(tunfold)","") if index==0 else 0
+        legend.AddEntry(box,"electron channel","F") if index==0 else 0
         
-        box = createBox(muBinDict,sys,index+0.5,index+0.9)
+        box = createBox(muBinDict,sys[0],index+0.35,index+0.65)
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
-        legend.AddEntry(box,"muon ch.","F") if index==0 else 0
-        legend.AddEntry("","(tunfold)","") if index==0 else 0
+        legend.AddEntry(box,"muon channel","F") if index==0 else 0
         
-        box = createBox(eleBinDictn,sys,index+0.1,index+0.5)
-        box.SetLineColor(ROOT.kBlack)
-        box.SetFillStyle(0)
-        box.Draw("SameL")
-        legend.AddEntry(box,"new BDTs","F") if index==0 else 0
+        box = createBox(combBinDict,sys[0],index+0.65,index+0.95)
+        box.SetFillColor(ROOT.kMagenta)
+        box.Draw("SameF")
+        legend.AddEntry(box,"combination","F") if index==0 else 0
         
-        box = createBox(muBinDictn,sys,index+0.5,index+0.9)
-        box.SetLineColor(ROOT.kBlack)
-        box.SetFillStyle(0)
-        box.Draw("SameL")
         
     
     hist.Draw("AXIS SAME")

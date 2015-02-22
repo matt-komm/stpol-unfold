@@ -181,35 +181,55 @@ ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetPaintTextFormat("7.4f")
 
 sysNames=[
-    "nominal",
-    "stat",
-    "generator",
-    "tchan_scale",
-    "ttjets_scale",
-    "wzjets_scale",
-    "mass",
-    "wjets_shape",
-    "wjets_flavour_heavy",
-    "wjets_flavour_light",
-    "top_weight",
-    "wzjets_matching",
-    "ttjets_matching",
-    #"pdf",
-    "jes",
-    "jer",
-    "met",
-    "lepton_id",
-    "lepton_iso",
-    "lepton_trigger",
-    "pu",
-    "btag_bc",
-    "btag_l",
-    #"lepton_weight",
-    "qcd_yield",
-    "qcd_antiiso",
-    "fiterror",
-    "mcstat",
+['stat', "statistical"],
+
+#fitting
+['fiterror', "ML-fit uncertainty"],
+['diboson', "DiBoson fraction"],
+['dyjets', "DrellYan fraction"],
+['schan', "s-channel fraction"],
+['twchan', "tW-channel fraction"],
+['qcd_antiiso', "QCD shape"],
+['qcd_yield', "QCD yield"],
+
+#detector
+['btag_bc', "b tagging"],
+['btag_l', "mistagging"],
+['jer', "JER"],
+['jes', "JES"],
+['met', "unclustered \\MET"],
+['pu', "pileup"],
+['lepton_id', "lepton ID"],
+['lepton_iso', "lepton isolation"],
+['lepton_trigger', "trigger efficiency"],
+
+#add reweighting
+['top_weight', "top \\pT reweighting"],
+['wjets_flavour_heavy', "\\wjets heavy flavor yield"],
+['wjets_flavour_light', "\\wjets light flavor yield"],
+['wjets_shape', "\\wjets shape reweighting"],
+
+#theory
+['generator', "generator model"],
+['mass', "top quark mass"],
+['me_weight', "t-channel $Q^{2}$ scale"],
+#['tchan_scale', "$Q^{2}$ scale t-channel"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['ttjets_matching', "\\ttbar matching"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+['wzjets_matching', "\\wjets matching"],
+['pdf', "PDF"],
+
+['mcstat', "limited MC"],
 ]
+
+
+tmp=["nominal"]
+for sys in sysNames:
+    tmp.append(sys[0])
+
+sysNames=tmp
+
 
 '''
 sysNames=[
@@ -431,7 +451,7 @@ def drawStatBar(x,xwidth,ymin,ymax):
     lineStatDown.Draw("Same")
     lineStatMid.Draw("Same")
 
-def readHistograms(folder,prefix="mu__"):
+def readHistograms(folder,prefix="combined__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:
@@ -508,10 +528,9 @@ def readHistograms(folder,prefix="mu__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.3")
+folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.60")
 
 sysDict = readHistograms(folderTUnfold)
-
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
 
 
@@ -626,8 +645,9 @@ paveLumi.SetFillColor(ROOT.kWhite)
 paveLumi.SetTextFont(43)
 paveLumi.SetTextSize(38)
 paveLumi.SetTextAlign(31)
-#pave.AddText("e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-paveLumi.AddText("#mu+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.AddText("#mu/e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveLumi.Draw("SAME")
 
 
@@ -636,7 +656,6 @@ paveCMS.SetFillColor(ROOT.kWhite)
 paveCMS.SetTextFont(63)
 paveCMS.SetTextSize(40)
 paveCMS.SetTextAlign(11)
-#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveCMS.AddText("CMS")
 paveCMS.Draw("SAME")
 
@@ -645,7 +664,6 @@ pavePrel.SetFillColor(ROOT.kWhite)
 pavePrel.SetTextFont(53)
 pavePrel.SetTextSize(40)
 pavePrel.SetTextAlign(11)
-#pave.AddText("e+jets, 16.9 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 pavePrel.AddText("Preliminary")
 pavePrel.Draw("SAME")
 
