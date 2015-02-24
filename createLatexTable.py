@@ -16,10 +16,10 @@ tableRows=[
 
 #fitting
 ['fiterror', "ML-fit uncertainty"],
-['diboson', "DiBoson fraction"],
-['dyjets', "DrellYan fraction"],
+['diboson', "Di Boson fraction"],
+['dyjets', "Drell-Yan fraction"],
 ['schan', "s-channel fraction"],
-['twchan', "tW-channel fraction"],
+['twchan', "tW fraction"],
 ['qcd_antiiso', "QCD shape"],
 ['qcd_yield', "QCD yield"],
 ["line"],
@@ -38,8 +38,8 @@ tableRows=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
-['wjets_flavour_heavy', "\\wjets heavy flavor yield"],
-['wjets_flavour_light', "\\wjets light flavor yield"],
+['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
+['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
 ["line"],
 

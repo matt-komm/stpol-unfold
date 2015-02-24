@@ -180,15 +180,16 @@ ROOT.gStyle.SetLineScalePS(2)
 ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetPaintTextFormat("7.4f")
 
+
 sysNames=[
 ['stat', "statistical"],
 
 #fitting
 ['fiterror', "ML-fit uncertainty"],
-['diboson', "DiBoson fraction"],
-['dyjets', "DrellYan fraction"],
+['diboson', "Di Boson fraction"],
+['dyjets', "Drell-Yan fraction"],
 ['schan', "s-channel fraction"],
-['twchan', "tW-channel fraction"],
+['twchan', "tW fraction"],
 ['qcd_antiiso', "QCD shape"],
 ['qcd_yield', "QCD yield"],
 
@@ -205,15 +206,15 @@ sysNames=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
-['wjets_flavour_heavy', "\\wjets heavy flavor yield"],
-['wjets_flavour_light', "\\wjets light flavor yield"],
+['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
+['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
 
 #theory
 ['generator', "generator model"],
 ['mass', "top quark mass"],
 ['me_weight', "t-channel $Q^{2}$ scale"],
-['tchan_scale', "$Q^{2}$ scale t-channel"],
+#['tchan_scale', "$Q^{2}$ scale t-channel"],
 ['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
 ['wzjets_scale', "\\wjets $Q^{2}$ scale"],
@@ -559,7 +560,7 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 #cv1.WaitPrimitive()
 
 genHist=sysDict["nominal"]["gen"]["nominal"]
-
+'''
 NTOYS=5000
 genDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 for toy in range(NTOYS):
@@ -573,7 +574,7 @@ for toy in range(NTOYS):
     
     #normalize(genDist[toy])
 downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
-
+'''
 
 
 NTOYS=5000
@@ -625,7 +626,7 @@ statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
 nominalHist.Scale(1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)
 genHist.Scale(1.0/genHist.Integral()*genHist.GetNbinsX()/2.0)
 '''
-
+'''
 for ibin in range(len(downSys)):
     n=genHist.GetBinContent(ibin+1)
     c=genHist.GetBinCenter(ibin+1)
@@ -633,8 +634,8 @@ for ibin in range(len(downSys)):
     u=upSysGen[ibin]
     d=max(0,downSysGen[ibin])
     drawGenBar(c,w,d,u)
-
-for ibin in range(len(downSysGen)):
+'''
+for ibin in range(len(downSys)):
 
     n=nominalHist.GetBinContent(ibin+1)
     c=nominalHist.GetBinCenter(ibin+1)
@@ -647,8 +648,8 @@ for ibin in range(len(downSysGen)):
     d=max(0,n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1)))
     drawStatBar(c,w,d,u)
     
-genHist.SetLineColor(ROOT.kBlue)
-genHist.SetLineWidth(1)
+genHist.SetLineColor(ROOT.kAzure+4)
+genHist.SetLineWidth(3)
 genHist.SetLineStyle(1)
 genHist.Draw("Samehist")
 legend.AddEntry(genHist,"PowHeg SM","L")
