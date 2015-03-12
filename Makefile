@@ -16,22 +16,16 @@ clean:
 	rm -f unfoldPro neymanPro collectUnfoldProResult
 
 test:
-	./unfoldPro \
-		--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
-		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
-		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
-		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
+	python auto_unfold2bins.py --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
 		--fitResultPrefix=$(FITDIR) \
-		--fitResult=mu.txt \
-		--fitCovariance=mu_cov.root \
-		--sys=nominal \
-		$(REGMODE) \
-		--output=test
-	./collectUnfoldProResult \
-	    --nominal=histos/tunfold/mu__nominal.root \
-	    --output=test.csv \
-	    --sys=nominal \
-	    --fromError
+		--fitResult=combined.txt \
+		--fitCovariance=combined_cov.root \
+		--sys=generator \
+		--responseMatrixName="tm__aMCatNLO" \
+		--output=$(OUTPUTFOLDER)/combined__generator.csv
 	    
 do_unfold_mu:
 	mkdir -p $(OUTPUTFOLDER)
@@ -454,7 +448,7 @@ unfold_2bin_mu:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
-		--sys=nominal \
+		--sys=generator \
 		--responseMatrixName="tm__aMCatNLO" \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/mu__generator.csv
@@ -518,7 +512,7 @@ unfold_2bin_ele:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
-		--sys=nominal \
+		--sys=generator \
 		--responseMatrixName="tm__aMCatNLO" \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/ele__generator.csv
@@ -582,7 +576,7 @@ unfold_2bin_combined:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
-		--sys=nominal \
+		--sys=generator \
 		--responseMatrixName="tm__aMCatNLO" \
 		--output=$(OUTPUTFOLDER)/combined__generator.csv
 

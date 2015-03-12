@@ -213,11 +213,13 @@ sysNames=[
 #theory
 ['generator', "generator model"],
 ['mass', "top quark mass"],
-['me_weight', "t-channel $Q^{2}$ scale"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
+#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 
@@ -547,7 +549,7 @@ def readHistograms(folder,prefix="combined__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.60")
+folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.45")
 
 sysDict = readHistograms(folderTUnfold)
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
@@ -577,7 +579,7 @@ downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
 '''
 
 
-NTOYS=5000
+NTOYS=10000
 unfoldedDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 

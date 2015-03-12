@@ -155,6 +155,8 @@ def doUnfolding(histFiles,signalHistName,backgroundHistNames,dataHistNames,respo
             backgroundDist = u2b.DataDistribution.createFromHistogram(backgroundHist,False,useMCStatUnc, fitResult[histName]["uncertainty"] if useFitUnc else 0.0)
             #subtract background from measured data
             measured = u2b.CompoundDistribution(u2b.Subtraction(),measured,backgroundDist)
+            
+    
 
     tmHist = readHist2d(responseFiles,responseHistName,systematic,fitResult[signalHistName]["scale"],REBIN_GEN,REBIN_RECO)
     tmHistinverted=u2b.readResponseFromHistogramAndInvert(tmHist)
@@ -203,6 +205,7 @@ if __name__=="__main__":
     parser.add_option("--histFile",action="append",dest="histFiles",default=[],help="The rootfile containing the signal/background histograms for unfolding")
     parser.add_option("--sys",action="store",dest="systematic",default="nominal",help="Systematic shift.")
     parser.add_option("--responseFile",action="append",dest="responseFiles",default=[],help="The <rootfile> containing the 2d response matrix.")
+    parser.add_option("--nominalMatrixName",action="store",dest="nominalMatrixName",default="tm",help="The<histname> containing the 2d nominal response matrix.")
     parser.add_option("--responseMatrixName",action="store",dest="responseMatrixName",default="tm",help="The<histname> containing the 2d response matrix.")
     parser.add_option("--fitResultPrefix",action="store",dest="fitResultPrefix",default="",help="Path prefix to the fit result")
     parser.add_option("--fitResult",action="store",dest="fitResult",default="mu.txt",help="Path to the fit result")
@@ -321,14 +324,21 @@ if __name__=="__main__":
             os.path.join(options.fitResultPrefix,"nominal",options.fitResult),
             os.path.join(options.fitResultPrefix,"nominal",options.fitCovariance)
         )
-        fitResultUp = readFitResult(
-            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult),
-            os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
-        )
-        fitResultDown = readFitResult(
-            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult),
-            os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
-        )
+        fitResultUp=None
+        fitResultDown=None
+        if options.systematic=="generator":
+            fitResultUp=fitResultNominal
+            fitResultDown=fitResultNominal
+        else:
+        
+            fitResultUp = readFitResult(
+                os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitResult),
+                os.path.join(options.fitResultPrefix,options.systematic+"__up",options.fitCovariance)
+            )
+            fitResultDown = readFitResult(
+                os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitResult),
+                os.path.join(options.fitResultPrefix,options.systematic+"__down",options.fitCovariance)
+            )
         if (options.normsys):
             fitResultUp=fitResultNominal
             fitResultDown=fitResultNominal
@@ -349,7 +359,7 @@ if __name__=="__main__":
             BACKGROUND,
             DATA,
             options.responseFiles,
-            options.responseMatrixName,
+            options.nominalMatrixName,
             fitResultNominal,
             systematic="nominal",
             useStatUnc=False,

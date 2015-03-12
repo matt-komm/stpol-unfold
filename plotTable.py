@@ -12,10 +12,10 @@ ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
-ROOT.gStyle.SetPadLeftMargin(0.3)
-ROOT.gStyle.SetPadRightMargin(0.07)
+ROOT.gStyle.SetPadLeftMargin(0.31)
+ROOT.gStyle.SetPadRightMargin(0.075)
 ROOT.gStyle.SetPadTopMargin(0.01)
-ROOT.gStyle.SetPadBottomMargin(0.1)
+ROOT.gStyle.SetPadBottomMargin(0.05)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
@@ -42,7 +42,7 @@ ROOT.gStyle.SetPadColor(ROOT.TStyle.kWhite)
 ROOT.gStyle.SetPadGridX(True)
 ROOT.gStyle.SetPadGridY(True)
 ROOT.gStyle.SetGridColor(ROOT.kBlack)
-ROOT.gStyle.SetGridStyle(2)
+ROOT.gStyle.SetGridStyle(3)
 ROOT.gStyle.SetGridWidth(1)
 
 # For the frame:
@@ -119,22 +119,22 @@ ROOT.gStyle.SetTitleFontSize(0.03)
 
 # For the axis titles:
 ROOT.gStyle.SetTitleColor(1, "XYZ")
-ROOT.gStyle.SetTitleFont(42, "XYZ")
+ROOT.gStyle.SetTitleFont(43, "XYZ")
 #ROOT.gStyle.SetTitleSize(0.06, "XYZ")
-ROOT.gStyle.SetTitleSize(0.048, "XYZ")
+ROOT.gStyle.SetTitleSize(28, "XYZ")
 # ROOT.gStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
 # ROOT.gStyle.SetTitleYSize(Float_t size = 0.02)
-ROOT.gStyle.SetTitleXOffset(0.9)
+ROOT.gStyle.SetTitleXOffset(0.95)
 ROOT.gStyle.SetTitleYOffset(1.15)
 #ROOT.gStyle.SetTitleOffset(1.1, "Y") # Another way to set the Offset
 
 # For the axis labels:
 
 ROOT.gStyle.SetLabelColor(1, "XYZ")
-ROOT.gStyle.SetLabelFont(42, "XYZ")
+ROOT.gStyle.SetLabelFont(43, "XYZ")
 ROOT.gStyle.SetLabelOffset(0.0077, "XYZ")
-ROOT.gStyle.SetLabelSize(0.033, "X")
-ROOT.gStyle.SetLabelSize(0.04, "Y")
+ROOT.gStyle.SetLabelSize(24, "X")
+ROOT.gStyle.SetLabelSize(20, "Y")
 #ROOT.gStyle.SetLabelSize(0.04, "XYZ")
 
 # For the axis:
@@ -159,12 +159,12 @@ ROOT.gStyle.SetOptLogz(0)
 ROOT.gStyle.SetHatchesSpacing(1.0)
 
 # Postscript options:
-#ROOT.gStyle.SetPaperSize(20., 20.)
+ROOT.gStyle.SetPaperSize(14.0, 14.0/800.0*1200.0)
 #ROOT.gStyle.SetPaperSize(ROOT.TStyle.kA4)
 #ROOT.gStyle.SetPaperSize(27., 29.7)
 #ROOT.gStyle.SetPaperSize(27., 29.7)
 ROOT.TGaxis.SetMaxDigits(3)
-ROOT.gStyle.SetLineScalePS(2)
+ROOT.gStyle.SetLineScalePS(1)
 
 # ROOT.gStyle.SetLineStyleString(Int_t i, const char* text)
 # ROOT.gStyle.SetHeaderPS(const char* header)
@@ -186,7 +186,7 @@ sysNames=[
 
 #fitting
 ['fiterror', "ML-fit uncertainty"],
-['diboson', "Di Boson fraction"],
+['diboson', "Diboson fraction"],
 ['dyjets', "Drell-Yan fraction"],
 ['schan', "s-channel fraction"],
 ['twchan', "tW fraction"],
@@ -209,20 +209,26 @@ sysNames=[
 ['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
 ['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
+['bias', "unfolding bias"],
 
 #theory
 ['generator', "generator model"],
 ['mass', "top quark mass"],
-['me_weight', "t-channel $Q^{2}$ scale"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "signal $Q^{2}$ scale"],
+#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 
 ['mcstat', "limited MC"],
 ]
+
+sysNames.reverse()
+print sysNames[0]
 
 rootObj=[]
 
@@ -251,8 +257,8 @@ def createBox(sysDict,sysEntry,ypos1,ypos2):
 if __name__=="__main__":
 
 
-    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/0.60")
-    #basefolder2=os.path.join(os.getcwd(),"histos/2bin")
+    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/0.45")
+    basefolder2=os.path.join(os.getcwd(),"histos/scan/2bin/0.45")
     #basefolder2=os.path.join(os.getcwd(),"histos/scan/tunfold/0.6")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
@@ -263,20 +269,24 @@ if __name__=="__main__":
     muBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("ele__") and f.endswith(".csv")])
     combBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("combined__") and f.endswith(".csv")])
-    '''
+    
     muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
     eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
-    '''
+    combBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("combined__") and f.endswith(".csv")])
     
-    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.06,len(sysNames),0,len(sysNames))
-    cv = ROOT.TCanvas("cv","",800,800)
+    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.05,len(sysNames),0,len(sysNames))
+    cv = ROOT.TCanvas("cv","",800,1200)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.6,0.5,0.95,0.65)
+    legend = ROOT.TLegend(0.6,0.94,0.9,0.81)
     legend.SetFillColor(ROOT.kWhite)
     legend.SetFillStyle(1001)
-    legend.SetTextFont(42)
+    legend.SetTextFont(43)
+    legend.SetTextSize(25)
     legend.SetBorderSize(0)
+    
+    hist.GetYaxis().SetLabelFont(43)
+    hist.GetYaxis().SetLabelSize(20)
     
     for index in range(len(sysNames)):
         sys = sysNames[index]
@@ -287,24 +297,43 @@ if __name__=="__main__":
         rootObj.append(line)
         line.Draw("Same")
         
-        box = createBox(eleBinDict,sys[0],index+0.05,index+0.35)
+        box = createBox(eleBinDict,sys[0],index+0.1,index+0.36)
         box.SetFillColor(ROOT.kAzure-4)
         box.Draw("SameF")
         legend.AddEntry(box,"electron channel","F") if index==0 else 0
         
-        box = createBox(muBinDict,sys[0],index+0.35,index+0.65)
+        box = createBox(muBinDict,sys[0],index+0.36,index+0.63)
         box.SetFillColor(ROOT.kOrange)
         box.Draw("SameF")
         legend.AddEntry(box,"muon channel","F") if index==0 else 0
         
-        box = createBox(combBinDict,sys[0],index+0.65,index+0.95)
+        box = createBox(combBinDict,sys[0],index+0.63,index+0.9)
         box.SetFillColor(ROOT.kMagenta)
         box.Draw("SameF")
         legend.AddEntry(box,"combination","F") if index==0 else 0
+        
+        
+        
+        box = createBox(eleBinDictn,sys[0],index+0.1,index+0.36)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+        
+        box = createBox(muBinDictn,sys[0],index+0.36,index+0.63)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+
+        box = createBox(combBinDictn,sys[0],index+0.63,index+0.9)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+        legend.AddEntry(box,"2-bin unfolding","F") if index==0 else 0
         
         
     
     hist.Draw("AXIS SAME")
     legend.Draw("Same")
     cv.Update()
+    cv.Print("statEval.pdf")
     cv.WaitPrimitive()

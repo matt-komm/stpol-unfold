@@ -290,7 +290,7 @@ if __name__=="__main__":
     legend.Draw("Same")
     
     pave = ROOT.TPaveText(0.2,0.93,0.755,0.99,"NDC")
-    pave.AddText("#mu+jets")
+    pave.AddText("e+jets")
     pave.SetFillColor(ROOT.kWhite)
     pave.SetTextFont(42)
     pave.SetTextAlign(31)

@@ -4,13 +4,13 @@ LD_LIBRARY_PATH=$UNFOLD_DIR:$LD_LIBRARY_PATH
 
 
 
-CHANNEL="mu"
-METHOD="tunfold"
+CHANNEL="ele"
+METHOD="2bin"
 
-./neymanPro \
---responseFile="/home/mkomm/Analysis/STpol/Jan11_deltaR_mconly/merged/0.30000/"$CHANNEL"/tmatrix_nocharge__gen_ele.root" \
---responseFile="/home/mkomm/Analysis/STpol/Jan11_deltaR_mconly/merged/0.30000/"$CHANNEL"/tmatrix_nocharge__gen_mu.root" \
---responseFile="/home/mkomm/Analysis/STpol/Jan11_deltaR_mconly/merged/0.30000/"$CHANNEL"/tmatrix_nocharge__gen_tau.root" \
+python auto_neyman2bins.py \
+--responseFile="/home/mkomm/Analysis/STpol/Mar9_mconly/merged/0.45000/"$CHANNEL"/tmatrix_nocharge__gen_ele.root" \
+--responseFile="/home/mkomm/Analysis/STpol/Mar9_mconly/merged/0.45000/"$CHANNEL"/tmatrix_nocharge__gen_mu.root" \
+--responseFile="/home/mkomm/Analysis/STpol/Mar9_mconly/merged/0.45000/"$CHANNEL"/tmatrix_nocharge__gen_tau.root" \
 --responseMatrixName="tm__comphep__nominal" \
 --comphep1000Name="tm__comphep__nominal" \
 --comphep1100Name="tm__comphep_anom_unphys" \

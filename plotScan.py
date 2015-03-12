@@ -184,7 +184,7 @@ sysNames=[
 
 #fitting
 ['fiterror', "ML-fit uncertainty"],
-['diboson', "Di Boson fraction"],
+['diboson', "Diboson fraction"],
 ['dyjets', "Drell-Yan fraction"],
 ['schan', "s-channel fraction"],
 ['twchan', "tW fraction"],
@@ -211,12 +211,14 @@ sysNames=[
 #theory
 ['generator', "generator model"],
 ['mass', "top quark mass"],
-['me_weight', "t-channel $Q^{2}$ scale"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "signal $Q^{2}$ scale"],
+#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-['wzjets_scale', "\\wjets $Q^{2}$ scale"],
-['wzjets_matching', "\\wjets matching"],
+#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
+#['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 
 ['mcstat', "limited MC"],
@@ -225,13 +227,15 @@ sysNames=[
 whiteList=[
     "stat",
     "wzjets_matching",
-    "wzjets_scale",
+    #"wzjets_scale",
+    "wzjets_qscale_me_weight",
     "generator",
     "qcd_yield",
     
-    #"tchan_scale",
-    "me_weight",
-    "ttjets_scale",
+    "tchan_scale",
+    #"tchan_qscale_me_weight",
+    #"ttjets_scale",
+    "ttjets_qscale_me_weight",
     "mass",
     "wjets_flavor_heavy",
     "ttjets_matching",
@@ -260,7 +264,7 @@ scans=[]
 for folder in os.listdir(basefolder):
     scans.append({
         "cut":(float(folder)),
-        "sys":readCSV(os.path.join(basefolder,folder),"combined_")
+        "sys":readCSV(os.path.join(basefolder,folder),"ele_")
     })
     
     
@@ -289,7 +293,7 @@ c.setCoordinateStyle(style)
 c.draw()
 '''
 cv = ROOT.TCanvas("cv","",800,600)
-axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.2,0.8,50,0.0,0.135)
+axis=ROOT.TH2F("axis",";BDT WP; uncertainty",50,-0.2,0.8,50,0.0,0.10)
 axis.Draw("AXIS")
 
 rootObj=[]
@@ -299,10 +303,11 @@ legend.SetBorderSize(0)
 legend.SetFillColor(ROOT.kWhite)
 legend.SetTextFont(42)
 
-stops = numpy.array([0.00, 0.2,  0.4,  0.6, 0.68, 0.74, 1.00 ])
-red   = numpy.array([0.00, 0.00, 0.5,  0.0,  0.5, 0.9, 0.6])
-green = numpy.array([0.00, 0.6,  0.0,  0.9,  0.9, 0.5, 0.00])
-blue  = numpy.array([0.71, 0.9,  0.5,  0.4,  0.0, 0.00, 0.00])
+
+stops = numpy.array([0.00, 0.2, 0.45, 0.55, 1.00 ])
+red   = numpy.array([0.00, 0.00, 0.5, 0.9, 0.6])
+green = numpy.array([0.00, 0.4, 0.9, 0.20, 0.00])
+blue  = numpy.array([0.6, 0.9, 0.2, 0.00, 0.00])
 
 
 col=ROOT.TColor.CreateGradientColorTable(len(stops), stops, red, green, blue, len(whiteList))
