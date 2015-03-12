@@ -217,10 +217,10 @@ outFile = open("table.tex","w")
 outFile.write("\\begin{tabular}[htc]{|r || r | r | r | r | r | r |}\n")
 outFile.write("\\hline \n")
 
-outFile.write("\\parbox[t][][c]{2.0cm}{\\centering "+tableHeader[1]+"} & ")
+outFile.write("\\parbox[t][][c]{2.3cm}{\\centering "+tableHeader[1]+"} & ")
 for h in tableHeader[2:-1]:
-    outFile.write("\\parbox[t][][c]{2.0cm}{\\centering $\\big[$"+h+"$\\big]\\cdot 10^{3}$} & ")
-outFile.write("\\parbox[t][][c]{2.0cm}{\\centering $\\big[$"+tableHeader[-1]+"$\\big]\\cdot 10^{3}$} \\\\[0.5cm] \n")
+    outFile.write("\\parbox[t][][c]{2.3cm}{\\centering $\\delta\\big[$"+h+"$\\big]\\cdot 10^{3}$} & ")
+outFile.write("\\parbox[t][][c]{2.3cm}{\\centering $\\delta\\big[$"+tableHeader[-1]+"$\\big]\\cdot 10^{3}$} \\\\[0.5cm] \n")
 
 outFile.write("\\hline \n")
 outFile.write("\\hline \n")
