@@ -579,7 +579,7 @@ downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
 '''
 
 
-NTOYS=10000
+NTOYS=100000
 unfoldedDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -597,7 +597,7 @@ for toy in range(NTOYS):
         else:
             diceShape(unfoldedDist[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"])
     
-    asymmetries[toy]=calculateAsymmetry(unfoldedDist[toy],statCov)  
+    asymmetries[toy]=calculateAsymmetry(unfoldedDist[toy],statCov)+numpy.random.normal(scale=0.032)
     #normalize(unfoldedDist[toy])
    
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
@@ -608,6 +608,13 @@ print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmet
 genA=calculateAsymmetry(genHist)
 print "Agen=%5.4f" % genA
 print "p-value=%5.4e" % calculatePvalue(asymmetries,genA)
+
+cvA = ROOT.TCanvas("cvA","",900,800)
+histA = ROOT.TH1F("asymA",";asymmetry",500,0.0,1.0)
+for i in range(NTOYS):
+    histA.Fill(asymmetries[i])
+histA.Draw()
+
 
 cv=ROOT.TCanvas("cv","",900,800)
 
