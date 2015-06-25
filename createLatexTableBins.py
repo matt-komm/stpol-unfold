@@ -75,7 +75,7 @@ def addErrorMatrix(hist,error,scale=1.0):
     for ibin in range(hist.GetNbinsX()):
         hist.SetBinContent(ibin+1,hist.GetBinContent(ibin+1)+scale*math.sqrt(error.GetBinContent(ibin+1,ibin+1)))
     
-def readHistograms(folder,prefix="combined__"):
+def readHistograms(folder,prefix="ele__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:

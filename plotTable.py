@@ -15,7 +15,7 @@ ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetPadLeftMargin(0.31)
 ROOT.gStyle.SetPadRightMargin(0.075)
 ROOT.gStyle.SetPadTopMargin(0.01)
-ROOT.gStyle.SetPadBottomMargin(0.05)
+ROOT.gStyle.SetPadBottomMargin(0.07)
 ROOT.gStyle.SetMarkerSize(0.16)
 ROOT.gStyle.SetHistLineWidth(1)
 ROOT.gStyle.SetStatFontSize(0.025)
@@ -143,7 +143,7 @@ ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetAxisColor(1, "XYZ")
 ROOT.gStyle.SetStripDecimals(True)
 ROOT.gStyle.SetTickLength(0.02, "XYZ")
-ROOT.gStyle.SetNdivisions(505, "XYZ")
+ROOT.gStyle.SetNdivisions(512, "XYZ")
 
 ROOT.gStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
 ROOT.gStyle.SetPadTickY(1)
@@ -215,12 +215,12 @@ sysNames=[
 ['generator', "generator model"],
 ['mass', "top quark mass"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['tchan_qscale_me_weight', "signal $Q^{2}$ scale"],
-#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
-['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+#['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
-['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 
@@ -257,32 +257,32 @@ def createBox(sysDict,sysEntry,ypos1,ypos2):
 if __name__=="__main__":
 
 
-    basefolder1=os.path.join(os.getcwd(),"histos/scan/tunfold/0.45")
-    basefolder2=os.path.join(os.getcwd(),"histos/scan/2bin/0.45")
-    #basefolder2=os.path.join(os.getcwd(),"histos/scan/tunfold/0.6")
+    basefolder=os.path.join(os.getcwd(),"histos/bdt_Jun22_final/tunfold/0.45")
+    basefolder_top=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_top/tunfold/0.45")
+    basefolder_antitop=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_antitop/tunfold/0.45")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
     
     
 
-    muBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("mu__") and f.endswith(".csv")])
-    eleBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("ele__") and f.endswith(".csv")])
-    combBinDict = loadDict([os.path.join(basefolder1,f) for f in os.listdir(basefolder1) if f.startswith("combined__") and f.endswith(".csv")])
+    topBinDict = loadDict([os.path.join(basefolder_top,f) for f in os.listdir(basefolder_top) if f.startswith("mu__") and f.endswith(".csv")])
+    antitopBinDict = loadDict([os.path.join(basefolder_antitop,f) for f in os.listdir(basefolder_antitop) if f.startswith("mu__") and f.endswith(".csv")])
+    combBinDict = loadDict([os.path.join(basefolder,f) for f in os.listdir(basefolder) if f.startswith("mu__") and f.endswith(".csv")])
     
-    muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
-    eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
-    combBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("combined__") and f.endswith(".csv")])
+    #muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
+    #eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
+    #combBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("combined__") and f.endswith(".csv")])
     
-    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.05,len(sysNames),0,len(sysNames))
-    cv = ROOT.TCanvas("cv","",800,1200)
+    hist = ROOT.TH2F("hist",";uncertainty;",50,0,0.065,len(sysNames),0,len(sysNames))
+    cv = ROOT.TCanvas("cv","",800,900)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.6,0.94,0.9,0.81)
+    legend = ROOT.TLegend(0.66,0.87,0.9,0.74)
     legend.SetFillColor(ROOT.kWhite)
-    legend.SetFillStyle(1001)
+    legend.SetFillStyle(0)
     legend.SetTextFont(43)
-    legend.SetTextSize(25)
+    legend.SetTextSize(30)
     legend.SetBorderSize(0)
     
     hist.GetYaxis().SetLabelFont(43)
@@ -293,32 +293,40 @@ if __name__=="__main__":
         
         hist.GetYaxis().SetBinLabel(index+1,sys[1].replace("$","").replace("\\wjets","W+jets").replace("\\ttbar","t#bar{t}+jets").replace("\\",""))
         
-        line = ROOT.TLine(-0.03,index,0.0,index)
+        line = ROOT.TLine(-0.003,index,0.0,index)
         rootObj.append(line)
-        line.Draw("Same")
+        line.Draw("Same") if index!=0 else 0
         
-        box = createBox(eleBinDict,sys[0],index+0.1,index+0.36)
+        box = createBox(combBinDict,sys[0],index+0.0,index+1)
+        box.SetFillColor(ROOT.kGray)
+        box.SetLineColor(ROOT.kGray+2)
+        box.SetLineWidth(2)
+        box.Draw("SameFL")
+        legend.AddEntry(box,"t + #bar{t}","F") if index==0 else 0
+        
+        box = createBox(topBinDict,sys[0],index+0.2,index+0.4)
         box.SetFillColor(ROOT.kAzure-4)
-        box.Draw("SameF")
-        legend.AddEntry(box,"electron channel","F") if index==0 else 0
+        box.SetLineColor(ROOT.kAzure-6)
+        box.SetLineWidth(2)
+        box.Draw("SameFL")
+        legend.AddEntry(box,"t only","F") if index==0 else 0
         
-        box = createBox(muBinDict,sys[0],index+0.36,index+0.63)
+        box = createBox(antitopBinDict,sys[0],index+0.6,index+0.8)
         box.SetFillColor(ROOT.kOrange)
-        box.Draw("SameF")
-        legend.AddEntry(box,"muon channel","F") if index==0 else 0
-        
+        box.SetLineColor(ROOT.kOrange-3)
+        box.SetLineWidth(2)
+        box.Draw("SameFL")
+        legend.AddEntry(box,"#bar{t} only","F") if index==0 else 0
+        '''
         box = createBox(combBinDict,sys[0],index+0.63,index+0.9)
         box.SetFillColor(ROOT.kMagenta)
         box.Draw("SameF")
-        legend.AddEntry(box,"combination","F") if index==0 else 0
+        legend.AddEntry(box,"both","F") if index==0 else 0
         
         
-        
-        box = createBox(eleBinDictn,sys[0],index+0.1,index+0.36)
-        box.SetFillStyle(0)
-        box.SetLineColor(ROOT.kBlack)
-        box.Draw("SameL")
-        
+        '''
+
+        '''
         box = createBox(muBinDictn,sys[0],index+0.36,index+0.63)
         box.SetFillStyle(0)
         box.SetLineColor(ROOT.kBlack)
@@ -329,11 +337,30 @@ if __name__=="__main__":
         box.SetLineColor(ROOT.kBlack)
         box.Draw("SameL")
         legend.AddEntry(box,"2-bin unfolding","F") if index==0 else 0
-        
+        '''
         
     
     hist.Draw("AXIS SAME")
     legend.Draw("Same")
+    
+    paveCMS=ROOT.TPaveText(0.65,0.92,0.9,0.92,"NDC")
+    paveCMS.SetFillColor(ROOT.kWhite)
+    paveCMS.SetTextFont(63)
+    paveCMS.SetTextSize(40)
+    paveCMS.SetTextAlign(11)
+    paveCMS.AddText("CMS")
+    paveCMS.Draw("SAME")
+
+    pavePrel=ROOT.TPaveText(0.65,0.88,0.9,0.88,"NDC")
+    pavePrel.SetFillColor(ROOT.kWhite)
+    pavePrel.SetTextFont(53)
+    pavePrel.SetTextSize(40)
+    pavePrel.SetTextAlign(11)
+    pavePrel.AddText("Preliminary")
+    pavePrel.Draw("SAME")
+    
+    
     cv.Update()
     cv.Print("statEval.pdf")
+    cv.Print("statEval.png")
     cv.WaitPrimitive()

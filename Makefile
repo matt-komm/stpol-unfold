@@ -24,7 +24,7 @@ test:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=generator \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--output=$(OUTPUTFOLDER)/combined__generator.csv
 	    
 do_unfold_mu:
@@ -44,7 +44,7 @@ do_unfold_mu:
 		--no-fiterror \
 		--output=$(OUTPUTFOLDER)/mu__nominal 
 		
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTMU); do \
 		./unfoldPro \
 			--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
 			--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
@@ -90,7 +90,7 @@ do_unfold_mu:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--sys=nominal \
 		$(REGMODE) \
 		--no-mcstat \
@@ -180,7 +180,7 @@ do_unfold_combined:
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/combined__nominal 
 	
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTCOMB); do \
 		./unfoldPro \
 			--histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
 			--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
@@ -223,7 +223,7 @@ do_unfold_combined:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--sys=nominal \
 		--no-mcstat \
 		--no-fiterror \
@@ -311,7 +311,7 @@ do_unfold_ele:
 		$(REGMODE) \
 		--output=$(OUTPUTFOLDER)/ele__nominal 
 	
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTELE); do \
 		./unfoldPro \
 			--histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
 			--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
@@ -356,7 +356,7 @@ do_unfold_ele:
 		--fitResultPrefix=$(FITDIR) \
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--sys=nominal \
 		--no-mcstat \
 		--no-fiterror \
@@ -429,7 +429,7 @@ do_unfold_ele:
 
 unfold_2bin_mu:
 	mkdir -p $(OUTPUTFOLDER)
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTMU); do \
 	python auto_unfold2bins.py --histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
@@ -449,7 +449,7 @@ unfold_2bin_mu:
 		--fitResult=mu.txt \
 		--fitCovariance=mu_cov.root \
 		--sys=generator \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/mu__generator.csv
 
@@ -493,7 +493,7 @@ unfold_2bin_mu:
 
 unfold_2bin_ele:
 	mkdir -p $(OUTPUTFOLDER)
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTELE); do \
 	python auto_unfold2bins.py --histFile=$(DATADIR)/ele/merged/cos_theta_lj.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/ele/tmatrix_nocharge__gen_mu.root \
@@ -513,7 +513,7 @@ unfold_2bin_ele:
 		--fitResult=ele.txt \
 		--fitCovariance=ele_cov.root \
 		--sys=generator \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--overrideOutputSysName="generator" \
 		--output=$(OUTPUTFOLDER)/ele__generator.csv
 
@@ -557,7 +557,7 @@ unfold_2bin_ele:
 
 unfold_2bin_combined:
 	mkdir -p $(OUTPUTFOLDER)
-	for SYS in $(SYSLIST); do \
+	for SYS in $(SYSLISTCOMB); do \
 	python auto_unfold2bins.py --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
 		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
 		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
@@ -577,7 +577,7 @@ unfold_2bin_combined:
 		--fitResult=combined.txt \
 		--fitCovariance=combined_cov.root \
 		--sys=generator \
-		--responseMatrixName="tm__aMCatNLO" \
+		--responseMatrixName=$(GENERATOR_SYS_TM) \
 		--output=$(OUTPUTFOLDER)/combined__generator.csv
 
 	python auto_unfold2bins.py --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \

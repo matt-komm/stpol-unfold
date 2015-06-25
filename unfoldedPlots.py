@@ -215,31 +215,43 @@ sysNames=[
 ['mass', "top quark mass"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
 ['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
-#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
-['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+#['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
-['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 
 ['mcstat', "limited MC"],
 ]
 
-
-tmp=["nominal"]
-for sys in sysNames:
-    tmp.append(sys[0])
-
-sysNames=tmp
-
+genSysNames=[
+['tchan_scale', "$Q^{2}$ scale t-channel"],
+['pdf', "PDF"]
+]
 
 '''
 sysNames=[
-    "nominal",
-    "wzjets_matching"
+    ['stat', "statistical"],
+    ['mcstat', "limited MC"],
+    ['fiterror', "ML-fit uncertainty"],
 ]
 '''
+tmp=["nominal"]
+for sys in sysNames:
+    tmp.append(sys[0])
+sysNames=tmp
+    
+tmp=["nominal"]
+for sys in genSysNames:
+    tmp.append(sys[0])
+genSysNames=tmp
+
+
+
+
+
 
 rootObj=[]
 
@@ -313,9 +325,19 @@ def diceGaus(output,hist,covHist):
     diced=numpy.random.multivariate_normal(mean,cov)
     for i in range(N):
         output[i]+=diced[i]
+        
+def getHistogram(fileName,histName):
+    f = ROOT.TFile(fileName)
+    h = f.Get(histName).Clone()
+    h.SetDirectory(0)
+    f.Close()
+    h.Rebin(h.GetNbinsX()/6)
+    return h
+    
             
-def diceShape(output,nominalHist,upHist,downHist):
-    d=ROOT.gRandom.Gaus(0.0,1.0)
+def diceShape(output,nominalHist,upHist,downHist,d=None):
+    if d==None:
+        d = ROOT.gRandom.Gaus(0.0,1.0)
     for i in range(nominalHist.GetNbinsX()):
         
         up=upHist.GetBinContent(i+1)
@@ -426,11 +448,14 @@ def applyLineStyle(line,color=ROOT.kBlack,width=2):
     line.SetLineColor(color)
     
 def drawGenBar(x,xwidth,ymin,ymax):
-    box = ROOT.TBox(x-xwidth*0.5,ymin,x+xwidth*0.5,ymax)
-    box.SetFillColor(ROOT.kAzure+4)
-    box.Draw("FSame")
-    rootObj.append(box)
-
+    boxF = ROOT.TBox(x-xwidth*0.5,ymin,x+xwidth*0.5,ymax)
+    boxF.SetFillColor(ROOT.kGray)
+    boxF.SetLineColor(ROOT.kGray+1)
+    boxF.SetLineWidth(2)
+    boxF.Draw("FLSame")
+    rootObj.append(boxF)
+    return boxF
+    
 
     
 def drawSysBar(x,xwidth,ymin,ymax):
@@ -462,9 +487,10 @@ def drawStatBar(x,xwidth,ymin,ymax):
     lineStatDown.Draw("Same")
     lineStatMid.Draw("Same")
 
-def readHistograms(folder,prefix="combined__"):
+def readHistograms(folder,sysNames,prefix="mu__"):
     histDict={}
     for sys in sysNames:
+        print sys
         if sys in ["nominal","stat","mcstat","fiterror"]:
             
             fileName=os.path.join(folder,prefix+sys+".root")
@@ -549,9 +575,15 @@ def readHistograms(folder,prefix="combined__"):
 
     
 
-folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.45")
+folderTUnfold=os.path.join(os.getcwd(),"histos","bdt_Jun22_final","tunfold","0.45")
 
-sysDict = readHistograms(folderTUnfold)
+sysDict = readHistograms(folderTUnfold,sysNames)
+genSysDict = readHistograms(folderTUnfold,genSysNames)
+genSysDict["pdf"]["gen"]["up"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__up")
+genSysDict["pdf"]["gen"]["down"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__down")
+genSysDict["pdf"]["gen"]["up"].Scale(3.0/genSysDict["pdf"]["gen"]["up"].Integral())
+genSysDict["pdf"]["gen"]["down"].Scale(3.0/genSysDict["pdf"]["gen"]["down"].Integral())
+print genSysDict["pdf"]["gen"]
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
 
 
@@ -562,8 +594,9 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 #cv1.WaitPrimitive()
 
 genHist=sysDict["nominal"]["gen"]["nominal"]
-'''
-NTOYS=5000
+#print genSysDict['tchan_scale']["gen"]["up"].Integral()
+
+NTOYS=6000
 genDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 for toy in range(NTOYS):
     if toy%500==0:
@@ -571,15 +604,17 @@ for toy in range(NTOYS):
     for ibin in range(genHist.GetNbinsX()):
         genDist[toy][ibin]=genHist.GetBinContent(ibin+1)
      
-    for sysName in ["tchan_scale"]:
-        diceShape(genDist[toy],genHist,sysDict[sysName]["gen"]["up"],sysDict[sysName]["gen"]["down"])
+    for sysName in genSysDict.keys():
+        if sysName=="nominal":
+            continue
+        diceShape(genDist[toy],genHist,genSysDict[sysName]["gen"]["up"],genSysDict[sysName]["gen"]["down"])
     
     #normalize(genDist[toy])
 downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
-'''
 
 
-NTOYS=100000
+
+NTOYS=15000
 unfoldedDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -595,9 +630,10 @@ for toy in range(NTOYS):
         if not sysDict[sysName]["isShape"]:
             diceGaus(unfoldedDist[toy],nominalHist,sysDict[sysName]["unfolded"]["error"])
         else:
-            diceShape(unfoldedDist[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"])
+            d = ROOT.gRandom.Gaus(0.0,1.0) 
+            diceShape(unfoldedDist[toy],nominalHist,sysDict[sysName]["unfolded"]["up"],sysDict[sysName]["unfolded"]["down"],d)
     
-    asymmetries[toy]=calculateAsymmetry(unfoldedDist[toy],statCov)+numpy.random.normal(scale=0.032)
+    asymmetries[toy]=calculateAsymmetry(unfoldedDist[toy],statCov)
     #normalize(unfoldedDist[toy])
    
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
@@ -635,7 +671,7 @@ statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
 nominalHist.Scale(1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)
 genHist.Scale(1.0/genHist.Integral()*genHist.GetNbinsX()/2.0)
 '''
-'''
+
 for ibin in range(len(downSys)):
     n=genHist.GetBinContent(ibin+1)
     c=genHist.GetBinCenter(ibin+1)
@@ -643,7 +679,17 @@ for ibin in range(len(downSys)):
     u=upSysGen[ibin]
     d=max(0,downSysGen[ibin])
     drawGenBar(c,w,d,u)
-'''
+
+
+genHist.SetLineColor(ROOT.kAzure-6)
+genHist.SetLineWidth(3)
+genHist.SetLineStyle(1)
+genHist.Draw("Samehist")
+legend.AddEntry(genHist,"PowHeg SM #pm       Q^{2}-scale","L")
+
+drawGenBar(-0.09,0.11,0.928,0.965)
+
+
 for ibin in range(len(downSys)):
 
     n=nominalHist.GetBinContent(ibin+1)
@@ -657,11 +703,7 @@ for ibin in range(len(downSys)):
     d=max(0,n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1)))
     drawStatBar(c,w,d,u)
     
-genHist.SetLineColor(ROOT.kAzure+4)
-genHist.SetLineWidth(3)
-genHist.SetLineStyle(1)
-genHist.Draw("Samehist")
-legend.AddEntry(genHist,"PowHeg SM","L")
+
     
     
 nominalHist.SetMarkerStyle(21)
@@ -678,13 +720,13 @@ paveLumi.SetFillColor(ROOT.kWhite)
 paveLumi.SetTextFont(43)
 paveLumi.SetTextSize(38)
 paveLumi.SetTextAlign(31)
-#paveLumi.AddText("e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-#paveLumi.AddText("#mu+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-paveLumi.AddText("#mu/e+jets, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.AddText("#mu+jets, t + #bar{t}, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu+jets, t only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu+jets, #bar{t} only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveLumi.Draw("SAME")
 
 
-paveCMS=ROOT.TPaveText(0.12,0.92,0.5,0.98,"NDC")
+paveCMS=ROOT.TPaveText(0.12,0.92,0.12,0.98,"NDC")
 paveCMS.SetFillColor(ROOT.kWhite)
 paveCMS.SetTextFont(63)
 paveCMS.SetTextSize(40)
@@ -692,7 +734,7 @@ paveCMS.SetTextAlign(11)
 paveCMS.AddText("CMS")
 paveCMS.Draw("SAME")
 
-pavePrel=ROOT.TPaveText(0.23,0.92,0.5,0.98,"NDC")
+pavePrel=ROOT.TPaveText(0.23,0.92,0.23,0.98,"NDC")
 pavePrel.SetFillColor(ROOT.kWhite)
 pavePrel.SetTextFont(53)
 pavePrel.SetTextSize(40)

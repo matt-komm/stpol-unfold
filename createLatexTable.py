@@ -48,12 +48,12 @@ tableRows=[
 ['generator', "generator model"],
 ['mass', "top quark mass"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['tchan_qscale_me_weight', "signal $Q^{2}$ scale"],
-#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
-['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+#['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
-['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 ["line"],
@@ -97,24 +97,25 @@ def addColumn(header,sysDict):
             tableRows[row].append("-")
     tableTotal.append("$%3.1f$" % (math.sqrt(totalSum2)*100.0))
     
-'''
-addColumn("muon",readCSV("histos/scan/tunfold/0.45","mu_"))
-addColumn("electron",readCSV("histos/scan/tunfold/0.45","ele_"))
-addColumn("combined",readCSV("histos/scan/tunfold/0.45","combined_"))
+
+addColumn("t",readCSV("histos/bdt_Jun22_final_top/tunfold/0.45","mu_"))
+addColumn("tbar",readCSV("histos/bdt_Jun22_final_antitop/tunfold/0.45","mu_"))
+addColumn("t+tbar",readCSV("histos/bdt_Jun22_final/tunfold/0.45","mu_"))
+
 '''
 addColumn("muon",readCSV("histos/scan/2bin/0.45","mu_"))
 addColumn("electron",readCSV("histos/scan/2bin/0.45","ele_"))
 addColumn("combined",readCSV("histos/scan/2bin/0.45","combined_"))
-
+'''
 outFile = open("table.tex","w")
 outFile.write("\\begin{tabular}[htc]{|r || r | r | r |}\n")
 outFile.write("\\hline \n")
 
 outFile.write(
     ''' 
-        & \\parbox[t]{2.0cm}{\\centering$\\delta A_{l}^{\\mu}\\cdot 10^{2}$}
-        & \\parbox[t]{2.0cm}{\\centering$\\delta A_{l}^{e}\\cdot 10^{2}$}
-        & \\parbox[t]{2.0cm}{\\centering$\\delta A_{l}^{e+\\mu}\\cdot 10^{2}$}
+        & \\parbox[t]{2.0cm}{\\centering$\\delta A_{l}^{\\mu}(t)\\cdot 10^{2}$}
+        & \\parbox[t]{2.0cm}{\\centering$\\delta A_{l}^{\\mu}(\\bar{t})\\cdot 10^{2}$}
+        & \\parbox[t]{3.0cm}{\\centering$\\delta A_{l}^{\\mu}(t+\\bar{t})\\cdot 10^{2}$}
          \\\\\n
     '''
 )
