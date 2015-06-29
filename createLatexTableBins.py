@@ -72,12 +72,14 @@ for sys in tableRows:
 sysNames=tmp
 
 
+
 def addErrorMatrix(hist,error,scale=1.0):
     for ibin in range(hist.GetNbinsX()):
         hist.SetBinContent(ibin+1,hist.GetBinContent(ibin+1)+scale*math.sqrt(error.GetBinContent(ibin+1,ibin+1)))
     
-def readHistograms(folder,prefix="mu__"):
+def readHistograms(folder,sysNames,prefix="mu__"):
     histDict={}
+    norm = None
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:
             
@@ -91,21 +93,23 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["nominal"].SetDirectory(0)
                 histDict[sys]["unfolded"]["error"]=rootFile.Get("error")
                 histDict[sys]["unfolded"]["error"].SetDirectory(0)
-                
-                norm=histDict[sys]["unfolded"]["nominal"].Integral()
-                histDict[sys]["unfolded"]["nominal"].Scale(3.0/norm)
-                histDict[sys]["unfolded"]["error"].Scale((3.0/norm)**2)
-                
-                
-                
-                
                 histDict[sys]["unfolded"]["up"]=histDict[sys]["unfolded"]["nominal"].Clone()
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
-                addErrorMatrix(histDict[sys]["unfolded"]["up"],histDict[sys]["unfolded"]["error"])
                 histDict[sys]["unfolded"]["down"]=histDict[sys]["unfolded"]["nominal"].Clone()
                 histDict[sys]["unfolded"]["down"].SetDirectory(0)
-                addErrorMatrix(histDict[sys]["unfolded"]["down"].Clone(),histDict[sys]["unfolded"]["error"],scale=-1.0)
-                               
+                
+                for ibin in range(histDict[sys]["unfolded"]["nominal"].GetNbinsX()):
+                    histDict[sys]["unfolded"]["up"].SetBinContent(ibin+1,histDict[sys]["unfolded"]["nominal"].GetBinContent(ibin+1)+math.sqrt(histDict[sys]["unfolded"]["error"].GetBinContent(ibin+1,ibin+1)))
+                    histDict[sys]["unfolded"]["down"].SetBinContent(ibin+1,histDict[sys]["unfolded"]["nominal"].GetBinContent(ibin+1)-math.sqrt(histDict[sys]["unfolded"]["error"].GetBinContent(ibin+1,ibin+1)))
+                
+                if sys=="nominal":
+                    norm=histDict["nominal"]["unfolded"]["nominal"].Integral()
+                
+                
+                histDict[sys]["unfolded"]["nominal"].Scale(3.0/norm)
+                histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
+                histDict[sys]["unfolded"]["down"].Scale(3.0/norm)
+                histDict[sys]["unfolded"]["error"].Scale((3.0/norm)**2)
                 
                 histDict[sys]["gen"]["nominal"]=rootFile.Get("gen")
                 histDict[sys]["gen"]["nominal"].SetDirectory(0)
@@ -116,6 +120,7 @@ def readHistograms(folder,prefix="mu__"):
         elif sys == "generator":
             fileName=os.path.join(folder,prefix+sys+".root")
             if os.path.exists(fileName):
+            
                 histDict[sys]={"isShape":True,"unfolded":{},"input":{}, "gen":{}}
                 rootFile=ROOT.TFile(fileName)
                 histDict[sys]["input"]["up"]=rootFile.Get("substractedData")
@@ -123,7 +128,7 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
                 
-                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
+                histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
                 
                 #symmetrize uncertainty
                 histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"].Clone()
@@ -145,12 +150,13 @@ def readHistograms(folder,prefix="mu__"):
             downFileName=os.path.join(folder,prefix+sys+"__down.root")
             if os.path.exists(upFileName) and os.path.exists(downFileName):
                 histDict[sys]={"isShape":True,"unfolded":{},"input":{}, "gen":{}}
+
                 rootFile=ROOT.TFile(upFileName)
                 histDict[sys]["input"]["up"]=rootFile.Get("substractedData")
                 histDict[sys]["input"]["up"].SetDirectory(0)
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
-                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
+                histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
                 
                 histDict[sys]["gen"]["up"]=rootFile.Get("gen")
                 histDict[sys]["gen"]["up"].SetDirectory(0)
@@ -162,7 +168,7 @@ def readHistograms(folder,prefix="mu__"):
                 histDict[sys]["input"]["down"].SetDirectory(0)
                 histDict[sys]["unfolded"]["down"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["down"].SetDirectory(0)
-                histDict[sys]["unfolded"]["down"].Scale(3.0/histDict[sys]["unfolded"]["down"].Integral())
+                histDict[sys]["unfolded"]["down"].Scale(3.0/norm)
                 
                 histDict[sys]["gen"]["down"]=rootFile.Get("gen")
                 histDict[sys]["gen"]["down"].SetDirectory(0)
@@ -171,8 +177,8 @@ def readHistograms(folder,prefix="mu__"):
     return histDict
     
 folderTUnfold=os.path.join(os.getcwd(),"histos","bdt_Jun22_final_antitop","tunfold","0.45")
+sysDict = readHistograms(folderTUnfold,sysNames)
 
-sysDict = readHistograms(folderTUnfold)
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
     
 
