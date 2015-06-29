@@ -74,6 +74,7 @@ def doNeyman(responseMatrix,comphep1000Matrix,comphep1100Matrix,comphep0100Matri
     cv.WaitPrimitive()
     '''
     tmHistinverted=u2b.readResponseFromHistogramAndInvert(responseMatrix)
+
     
     for i in range(N):
         vl=1.0
@@ -81,7 +82,7 @@ def doNeyman(responseMatrix,comphep1000Matrix,comphep1100Matrix,comphep0100Matri
         
         genDist=generateWeightedHist(comphep1000Gen,comphep1100Gen,comphep0100Gen,vl,vr)
         recoDist=generateWeightedHist(comphep1000Reco,comphep1100Reco,comphep0100Reco,vl,vr)
-        
+
         measured = u2b.DataDistribution.createFromHistogram(recoDist,True,False,0.0)
         unfolded= u2b.CompoundDistribution(u2b.Unfolding(tmHistinverted),measured)
         asymmetry=u2b.CompoundDistribution(u2b.Asymmetry(),unfolded)

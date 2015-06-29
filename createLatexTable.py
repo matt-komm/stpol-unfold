@@ -38,6 +38,7 @@ tableRows=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
+['wjets_pt_weight', "\\wjets W \\pT reweighting"],
 ['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
 ['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
@@ -79,28 +80,21 @@ def addColumn(header,sysDict):
     for row in range(len(tableRows)):
         sysName= tableRows[row][0]
         if sysDict.has_key(sysName):
-            #value=(0.5*(math.fabs(sysDict[sysName]["dup"])+math.fabs(sysDict[sysName]["ddown"])))
             value=math.fabs(sysDict[sysName]["d"])
             totalSum2+=value**2
-            #print sysName, round(math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"]),5)
             if value*100.0<0.05:
-                #tableRows[row].append("$<10^{-3}$")
                 tableRows[row].append("$<0.1$")
             
-            else: #math.fabs(sysDict[sysName]["dup"]+sysDict[sysName]["ddown"])<0.01:
-                tableRows[row].append("$%3.1f$" % (sysDict[sysName]["d"]*100.0))
-            '''
             else:
-                tableRows[row].append("${}^{%+4.3f}_{%+4.3f}$" % (sysDict[sysName]["dup"],sysDict[sysName]["ddown"] ))
-            '''
+                tableRows[row].append("$%3.1f$" % (sysDict[sysName]["d"]*100.0))
         else:
             tableRows[row].append("-")
     tableTotal.append("$%3.1f$" % (math.sqrt(totalSum2)*100.0))
     
 
-addColumn("t",readCSV("histos/bdt_Jun22_final_top/tunfold/0.45","mu_"))
-addColumn("tbar",readCSV("histos/bdt_Jun22_final_antitop/tunfold/0.45","mu_"))
-addColumn("t+tbar",readCSV("histos/bdt_Jun22_final/tunfold/0.45","mu_"))
+addColumn("t",readCSV("histos/bdt_Jun22_final_top/2bin/0.45","mu_"))
+addColumn("tbar",readCSV("histos/bdt_Jun22_final_antitop/2bin/0.45","mu_"))
+addColumn("t+tbar",readCSV("histos/bdt_Jun22_final/2bin/0.45","mu_"))
 
 '''
 addColumn("muon",readCSV("histos/scan/2bin/0.45","mu_"))

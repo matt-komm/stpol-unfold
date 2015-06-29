@@ -206,6 +206,7 @@ sysNames=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
+['wjets_pt_weight', "\\wjets W \\pT reweighting"],
 ['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
 ['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
@@ -226,10 +227,15 @@ sysNames=[
 ['mcstat', "limited MC"],
 ]
 
+
+
+
 genSysNames=[
 ['tchan_scale', "$Q^{2}$ scale t-channel"],
 ['pdf', "PDF"]
 ]
+
+
 
 '''
 sysNames=[
@@ -489,8 +495,8 @@ def drawStatBar(x,xwidth,ymin,ymax):
 
 def readHistograms(folder,sysNames,prefix="mu__"):
     histDict={}
+    norm = None
     for sys in sysNames:
-        print sys
         if sys in ["nominal","stat","mcstat","fiterror"]:
             
             fileName=os.path.join(folder,prefix+sys+".root")
@@ -504,7 +510,10 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 histDict[sys]["unfolded"]["error"]=rootFile.Get("error")
                 histDict[sys]["unfolded"]["error"].SetDirectory(0)
                 
-                norm=histDict[sys]["unfolded"]["nominal"].Integral()
+                if sys=="nominal":
+                    norm=histDict["nominal"]["unfolded"]["nominal"].Integral()
+                
+                
                 histDict[sys]["unfolded"]["nominal"].Scale(3.0/norm)
                 histDict[sys]["unfolded"]["error"].Scale((3.0/norm)**2)
                 
@@ -517,6 +526,7 @@ def readHistograms(folder,sysNames,prefix="mu__"):
         elif sys == "generator":
             fileName=os.path.join(folder,prefix+sys+".root")
             if os.path.exists(fileName):
+            
                 histDict[sys]={"isShape":True,"unfolded":{},"input":{}, "gen":{}}
                 rootFile=ROOT.TFile(fileName)
                 histDict[sys]["input"]["up"]=rootFile.Get("substractedData")
@@ -524,7 +534,7 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
                 
-                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
+                histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
                 
                 #symmetrize uncertainty
                 histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"].Clone()
@@ -546,12 +556,13 @@ def readHistograms(folder,sysNames,prefix="mu__"):
             downFileName=os.path.join(folder,prefix+sys+"__down.root")
             if os.path.exists(upFileName) and os.path.exists(downFileName):
                 histDict[sys]={"isShape":True,"unfolded":{},"input":{}, "gen":{}}
+
                 rootFile=ROOT.TFile(upFileName)
                 histDict[sys]["input"]["up"]=rootFile.Get("substractedData")
                 histDict[sys]["input"]["up"].SetDirectory(0)
                 histDict[sys]["unfolded"]["up"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["up"].SetDirectory(0)
-                histDict[sys]["unfolded"]["up"].Scale(3.0/histDict[sys]["unfolded"]["up"].Integral())
+                histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
                 
                 histDict[sys]["gen"]["up"]=rootFile.Get("gen")
                 histDict[sys]["gen"]["up"].SetDirectory(0)
@@ -563,7 +574,7 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 histDict[sys]["input"]["down"].SetDirectory(0)
                 histDict[sys]["unfolded"]["down"]=rootFile.Get("unfolded")
                 histDict[sys]["unfolded"]["down"].SetDirectory(0)
-                histDict[sys]["unfolded"]["down"].Scale(3.0/histDict[sys]["unfolded"]["down"].Integral())
+                histDict[sys]["unfolded"]["down"].Scale(3.0/norm)
                 
                 histDict[sys]["gen"]["down"]=rootFile.Get("gen")
                 histDict[sys]["gen"]["down"].SetDirectory(0)
@@ -571,20 +582,26 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 rootFile.Close()
     return histDict
     
-
-
     
-
-folderTUnfold=os.path.join(os.getcwd(),"histos","bdt_Jun22_final","tunfold","0.45")
-
+folderTUnfold=os.path.join(os.getcwd(),"histos","bdt_Jun22_final_antitop","tunfold","0.45")
 sysDict = readHistograms(folderTUnfold,sysNames)
 genSysDict = readHistograms(folderTUnfold,genSysNames)
+nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
+genHist=sysDict["nominal"]["gen"]["nominal"]
+
+for sysName in sysDict.keys():
+    if sysDict[sysName]["isShape"]:
+        meanA=calculateAsymmetry(nominalHist)
+        upA=calculateAsymmetry(sysDict[sysName]["unfolded"]["up"])
+        downA=calculateAsymmetry(sysDict[sysName]["unfolded"]["down"])
+        print sysName,"%5.4f %+5.4f %+5.4f" % (meanA,upA-meanA,downA-meanA)
+        
+
 genSysDict["pdf"]["gen"]["up"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__up")
 genSysDict["pdf"]["gen"]["down"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__down")
 genSysDict["pdf"]["gen"]["up"].Scale(3.0/genSysDict["pdf"]["gen"]["up"].Integral())
 genSysDict["pdf"]["gen"]["down"].Scale(3.0/genSysDict["pdf"]["gen"]["down"].Integral())
-print genSysDict["pdf"]["gen"]
-nominalHist=sysDict["nominal"]["unfolded"]["nominal"]
+
 
 
 #cv1=ROOT.TCanvas("cv1","",800,600)
@@ -593,11 +610,12 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 #statCov.Draw("colz")
 #cv1.WaitPrimitive()
 
-genHist=sysDict["nominal"]["gen"]["nominal"]
+
 #print genSysDict['tchan_scale']["gen"]["up"].Integral()
 
 NTOYS=6000
 genDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
+genADist=numpy.zeros(NTOYS)
 for toy in range(NTOYS):
     if toy%500==0:
         print "process... ",100.0*toy/NTOYS,"%"
@@ -609,12 +627,13 @@ for toy in range(NTOYS):
             continue
         diceShape(genDist[toy],genHist,genSysDict[sysName]["gen"]["up"],genSysDict[sysName]["gen"]["down"])
     
+    genADist[toy]=calculateAsymmetry(genDist[toy])
     #normalize(genDist[toy])
 downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
 
 
-
-NTOYS=15000
+        
+NTOYS=10000
 unfoldedDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -641,9 +660,9 @@ downSys,mean,upSys=numpy.percentile(unfoldedDist, [15.866,50.0,84.134],0)
 
 asymmetryDown,asymmetryMean,asymmetryUp=numpy.percentile(asymmetries, [15.866,50.0,84.134])
 print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmetryDown-asymmetryMean)
-genA=calculateAsymmetry(genHist)
-print "Agen=%5.4f" % genA
-print "p-value=%5.4e" % calculatePvalue(asymmetries,genA)
+#genA=calculateAsymmetry(genHist)
+genADown,genA,genAUp=numpy.percentile(genADist, [15.866,50.0,84.134])
+print "Agen=%5.4f %+5.4f %+5.4f" % (genA,genAUp-genA,genADown-genA)
 
 cvA = ROOT.TCanvas("cvA","",900,800)
 histA = ROOT.TH1F("asymA",";asymmetry",500,0.0,1.0)
@@ -720,9 +739,9 @@ paveLumi.SetFillColor(ROOT.kWhite)
 paveLumi.SetTextFont(43)
 paveLumi.SetTextSize(38)
 paveLumi.SetTextAlign(31)
-paveLumi.AddText("#mu+jets, t + #bar{t}, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu+jets, t + #bar{t}, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 #paveLumi.AddText("#mu+jets, t only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-#paveLumi.AddText("#mu+jets, #bar{t} only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.AddText("#mu+jets, #bar{t} only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveLumi.Draw("SAME")
 
 
@@ -740,7 +759,7 @@ pavePrel.SetTextFont(53)
 pavePrel.SetTextSize(40)
 pavePrel.SetTextAlign(11)
 pavePrel.AddText("Preliminary")
-pavePrel.Draw("SAME")
+#pavePrel.Draw("SAME")
 
 axis.Draw("AXIS SAME ")
 

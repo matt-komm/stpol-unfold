@@ -39,6 +39,7 @@ tableRows=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
+['wjets_pt_weight', "\\wjets W \\pT reweighting"],
 ['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
 ['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
@@ -49,12 +50,12 @@ tableRows=[
 ['generator', "generator model"],
 ['mass', "top quark mass"],
 #['tchan_scale', "$Q^{2}$ scale t-channel"],
-['tchan_qscale_me_weight', "signal $Q^{2}$ scale"],
-#['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
-['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
+['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
+['ttjets_scale', "\\ttbar $Q^{2}$ scale"],
+#['ttjets_qscale_me_weight', "\\ttbar $Q^{2}$ scale"],
 ['ttjets_matching', "\\ttbar matching"],
-#['wzjets_scale', "\\wjets $Q^{2}$ scale"],
-['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
+['wzjets_scale', "\\wjets $Q^{2}$ scale"],
+#['wzjets_qscale_me_weight', "\\wjets $Q^{2}$ scale"],
 ['wzjets_matching', "\\wjets matching"],
 ['pdf', "PDF"],
 ["line"],
@@ -75,7 +76,7 @@ def addErrorMatrix(hist,error,scale=1.0):
     for ibin in range(hist.GetNbinsX()):
         hist.SetBinContent(ibin+1,hist.GetBinContent(ibin+1)+scale*math.sqrt(error.GetBinContent(ibin+1,ibin+1)))
     
-def readHistograms(folder,prefix="ele__"):
+def readHistograms(folder,prefix="mu__"):
     histDict={}
     for sys in sysNames:
         if sys in ["nominal","stat","mcstat","fiterror"]:
@@ -169,7 +170,7 @@ def readHistograms(folder,prefix="ele__"):
                 rootFile.Close()
     return histDict
     
-folderTUnfold=os.path.join(os.getcwd(),"histos","scan","tunfold","0.45")
+folderTUnfold=os.path.join(os.getcwd(),"histos","bdt_Jun22_final_antitop","tunfold","0.45")
 
 sysDict = readHistograms(folderTUnfold)
 nominalHist=sysDict["nominal"]["unfolded"]["nominal"]

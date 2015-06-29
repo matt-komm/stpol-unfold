@@ -199,7 +199,7 @@ class Unfolding(TransformationFunction):
         if (len(args)!=1):
             raise NotImplemented
         result = numpy.dot(self._invertedResponseMatrix,args[0])
-        result = result / sum(result)
+        result = result 
         return result
         
 class Asymmetry(TransformationFunction):

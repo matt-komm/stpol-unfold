@@ -206,6 +206,7 @@ sysNames=[
 
 #add reweighting
 ['top_weight', "top \\pT reweighting"],
+['wjets_pt_weight', "\\wjets W \\pT reweighting"],
 ['wjets_flavour_heavy', "\\wjets heavy flavor fraction"],
 ['wjets_flavour_light', "\\wjets light flavor fraction"],
 ['wjets_shape', "\\wjets shape reweighting"],
@@ -260,6 +261,10 @@ if __name__=="__main__":
     basefolder=os.path.join(os.getcwd(),"histos/bdt_Jun22_final/tunfold/0.45")
     basefolder_top=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_top/tunfold/0.45")
     basefolder_antitop=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_antitop/tunfold/0.45")
+    
+    basefolder2=os.path.join(os.getcwd(),"histos/bdt_Jun22_final/2bin/0.45")
+    basefolder2_top=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_top/2bin/0.45")
+    basefolder2_antitop=os.path.join(os.getcwd(),"histos/bdt_Jun22_final_antitop/2bin/0.45")
     #eleTUnfoldDict = loadDict(["asymmetries_ele.csv"])
     #eleBinDict = loadDict([f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.startswith("ele_") and f.endswith(".csv")])
     #muTUnfoldDict = loadDict(["asymmetries_mu.csv"])
@@ -270,7 +275,10 @@ if __name__=="__main__":
     antitopBinDict = loadDict([os.path.join(basefolder_antitop,f) for f in os.listdir(basefolder_antitop) if f.startswith("mu__") and f.endswith(".csv")])
     combBinDict = loadDict([os.path.join(basefolder,f) for f in os.listdir(basefolder) if f.startswith("mu__") and f.endswith(".csv")])
     
-    #muBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
+    
+    topBinDict2bin = loadDict([os.path.join(basefolder2_top,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
+    antitopBinDict2bin = loadDict([os.path.join(basefolder2_antitop,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
+    combBinDict2bin = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("mu__") and f.endswith(".csv")])
     #eleBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("ele__") and f.endswith(".csv")])
     #combBinDictn = loadDict([os.path.join(basefolder2,f) for f in os.listdir(basefolder2) if f.startswith("combined__") and f.endswith(".csv")])
     
@@ -278,7 +286,7 @@ if __name__=="__main__":
     cv = ROOT.TCanvas("cv","",800,900)
     hist.Draw("AXIS")
     
-    legend = ROOT.TLegend(0.66,0.87,0.9,0.74)
+    legend = ROOT.TLegend(0.66,0.87,0.9,0.70)
     legend.SetFillColor(ROOT.kWhite)
     legend.SetFillStyle(0)
     legend.SetTextFont(43)
@@ -304,6 +312,11 @@ if __name__=="__main__":
         box.Draw("SameFL")
         legend.AddEntry(box,"t + #bar{t}","F") if index==0 else 0
         
+        box = createBox(combBinDict2bin,sys[0],index+0.0,index+1)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+        
         box = createBox(topBinDict,sys[0],index+0.2,index+0.4)
         box.SetFillColor(ROOT.kAzure-4)
         box.SetLineColor(ROOT.kAzure-6)
@@ -311,12 +324,24 @@ if __name__=="__main__":
         box.Draw("SameFL")
         legend.AddEntry(box,"t only","F") if index==0 else 0
         
+        box = createBox(topBinDict2bin,sys[0],index+0.2,index+0.4)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+        
         box = createBox(antitopBinDict,sys[0],index+0.6,index+0.8)
         box.SetFillColor(ROOT.kOrange)
         box.SetLineColor(ROOT.kOrange-3)
         box.SetLineWidth(2)
         box.Draw("SameFL")
         legend.AddEntry(box,"#bar{t} only","F") if index==0 else 0
+        
+        box = createBox(antitopBinDict2bin,sys[0],index+0.6,index+0.8)
+        box.SetFillStyle(0)
+        box.SetLineColor(ROOT.kBlack)
+        box.Draw("SameL")
+        
+        legend.AddEntry(box,"2bin","F") if index==0 else 0
         '''
         box = createBox(combBinDict,sys[0],index+0.63,index+0.9)
         box.SetFillColor(ROOT.kMagenta)
@@ -326,12 +351,9 @@ if __name__=="__main__":
         
         '''
 
+        
+        
         '''
-        box = createBox(muBinDictn,sys[0],index+0.36,index+0.63)
-        box.SetFillStyle(0)
-        box.SetLineColor(ROOT.kBlack)
-        box.Draw("SameL")
-
         box = createBox(combBinDictn,sys[0],index+0.63,index+0.9)
         box.SetFillStyle(0)
         box.SetLineColor(ROOT.kBlack)
