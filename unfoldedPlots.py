@@ -225,14 +225,16 @@ sysNames=[
 ['pdf', "PDF"],
 
 ['mcstat', "limited MC"],
+
+['comhep', "generator model"],
 ]
 
 
 
 
 genSysNames=[
-['tchan_scale', "$Q^{2}$ scale t-channel"],
-['pdf', "PDF"]
+['tchan_qscale_me_weight', "$Q^{2}$ scale t-channel"],
+#['pdf', "PDF"]
 ]
 
 
@@ -470,21 +472,21 @@ def drawSysBar(x,xwidth,ymin,ymax):
     lineSysMid=ROOT.TLine(x,ymin,x,ymax)
     applyLineStyle(lineSysUp,ROOT.kBlack,width=5)
     applyLineStyle(lineSysDown,ROOT.kBlack,width=5)
-    applyLineStyle(lineSysMid,ROOT.kBlack)
+    applyLineStyle(lineSysMid,ROOT.kBlack,width=2)
     
     rootObj.append(lineSysUp)
     rootObj.append(lineSysDown)
     rootObj.append(lineSysMid)
-    lineSysUp.Draw("Same")
-    lineSysDown.Draw("Same")
+    #lineSysUp.Draw("Same")
+    #lineSysDown.Draw("Same")
     lineSysMid.Draw("Same")
     
 def drawStatBar(x,xwidth,ymin,ymax):
-    lineStatUp=ROOT.TLine(x-0.07*xwidth,ymax,x+0.07*xwidth,ymax)
-    lineStatDown=ROOT.TLine(x-0.07*xwidth,ymin,x+0.07*xwidth,ymin)
+    lineStatUp=ROOT.TLine(x-0.09*xwidth,ymax,x+0.09*xwidth,ymax)
+    lineStatDown=ROOT.TLine(x-0.09*xwidth,ymin,x+0.09*xwidth,ymin)
     lineStatMid=ROOT.TLine(x,ymin,x,ymax)
-    applyLineStyle(lineStatUp,ROOT.kBlack,width=3)
-    applyLineStyle(lineStatDown,ROOT.kBlack,width=3)
+    applyLineStyle(lineStatUp,ROOT.kBlack,width=4)
+    applyLineStyle(lineStatDown,ROOT.kBlack,width=4)
     applyLineStyle(lineStatMid,ROOT.kBlack)
     rootObj.append(lineStatUp)
     rootObj.append(lineStatDown)
@@ -523,8 +525,9 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 
                 rootFile.Close()
                 
-        elif sys == "generator":
+        elif sys in ["generator","comhep"]:
             fileName=os.path.join(folder,prefix+sys+".root")
+            print fileName
             if os.path.exists(fileName):
             
                 histDict[sys]={"isShape":True,"unfolded":{},"input":{}, "gen":{}}
@@ -536,6 +539,11 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 
                 histDict[sys]["unfolded"]["up"].Scale(3.0/norm)
                 
+                
+                histDict[sys]["gen"]["nominal"]=rootFile.Get("gen")
+                histDict[sys]["gen"]["nominal"].SetDirectory(0)
+                histDict[sys]["gen"]["nominal"].Scale(3.0/histDict[sys]["gen"]["nominal"].Integral())
+                
                 #symmetrize uncertainty
                 histDict[sys]["input"]["down"]=histDict[sys]["input"]["up"].Clone()
                 histDict[sys]["input"]["down"].SetDirectory(0)
@@ -546,8 +554,6 @@ def readHistograms(folder,sysNames,prefix="mu__"):
                 histDict[sys]["unfolded"]["down"].Scale(-1.0)
                 histDict[sys]["unfolded"]["down"].Add(histDict["nominal"]["unfolded"]["nominal"],2.0)
                 
-                histDict[sys]["gen"]["nominal"]=rootFile.Get("gen")
-                histDict[sys]["gen"]["nominal"].SetDirectory(0)
                 rootFile.Close()
              
         else:
@@ -596,12 +602,12 @@ for sysName in sysDict.keys():
         downA=calculateAsymmetry(sysDict[sysName]["unfolded"]["down"])
         print sysName,"%5.4f %+5.4f %+5.4f" % (meanA,upA-meanA,downA-meanA)
         
-
+'''
 genSysDict["pdf"]["gen"]["up"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__up")
 genSysDict["pdf"]["gen"]["down"] = getHistogram(os.path.join(folderTUnfold,"cos_theta_lj_gen.root"),"cos_theta_lj_gen__tchan__pdf__down")
 genSysDict["pdf"]["gen"]["up"].Scale(3.0/genSysDict["pdf"]["gen"]["up"].Integral())
 genSysDict["pdf"]["gen"]["down"].Scale(3.0/genSysDict["pdf"]["gen"]["down"].Integral())
-
+'''
 
 
 #cv1=ROOT.TCanvas("cv1","",800,600)
@@ -613,7 +619,7 @@ statCov=sysDict["nominal"]["unfolded"]["error"]
 
 #print genSysDict['tchan_scale']["gen"]["up"].Integral()
 
-NTOYS=6000
+NTOYS=6
 genDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 genADist=numpy.zeros(NTOYS)
 for toy in range(NTOYS):
@@ -633,7 +639,7 @@ downSysGen,meanGen,upSysGen=numpy.percentile(genDist, [15.866,50.0,84.134],0)
 
 
         
-NTOYS=10000
+NTOYS=150
 unfoldedDist=numpy.zeros((NTOYS,nominalHist.GetNbinsX()))
 asymmetries=numpy.zeros(NTOYS)
 
@@ -644,7 +650,7 @@ for toy in range(NTOYS):
         unfoldedDist[toy][ibin]=nominalHist.GetBinContent(ibin+1)
      
     for sysName in sysDict.keys():
-        if sysName=="nominal":
+        if sysName in ["nominal","comhep"]:
             continue
         if not sysDict[sysName]["isShape"]:
             diceGaus(unfoldedDist[toy],nominalHist,sysDict[sysName]["unfolded"]["error"])
@@ -654,7 +660,7 @@ for toy in range(NTOYS):
     
     asymmetries[toy]=calculateAsymmetry(unfoldedDist[toy],statCov)
     #normalize(unfoldedDist[toy])
-   
+
 #print calculateAsymmetry(sysDict["jer"]["unfolded"]["up"],statCov)-asymmetryHist.GetMean(),asymmetryHist.GetMean()-calculateAsymmetry(sysDict["jer"]["unfolded"]["down"],statCov)
 downSys,mean,upSys=numpy.percentile(unfoldedDist, [15.866,50.0,84.134],0)
 
@@ -662,7 +668,7 @@ asymmetryDown,asymmetryMean,asymmetryUp=numpy.percentile(asymmetries, [15.866,50
 print "A=%5.4f %+5.4f %+5.4f" % (asymmetryMean,asymmetryUp-asymmetryMean,asymmetryDown-asymmetryMean)
 #genA=calculateAsymmetry(genHist)
 genADown,genA,genAUp=numpy.percentile(genADist, [15.866,50.0,84.134])
-print "Agen=%5.4f %+5.4f %+5.4f" % (genA,genAUp-genA,genADown-genA)
+print "Agen=%10.9f %+5.4f %+5.4f" % (genA,genAUp-genA,genADown-genA)
 
 cvA = ROOT.TCanvas("cvA","",900,800)
 histA = ROOT.TH1F("asymA",";asymmetry",500,0.0,1.0)
@@ -673,11 +679,12 @@ histA.Draw()
 
 cv=ROOT.TCanvas("cv","",900,800)
 
-#axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
-axis=ROOT.TH2F("axis",";unfolded cos#theta_{l}*;1 #/#sigma #times d#sigma #/d(cos#theta_{l}*) / "+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,1.05)
+#axis=ROOT.TH2F("axis",";unfolded cos#theta_{#mu}*;#lower[-0.05]{#scale[1.0]{#frac{d#sigma}{#sigma#upoint d(cos#theta_{l}*)}}} #lower[0.1]{#scale[1.4]{/}}"+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,max(upSys)*1.1)
+#axis=ROOT.TH2F("axis",";Unfolded cos#theta_{#mu}*;1 #/#sigma #times d#sigma #/d(cos#theta_{#mu}*) / "+str(round(2.0/genHist.GetNbinsX(),2))+" units",50,-1,1,50,0.0,1.05)
+axis=ROOT.TH2F("axis",";Unfolded cos#kern[0.1]{#theta}#scale[0.7]{#lower[0.28]{#mu}}#kern[-1.1]{*};1 #/#sigma #times d#sigma #/d(cos#kern[0.1]{#theta}#scale[0.7]{#lower[0.28]{#mu}}#kern[-1.1]{*})",50,-1,1,50,0.0,1.05)
 axis.Draw("AXIS")
 
-legend=ROOT.TLegend(0.18,0.88,0.5,0.70)
+legend=ROOT.TLegend(0.18,0.9,0.5,0.62)
 legend.SetBorderSize(0)
 legend.SetTextFont(43)
 legend.SetTextSize(34)
@@ -690,7 +697,7 @@ statCov.Scale((1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)**2)
 nominalHist.Scale(1.0/nominalHist.Integral()*nominalHist.GetNbinsX()/2.0)
 genHist.Scale(1.0/genHist.Integral()*genHist.GetNbinsX()/2.0)
 '''
-
+'''
 for ibin in range(len(downSys)):
     n=genHist.GetBinContent(ibin+1)
     c=genHist.GetBinCenter(ibin+1)
@@ -698,15 +705,33 @@ for ibin in range(len(downSys)):
     u=upSysGen[ibin]
     d=max(0,downSysGen[ibin])
     drawGenBar(c,w,d,u)
-
+'''
 
 genHist.SetLineColor(ROOT.kAzure-6)
 genHist.SetLineWidth(3)
 genHist.SetLineStyle(1)
 genHist.Draw("Samehist")
-legend.AddEntry(genHist,"PowHeg SM #pm       Q^{2}-scale","L")
 
-drawGenBar(-0.09,0.11,0.928,0.965)
+genHistAMCATNLO=sysDict["generator"]["gen"]["nominal"]
+genHistAMCATNLO.SetLineColor(ROOT.kGray+2)
+genHistAMCATNLO.SetLineWidth(5)
+genHistAMCATNLO.SetLineStyle(2)
+
+
+genHistComphep=sysDict["comhep"]["gen"]["nominal"]
+genHistComphep.SetLineColor(ROOT.kOrange+8)
+genHistComphep.SetLineWidth(2)
+genHistComphep.SetLineStyle(1)
+genHistComphep.Draw("Samehist")
+
+genHistAMCATNLO.Draw("Samehist")
+
+legend.AddEntry(genHist,"POWHEG (5#kern[-0.5]{ }FS) + Pythia#kern[-0.5]{ }6","L")
+legend.AddEntry(genHistAMCATNLO,"aMC@NLO (4#kern[-0.5]{ }FS) + Pythia#kern[-0.5]{ }8","L")
+legend.AddEntry(genHistComphep,"CompHEP + Pythia#kern[-0.5]{ }6","L")
+#legend.AddEntry(genHist,"PowHeg SM #pm       Q^{2}-scale","L")
+
+#drawGenBar(-0.09,0.11,0.928,0.965)
 
 
 for ibin in range(len(downSys)):
@@ -714,22 +739,26 @@ for ibin in range(len(downSys)):
     n=nominalHist.GetBinContent(ibin+1)
     c=nominalHist.GetBinCenter(ibin+1)
     w=nominalHist.GetBinWidth(ibin+1)
-    u=upSys[ibin]
-    d=max(0,downSys[ibin])
-    drawSysBar(c,w,d,u)
+    u_tot=upSys[ibin]
+    d_tot=max(0,downSys[ibin])
+    drawSysBar(c,w,d_tot,u_tot)
     
-    u=n+math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
-    d=max(0,n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1)))
-    drawStatBar(c,w,d,u)
+    u_stat=n+math.sqrt(statCov.GetBinContent(ibin+1,ibin+1))
+    d_stat=max(0,n-math.sqrt(statCov.GetBinContent(ibin+1,ibin+1)))
+    drawStatBar(c,w,d_stat,u_stat)
+    
+    
+    #-1; 25.4 +1.0,-1.0 (DSYS=+1.0,-1.0,DSYS=1.0:lumi)
+    print "%+04.3f; %04.3f +%04.3f, -%04.3f (DSYS=+%04.3f, -%04.3f)" % (c,n,(u_stat-n),(n-d_stat),math.sqrt((u_tot-n)**2-(u_stat-n)**2),math.sqrt((n-d_tot)**2-(n-d_stat)**2)) 
     
 
     
     
-nominalHist.SetMarkerStyle(21)
-nominalHist.SetMarkerSize(1.25)
+nominalHist.SetMarkerStyle(20)
+nominalHist.SetMarkerSize(1.4)
 nominalHist.Draw("SAME hist P")
-legend.AddEntry(nominalHist,"unfolded data","P")
-entry = legend.AddEntry("","  =stat.,     =total","")
+legend.AddEntry(nominalHist,"Unfolded data","P")
+entry = legend.AddEntry("","    Stat.      Total","")
 entry.SetTextSize(30)
 
 
@@ -739,13 +768,13 @@ paveLumi.SetFillColor(ROOT.kWhite)
 paveLumi.SetTextFont(43)
 paveLumi.SetTextSize(38)
 paveLumi.SetTextAlign(31)
-#paveLumi.AddText("#mu+jets, t + #bar{t}, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-#paveLumi.AddText("#mu+jets, t only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
-paveLumi.AddText("#mu+jets, #bar{t} only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+paveLumi.AddText("#mu + jets, t + #bar{t}, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu + jets, t only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
+#paveLumi.AddText("#mu + jets, #bar{t} only, 19.7 fb^{-1} #lower[-0.1]{#scale[0.9]{(}}8 TeV#lower[-0.1]{#scale[0.9]{)}}")
 paveLumi.Draw("SAME")
 
 
-paveCMS=ROOT.TPaveText(0.12,0.92,0.12,0.98,"NDC")
+paveCMS=ROOT.TPaveText(0.14,0.92,0.14,0.98,"NDC")
 paveCMS.SetFillColor(ROOT.kWhite)
 paveCMS.SetTextFont(63)
 paveCMS.SetTextSize(40)
@@ -767,8 +796,8 @@ axis.Draw("AXIS SAME ")
 
 legend.Draw("SAME")
 
-drawStatBar(-0.705,0.25,0.765,0.82)
-drawSysBar(-0.405,0.19,0.765,0.82)
+drawStatBar(-0.695,0.25,0.71,0.66)
+drawSysBar(-0.395,0.19,0.71,0.66)
 
 cv.Update()
 cv.WaitPrimitive()

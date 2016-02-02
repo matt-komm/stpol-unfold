@@ -311,37 +311,38 @@ if __name__=="__main__":
         box.SetLineWidth(2)
         box.Draw("SameFL")
         legend.AddEntry(box,"t + #bar{t}","F") if index==0 else 0
-        
+        '''
         box = createBox(combBinDict2bin,sys[0],index+0.0,index+1)
         box.SetFillStyle(0)
         box.SetLineColor(ROOT.kBlack)
         box.Draw("SameL")
-        
+        '''
         box = createBox(topBinDict,sys[0],index+0.2,index+0.4)
         box.SetFillColor(ROOT.kAzure-4)
         box.SetLineColor(ROOT.kAzure-6)
         box.SetLineWidth(2)
         box.Draw("SameFL")
         legend.AddEntry(box,"t only","F") if index==0 else 0
-        
+        '''
         box = createBox(topBinDict2bin,sys[0],index+0.2,index+0.4)
         box.SetFillStyle(0)
         box.SetLineColor(ROOT.kBlack)
         box.Draw("SameL")
-        
+        '''
         box = createBox(antitopBinDict,sys[0],index+0.6,index+0.8)
         box.SetFillColor(ROOT.kOrange)
         box.SetLineColor(ROOT.kOrange-3)
         box.SetLineWidth(2)
         box.Draw("SameFL")
         legend.AddEntry(box,"#bar{t} only","F") if index==0 else 0
-        
+        '''
         box = createBox(antitopBinDict2bin,sys[0],index+0.6,index+0.8)
         box.SetFillStyle(0)
         box.SetLineColor(ROOT.kBlack)
         box.Draw("SameL")
         
         legend.AddEntry(box,"2bin","F") if index==0 else 0
+        '''
         '''
         box = createBox(combBinDict,sys[0],index+0.63,index+0.9)
         box.SetFillColor(ROOT.kMagenta)

@@ -15,17 +15,27 @@ collectUnfoldProResult: collectUnfoldProResult.cc
 clean:
 	rm -f unfoldPro neymanPro collectUnfoldProResult
 
-test:
-	python auto_unfold2bins.py --histFile=$(DATADIR)/combined/merged/cos_theta_lj.root \
-		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_ele.root \
-		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_mu.root \
-		--responseFile=$(DATADIR)/combined/tmatrix_nocharge__gen_tau.root \
+comphep:
+	./unfoldPro \
+		--histFile=$(DATADIR)/mu/merged/cos_theta_lj.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_ele.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_mu.root \
+		--responseFile=$(DATADIR)/mu/tmatrix_nocharge__gen_tau.root \
 		--fitResultPrefix=$(FITDIR) \
-		--fitResult=combined.txt \
-		--fitCovariance=combined_cov.root \
-		--sys=generator \
+		--fitResult=mu.txt \
+		--fitCovariance=mu_cov.root \
 		--responseMatrixName=$(GENERATOR_SYS_TM) \
-		--output=$(OUTPUTFOLDER)/combined__generator.csv
+		--sys=nominal \
+		$(REGMODE) \
+		--no-mcstat \
+		--no-fiterror \
+		--output=$(OUTPUTFOLDER)/mu__comhep 
+	./collectUnfoldProResult \
+        --nominal=$(OUTPUTFOLDER)/mu__nominal.root \
+        --down=$(OUTPUTFOLDER)/mu__comhep.root \
+        --up=$(OUTPUTFOLDER)/mu__comhep.root \
+        --output=$(OUTPUTFOLDER)/mu__comhep.csv \
+        --sys=generator
 	    
 do_unfold_mu:
 	mkdir -p $(OUTPUTFOLDER)
